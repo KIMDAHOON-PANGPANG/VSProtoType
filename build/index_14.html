@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>EXECUTE v0.10.3 // Slash Aim Fix</title>
+<style>
+  :root{
+    --bg:#05060a; --teal:#1cf0d4; --orange:#ff7a1a; --crimson:#ff2b4e;
+    --gold:#ffd23f; --green:#36e06a; --purple:#b061ff; --blue:#3aa0ff; --ink:#e9f6ff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);}
+  body{font-family:"Segoe UI",system-ui,sans-serif;color:var(--ink);user-select:none;cursor:crosshair;}
+  #game{position:fixed;inset:0;display:block;}
+  #fx-overlay{
+    position:fixed;inset:0;pointer-events:none;z-index:5;
+    background:
+      radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%),
+      repeating-linear-gradient(0deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.10) 3px, rgba(0,0,0,0) 4px);
+    mix-blend-mode:multiply;
+  }
+  /* HUD */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:8;font-weight:700;}
+  #xpbar{position:absolute;left:0;right:0;top:0;height:6px;background:rgba(255,255,255,.06);}
+  #xpfill{height:100%;width:0;background:linear-gradient(90deg,var(--blue),#bfe8ff);box-shadow:0 0 16px var(--blue);transition:width .1s linear;}
+  #topbar{position:absolute;top:14px;left:0;right:0;display:flex;align-items:center;gap:12px;justify-content:center;}
+  .pill{background:rgba(8,12,20,.6);border:1px solid rgba(28,240,212,.25);padding:7px 14px;border-radius:30px;font-size:13px;letter-spacing:1px;backdrop-filter:blur(4px);}
+  #timer{color:var(--teal);font-variant-numeric:tabular-nums;font-size:18px;min-width:74px;text-align:center;text-shadow:0 0 8px rgba(28,240,212,.5);}
+  #phaseTag{color:var(--gold);text-shadow:0 0 8px rgba(255,210,63,.4);}
+  #killTag{color:var(--crimson);}
+  /* vitals */
+  #vitals{position:absolute;left:18px;bottom:18px;width:280px;display:flex;flex-direction:column;gap:8px;}
+  #lvlTag{font-size:12px;letter-spacing:2px;color:var(--teal);}
+  .vbar{height:16px;border-radius:8px;background:rgba(255,255,255,.07);overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.08);}
+  .vbar > i{position:absolute;inset:0;width:100%;transform-origin:left;transition:transform .12s ease;}
+  #hpfill{background:linear-gradient(90deg,#ff2b4e,#ff7a8f);}
+  #shfill{background:linear-gradient(90deg,#3aa0ff,#9fe0ff);}
+  .vbar span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:1px;text-shadow:0 1px 2px #000;}
+  /* execution skill indicator (bottom-right) */
+  #skill{position:absolute;right:20px;bottom:18px;width:96px;text-align:center;}
+  #skillRing{width:84px;height:84px;margin:0 auto;}
+  #skillLabel{font-size:11px;letter-spacing:2px;margin-top:4px;color:var(--crimson);text-shadow:0 0 10px rgba(255,43,78,.5);}
+  #skillLabel.ready{color:var(--teal);text-shadow:0 0 12px rgba(28,240,212,.6);}
+  #odTag{position:absolute;right:20px;bottom:120px;font-size:13px;letter-spacing:2px;color:var(--gold);opacity:0;transition:opacity .2s;text-shadow:0 0 12px var(--gold);text-align:right;width:160px;}
+  #dodgeTag{position:absolute;left:18px;bottom:118px;font-size:12px;letter-spacing:2px;font-weight:700;color:var(--teal);text-shadow:0 0 10px rgba(28,240,212,.5);transition:color .12s;}
+  #dodgeTag span{opacity:.5;font-size:10px;border:1px solid rgba(255,255,255,.2);padding:1px 5px;border-radius:4px;margin-left:4px;}
+  #dodgeTag.cd{color:#5a6478;text-shadow:none;}
+  #odTag.on{opacity:1;}
+  /* phase banner */
+  #banner{position:fixed;top:42%;left:50%;transform:translate(-50%,-50%) scale(.7);z-index:15;text-align:center;opacity:0;pointer-events:none;}
+  #banner.show{animation:bIn 2.6s ease forwards;}
+  #banner .b1{font-size:clamp(26px,5vw,52px);font-weight:900;letter-spacing:6px;}
+  #banner .b2{font-size:14px;letter-spacing:4px;opacity:.8;margin-top:6px;}
+  @keyframes bIn{0%{opacity:0;transform:translate(-50%,-50%) scale(.6);}15%{opacity:1;transform:translate(-50%,-50%) scale(1);}80%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(1.18);}}
+  /* screens */
+  .screen{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;background:radial-gradient(120% 120% at 50% 40%, rgba(8,12,22,.82), rgba(2,3,6,.96));backdrop-filter:blur(3px);pointer-events:auto;}
+  .hidden{display:none !important;}
+  .title{font-size:clamp(34px,7vw,72px);font-weight:900;letter-spacing:6px;background:linear-gradient(180deg,#fff,var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 38px rgba(28,240,212,.35);}
+  .subtitle{font-size:14px;letter-spacing:3px;opacity:.7;text-transform:uppercase;margin-top:-12px;}
+  .sub2{font-size:13px;opacity:.6;max-width:620px;text-align:center;line-height:1.8;}
+  .legend{display:flex;gap:30px;flex-wrap:wrap;justify-content:center;font-size:12.5px;opacity:.85;}
+  .legend b{display:block;font-size:14px;margin-bottom:3px;}
+  .btn{pointer-events:auto;cursor:pointer;margin-top:6px;padding:15px 46px;border-radius:30px;font-size:16px;letter-spacing:4px;font-weight:800;background:linear-gradient(180deg,#15202f,#0a1018);border:1.5px solid var(--teal);color:var(--teal);text-shadow:0 0 12px rgba(28,240,212,.5);transition:transform .15s, box-shadow .15s;}
+  .btn:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(28,240,212,.4);}
+  .hint{font-size:12px;letter-spacing:2px;opacity:.5;}
+  /* level up */
+  #levelup .lvlhdr{font-size:30px;font-weight:900;letter-spacing:4px;color:var(--gold);text-shadow:0 0 26px rgba(255,210,63,.5);}
+  .cardrow{display:flex;gap:22px;flex-wrap:wrap;justify-content:center;max-width:1000px;}
+  .upcard{width:248px;min-height:222px;padding:22px;border-radius:16px;cursor:pointer;background:rgba(10,15,24,.85);border:1.5px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;transition:transform .16s ease, box-shadow .16s ease;}
+  .upcard:hover{transform:translateY(-10px) scale(1.03);}
+  .upcard .rar{font-size:10px;letter-spacing:3px;font-weight:800;text-transform:uppercase;}
+  .upcard .upico{font-size:42px;line-height:1;margin:4px 0;}
+  .upcard h4{font-size:18px;letter-spacing:1px;}
+  .upcard .desc{font-size:12.5px;opacity:.78;line-height:1.6;flex:1;}
+  .upcard .glow{position:absolute;inset:0;opacity:0;transition:opacity .16s;pointer-events:none;}
+  .upcard:hover .glow{opacity:.18;}
+  .rar-common{border-color:var(--green);} .rar-common .rar{color:var(--green);} .rar-common:hover{box-shadow:0 16px 44px rgba(54,224,106,.35);} .rar-common .glow{background:radial-gradient(circle at 50% 0%,var(--green),transparent 70%);}
+  .rar-rare{border-color:var(--purple);} .rar-rare .rar{color:var(--purple);} .rar-rare:hover{box-shadow:0 16px 44px rgba(176,97,255,.4);} .rar-rare .glow{background:radial-gradient(circle at 50% 0%,var(--purple),transparent 70%);}
+  .rar-legend{border-color:var(--gold);} .rar-legend .rar{color:var(--gold);} .rar-legend:hover{box-shadow:0 16px 50px rgba(255,210,63,.45);} .rar-legend .glow{background:radial-gradient(circle at 50% 0%,var(--gold),transparent 70%);}
+  #endResult{font-size:clamp(40px,9vw,90px);font-weight:900;letter-spacing:6px;}
+  .lose{color:var(--crimson);text-shadow:0 0 40px rgba(255,43,78,.5);}
+  .win{color:var(--gold);text-shadow:0 0 40px rgba(255,210,63,.5);}
+  #endStats{font-size:15px;letter-spacing:2px;opacity:.85;line-height:2;text-align:center;}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="fx-overlay"></div>
+
+<div id="hud">
+  <div id="xpbar"><div id="xpfill"></div></div>
+  <div id="topbar">
+    <div class="pill" id="phaseTag">PHASE 1</div>
+    <div class="pill" id="timer">0:00</div>
+    <div class="pill" id="killTag">⚡ 0</div>
+  </div>
+  <div id="vitals">
+    <div id="lvlTag">LV 1</div>
+    <div class="vbar"><i id="hpfill"></i><span id="hptext">100 / 100</span></div>
+    <div class="vbar"><i id="shfill" style="transform:scaleX(0)"></i><span id="shtext">SHIELD —</span></div>
+  </div>
+  <div id="odTag">⚡ OVERDRIVE</div>
+  <div id="dodgeTag">⟳ DODGE <span>SPACE</span></div>
+  <div id="skill">
+    <canvas id="skillRing" width="168" height="168"></canvas>
+    <div id="skillLabel" class="ready">EXECUTE</div>
+  </div>
+</div>
+
+<div id="banner"><div class="b1"></div><div class="b2"></div></div>
+
+<!-- Start -->
+<div id="start" class="screen">
+  <div class="title">EXECUTE</div>
+  <div class="subtitle">v0.10.3 · Slash Aim Fix (자동 베기 조준 · 흡혈각인 제거)</div>
+  <div class="sub2">잡몹은 자동 베기로 쓸어담고, <b style="color:var(--gold)">엘리트</b>의 <b style="color:var(--crimson)">도약(빨간 원)</b>을 <b style="color:var(--teal)">SPACE 회피</b>로 딱 맞춰 피하면 <b style="color:var(--gold)">PERFECT!</b> → 엘리트 탈진(약점·비틀대기) → 그로기 → <b style="color:var(--crimson)">LMB 처형</b>. 방어·공격·처형이 한 줄로 이어진다.</div>
+  <div class="legend">
+    <div><b style="color:var(--blue)">◆ SWARM FODDER</b>HP 10 · 그로기 없음<br>즉사 → 파란 XP 파편</div>
+    <div><b style="color:var(--gold)">⬢ ELITE KNIGHT</b>HP 50 · <b style="color:var(--crimson)">도약 패턴</b><br>방치 시 1회 부활(40% HP) · LMB 처형</div>
+    <div><b style="color:var(--teal)">⟳ JUST-DODGE</b>SPACE = 잠깐 무적<br>도약 딱 맞춤 → 약점·그로기</div>
+  </div>
+  <button class="btn" id="startBtn">▶ START</button>
+  <div class="hint">WASD / 방향키 이동 · SPACE 회피 · LMB 처형</div>
+</div>
+
+<!-- Level up -->
+<div id="levelup" class="screen hidden">
+  <div class="lvlhdr">LEVEL UP</div>
+  <div class="subtitle" style="margin-top:-10px">강화를 선택하라</div>
+  <div class="cardrow" id="cardrow"></div>
+</div>
+
+<!-- End -->
+<div id="end" class="screen hidden">
+  <div id="endResult"></div>
+  <div id="endStats"></div>
+  <button class="btn" onclick="location.reload()">RETRY</button>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   EXECUTE v0.2 — Dual-System (Fodder vs Elite) + 3-Minute Pacing
+   Single-file, procedural. Canvas + WebAudio. No external assets.
+   ===================================================================== */
+
+/* ---------- math / utils ---------- */
+const PI=Math.PI, TAU=Math.PI*2;
+const rand=(a=1,b)=> b===undefined?Math.random()*a:a+Math.random()*(b-a);
+const pick=a=>a[(Math.random()*a.length)|0];
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+const dist2=(ax,ay,bx,by)=>{const dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;};
+const dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
+const now=()=>performance.now();
+function hexA(hex,a){const h=hex.replace('#','');const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);return`rgba(${r},${g},${b},${clamp(a,0,1)})`;}
+
+/* ---------- canvas ---------- */
+const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);resize();
+
+/* =====================================================================
+   AUDIO
+   ===================================================================== */
+const A={ctx:null,master:null,
+  init(){if(this.ctx)return;const AC=window.AudioContext||window.webkitAudioContext;this.ctx=new AC();this.master=this.ctx.createGain();this.master.gain.value=0.5;this.master.connect(this.ctx.destination);},
+  resume(){if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume();},
+  tone(f,d,type='sine',v=0.3,slide=null,atk=0.005){if(!this.ctx)return;const t=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(1,slide),t+d);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+atk);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+d+0.02);},
+  noise(d,v=0.3,ff=1200,ft='lowpass',slide=null){if(!this.ctx)return;const t=this.ctx.currentTime,n=(this.ctx.sampleRate*d)|0,buf=this.ctx.createBuffer(1,n,this.ctx.sampleRate),dt=buf.getChannelData(0);for(let i=0;i<n;i++)dt[i]=Math.random()*2-1;const s=this.ctx.createBufferSource();s.buffer=buf;const f=this.ctx.createBiquadFilter();f.type=ft;f.frequency.setValueAtTime(ff,t);if(slide)f.frequency.exponentialRampToValueAtTime(Math.max(60,slide),t+d);const g=this.ctx.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.0001,t+d);s.connect(f);f.connect(g);g.connect(this.master);s.start(t);s.stop(t+d+0.02);},
+  slash(){this.noise(0.07,0.10,5200,'highpass',2400);this.tone(820,0.05,'sawtooth',0.04,1500);},
+  hit(){this.tone(170,0.05,'square',0.05,90);},
+  fodderPop(){this.tone(520,0.07,'triangle',0.06,900);this.noise(0.05,0.05,4000,'highpass');},
+  groggy(){this.tone(330,0.18,'sine',0.13,520);this.tone(210,0.2,'triangle',0.08,320);},
+  pickup(){this.tone(880,0.06,'sine',0.07,1300);},
+  hurt(){this.noise(0.18,0.22,800,'lowpass',200);this.tone(150,0.18,'sawtooth',0.12,70);},
+  levelup(){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>this.tone(f,0.22,'triangle',0.15),i*70));},
+  overdrive(){this.tone(420,0.25,'sawtooth',0.10,840);this.tone(630,0.22,'square',0.05,1260);},
+  execSlice(power=1){const n=Math.min(12,3+power*3);for(let i=0;i<n;i++)setTimeout(()=>{this.noise(0.05,0.15,7000,'highpass',3000);this.tone(1400+rand(-300,600),0.04,'sawtooth',0.06,2600);},i*38);setTimeout(()=>this.tone(300,0.4,'triangle',0.15,1800),n*38);this.tone(210,0.22,'sine',0.10,90);},
+  reset(){this.tone(660,0.12,'square',0.08,1320);this.tone(990,0.1,'sine',0.05,1980);},
+  revive(){this.tone(180,0.2,'sawtooth',0.12,440);this.tone(360,0.24,'square',0.07,760);this.noise(0.12,0.10,2200,'bandpass',600);},
+  warn(){this.tone(740,0.07,'square',0.09,560);setTimeout(()=>this.tone(740,0.07,'square',0.09,560),85);},   // groggy expiry warning
+  dodge(){this.noise(0.12,0.10,3200,'highpass',1200);this.tone(440,0.1,'sine',0.05,820);},
+  leapCharge(){this.tone(150,0.6,'sawtooth',0.11,540);},                                  // rising telegraph cue
+  leapJump(){this.tone(320,0.16,'square',0.08,130);},
+  leapLand(){this.noise(0.32,0.3,900,'lowpass',80);this.tone(85,0.36,'sine',0.26,38);},
+  justDodge(){this.tone(920,0.12,'triangle',0.1,1500);this.tone(1320,0.14,'sine',0.07,2100);this.noise(0.1,0.08,6500,'highpass',3000);},
+  preCue(){this.tone(1300,0.09,'square',0.1,1700);this.tone(980,0.06,'sine',0.06,1500);},   // "회피!" pre-judgment cue
+};
+
+/* =====================================================================
+   INPUT
+   ===================================================================== */
+const keys={}, mouse={x:W/2,y:H/2,down:false};
+addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if(!keys[k] && (k===' '||k==='shift')) tryDodge();     // fresh press → dodge (Space / Shift)
+  keys[k]=true;
+  if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();
+});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+canvas.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+canvas.addEventListener('mousedown',e=>{if(e.button===0){mouse.down=true;if(G.state==='play')tryExecute();}});
+canvas.addEventListener('mouseup',e=>{if(e.button===0)mouse.down=false;});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('touchstart',e=>{if(G.state==='play'){const t=e.touches[0];mouse.x=t.clientX;mouse.y=t.clientY;tryExecute();}},{passive:true});
+
+/* =====================================================================
+   BALANCE  — gameBalance.json is the single source of truth when the page
+   is served over http.  The inline FALLBACK_BALANCE below is used only for
+   file:// double-click (fetch is blocked there); keep the two in sync.
+   ===================================================================== */
+const FALLBACK_BALANCE={
+  player:{ radius:16, maxHp:100, speed:240, friction:9, attackInterval:0.34, slashCount:1, slashReach:96, slashArc:1.5, slashDamage:14, execRadius:175, invulnOnHit:0.4, shieldRegenDelay:5, shieldRegenPerSec:0.5, overdrive:{duration:3,perStackBonus:0.25,maxStacks:4}, dodge:{cooldown:1.3, duration:0.18, iframe:0.2, speed:760} },
+  execution:{ cooldownMax:10, refundPerKill:10, maxTargets:1, baseDuration:0.10, perTargetDuration:0.09, easePower:1.0, bulletTime:0.05, bulletScale:0.22, bulletRamp:0.04, fastScale:1.0, windupFreeze:0.0, perCutFreeze:0.012, finalFreeze:0.0, endHold:0.03, burstDelay:0.04, invulnPadding:0.4, shakeStartBase:6, shakeStartPerKill:1.5, shakePerCut:9, burstShake:7, finalShakeBase:9, finalShakePerKill:2.5 },
+  combat:{ justDodge:{ hitstop:45, slowDuration:0.45, slowScale:0.16, staggerCharge:55, staggerPerDamage:0.6, weakpointMult:2.0, exhaustDuration:1.6, judgeRadiusMult:1.6 } },
+  groggy:{ duration:3, reviveEnabled:true, reviveHpFraction:0.4, reviveInvuln:0.4, maxRevives:1, warnTime:1.0 },
+  enemies:{
+    fodder:{ radius:12, hp:10, speedMin:95, speedMax:130, damage:8, gemsOnDeath:1, gemBonusChance:0.25, gemValue:1 },
+    elite:{ radius:26, hp:50, speed:58, damage:20, gemsOnFade:3, gemsOnExecute:5, gemValue:2, staggerMax:100,
+            leap:{ cooldownMin:3.0, cooldownMax:4.6, initMin:2.0, initMax:3.2, windup:0.78, air:0.36, recover:0.6, radius:88, damage:24, rise:50, triggerRange:560, homing:0.2, homingRate:16, preWindow:0.2 } }
+  },
+  spawner:{
+    phase1:{ untilSec:15, fodderInterval:0.62, fodderCap:120 },
+    phase2:{ untilSec:30, eliteOffsetY:-160 },
+    phase3:{ fodderInterval:0.26, fodderCap:340, eliteInterval:1.6, eliteMax:3, eliteRadiusMin:220, eliteRadiusMax:360 }
+  },
+  xp:{ firstLevel:5, growthMult:1.3, growthAdd:4, magnetRadius:100, pickupPad:8, magnetSpeedMin:140, magnetSpeedMax:640, gemLife:18 },
+  contact:{ interval:0.5, fodderDamage:2, eliteDamage:7, knockback:36 }
+};
+let BAL=FALLBACK_BALANCE;
+function applyBalance(b){
+  BAL=b;
+  GROGGY_TIME=b.groggy.duration;
+  G.exec.cdMax=b.execution.cooldownMax;
+  G.exec.refundPerKill=b.execution.refundPerKill;
+  if(G.state==='menu') G.xpNeed=b.xp.firstLevel;
+}
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+let GROGGY_TIME=BAL.groggy.duration;     // elite groggy window (s) — set from balance
+const G={
+  state:'menu', time:0, gameTime:0,
+  enemies:[], gems:[], particles:[], rings:[], texts:[], slashes:[], afterimages:[],
+  player:null, camX:0, camY:0, shake:0, hitstop:0,
+  level:1, xp:0, xpNeed:BAL.xp.firstLevel, kills:0, executions:0,
+  phase:1, phase2Done:false, phase2Spawned:false,
+  fodderAcc:0, eliteAcc:0, pendingLevels:0,
+  exec:{cdMax:BAL.execution.cooldownMax, cd:0, refundPerKill:BAL.execution.refundPerKill, pulse:0},
+  execSeq:null,
+  slow:{t:0,dur:0.5,scale:0.28},          // global slow-mo (just-dodge reward)
+  threat:0,                               // 0..1 — elite telegraph readability (screen tone dip)
+  _execReady:false,
+};
+
+/* =====================================================================
+   PLAYER (Specter Blade — melee only)
+   ===================================================================== */
+function makePlayer(){
+  const P=BAL.player;
+  return {
+    x:0,y:0,vx:0,vy:0,r:P.radius,
+    maxHp:P.maxHp,hp:P.maxHp, shield:0,maxShield:0,shieldDelay:P.shieldRegenDelay,shieldTimer:0,
+    speed:P.speed,friction:P.friction,
+    atkBase:P.attackInterval, atkTimer:0,
+    slashCount:P.slashCount, slashReach:P.slashReach, slashArc:P.slashArc, slashDmg:P.slashDamage,
+    execRadius:P.execRadius,
+    overTimer:0,overStacks:0,overDur:P.overdrive.duration,
+    invuln:0, facing:0, slashAnim:0, slashDir:0, flash:0,
+    dodge:{ cd:0, active:0, iframe:0, dir:0, cooldown:P.dodge.cooldown, duration:P.dodge.duration, iframeDur:P.dodge.iframe, speed:P.dodge.speed },
+    jdStaggerBonus:0, hurtSfxCd:0,
+  };
+}
+function overMult(){const p=G.player;return p.overTimer>0?1+BAL.player.overdrive.perStackBonus*p.overStacks:1;}
+
+/* =====================================================================
+   DODGE & JUST-DODGE (2-layer defense, per design doc)
+   ===================================================================== */
+function tryDodge(){
+  if(G.state!=='play'||G.execSeq)return;
+  const p=G.player; if(!p)return; const D=p.dodge;
+  if(D.cd>0)return;
+  let dx=0,dy=0;
+  if(keys['a']||keys['arrowleft'])dx--; if(keys['d']||keys['arrowright'])dx++;
+  if(keys['w']||keys['arrowup'])dy--; if(keys['s']||keys['arrowdown'])dy++;
+  // 방향키 입력 → 그 방향으로 대시 / 무입력 → 전방(조준) 유지한 채 백대시(뒤로)
+  D.dir=(dx||dy)?Math.atan2(dy,dx):(p.facing+PI);
+  D.active=D.duration; D.iframe=D.iframeDur; D.cd=D.cooldown;
+  p.invuln=Math.max(p.invuln,D.iframeDur);
+  A.dodge();
+  G.afterimages.push({x:p.x,y:p.y,life:0.3,max:0.3,color:'#9ffff2'});
+}
+function triggerSlowmo(dur,scale){ G.slow.t=dur; G.slow.dur=dur; G.slow.scale=scale; }
+
+/* =====================================================================
+   ENEMIES — Fodder vs Elite
+   ===================================================================== */
+function spawnFodder(){
+  const F=BAL.enemies.fodder, p=G.player, ang=rand(TAU), R=Math.max(W,H)*0.6+rand(30,140);
+  G.enemies.push({
+    kind:'fodder', state:'alive',
+    x:p.x+Math.cos(ang)*R, y:p.y+Math.sin(ang)*R, vx:0,vy:0, r:F.radius,
+    hp:F.hp,maxHp:F.hp, speed:rand(F.speedMin,F.speedMax), dmg:F.damage, flash:0, wob:rand(TAU), fade:1, reviveInvuln:0, contactCd:0,
+  });
+}
+function spawnElite(x,y,opts){
+  opts=opts||{};
+  const E=BAL.enemies.elite, L=E.leap;
+  G.enemies.push({
+    kind:'elite', state:'alive',
+    x,y,vx:0,vy:0,r:E.radius,
+    hp:E.hp,maxHp:E.hp, speed:E.speed, dmg:E.damage, flash:0, wob:rand(TAU), fade:1,
+    groggy:0, noMagnet:!!opts.noMagnet, hitT:0, reviveInvuln:0,
+    move:'chase', stateT:0, leapT:rand(L.initMin,L.initMax), leapX:0,leapY:0, fromX:0,fromY:0, airH:0, reviveCount:0, warned:false, contactCd:0,
+    preSignaled:false, prePhase:false,
+    stagger:0, staggerMax:E.staggerMax,
+  });
+}
+function countElites(){let n=0;for(const e of G.enemies)if(e.kind==='elite'&&e.state!=='dying')n++;return n;}
+
+/* ===== Elite "Leap" pattern (예고 → 도약 → 착지 AoE → 저스트 회피 시 탈진) ===== */
+function updateEliteAI(e,dt){
+  const p=G.player, L=BAL.enemies.elite.leap, JD=BAL.combat.justDodge;
+  if(e.move===undefined)e.move='chase';
+  e.stateT+=dt;
+  if(e.move==='chase'){
+    const a=Math.atan2(p.y-e.y,p.x-e.x);
+    e.vx=lerp(e.vx,Math.cos(a)*e.speed,0.08); e.vy=lerp(e.vy,Math.sin(a)*e.speed,0.08);
+    e.x+=e.vx*dt; e.y+=e.vy*dt;
+    e.leapT-=dt;
+    if(e.leapT<=0 && dist(e.x,e.y,p.x,p.y)<L.triggerRange){ e.move='windup'; e.stateT=0; e.leapX=p.x; e.leapY=p.y; e.preSignaled=false; e.prePhase=false; A.leapCharge(); spawnText(e.x,e.y-e.r-16,'!','#ffd23f',22,true); }
+  } else if(e.move==='windup'){           // grounded telegraph; decal HOMES on PC briefly then locks
+    e.vx*=0.8; e.vy*=0.8;
+    if(e.stateT < (L.homing||0)){          // 데칼 호밍: 짧게 PC를 추적(호밍 시간 = L.homing, 조절 가능)
+      const hr=clamp(dt*(L.homingRate||16),0,1);
+      e.leapX=lerp(e.leapX,p.x,hr); e.leapY=lerp(e.leapY,p.y,hr);
+    }
+    if(e.stateT>=L.windup){ e.move='air'; e.stateT=0; e.fromX=e.x; e.fromY=e.y; A.leapJump(); }
+  } else if(e.move==='air'){              // arc toward landing (INVULNERABLE until impact)
+    const f=clamp(e.stateT/L.air,0,1);
+    e.x=lerp(e.fromX,e.leapX,f); e.y=lerp(e.fromY,e.leapY,f);
+    e.airH=Math.sin(f*PI)*L.rise;
+    // PRE 판정: 실제 착지(hit) preWindow초 전부터 열림 — 이 동안 회피하면 저스트 회피(타이밍 쉬움)
+    const inPre=(L.air-e.stateT)<=(L.preWindow||0.2);
+    if(inPre && !e.preSignaled){          // pre 판정이 먼저 유저에게 '등장'
+      e.preSignaled=true;
+      spawnRing(e.leapX,e.leapY,'#ffffff',L.radius*1.35,L.radius*0.45);   // 수축 링 = 착지 임박
+      spawnText(e.leapX,e.leapY-L.radius-14,'▼ 회피 ▼','#fff7a0',18,true);
+      A.preCue();
+    }
+    e.prePhase=inPre;
+    if(inPre && p.dodge.iframe>0 && dist(e.leapX,e.leapY,p.x,p.y)<=L.radius+p.r){   // pre 크기 = hit 크기
+      e.x=e.leapX; e.y=e.leapY; e.airH=0; e.prePhase=false; justDodge(e); return;   // PRE 저스트 회피 → 도약 패링
+    }
+    if(f>=1){ e.airH=0; e.prePhase=false; leapImpact(e); if(e.move==='air'){ e.move='recover'; e.stateT=0; } }   // justDodge may set 'exhausted'
+  } else if(e.move==='recover'){          // normal landing → brief stun → chase again
+    e.vx*=0.85; e.vy*=0.85;
+    if(e.stateT>=L.recover){ e.move='chase'; e.stateT=0; e.leapT=rand(L.cooldownMin,L.cooldownMax); }
+  } else if(e.move==='exhausted'){        // just-dodged → vulnerable weak-point window
+    e.vx*=0.8; e.vy*=0.8;
+    if(e.stateT>=JD.exhaustDuration){ e.move='chase'; e.stateT=0; e.leapT=rand(L.cooldownMin,L.cooldownMax)*0.6; }
+  }
+  // contact: VS-style TICK damage while grounded & active (not air/exhausted)
+  if(e.move==='chase'||e.move==='windup'||e.move==='recover'){
+    if(dist(e.x,e.y,p.x,p.y)<e.r+p.r){
+      const pa=Math.atan2(p.y-e.y,p.x-e.x); p.vx+=Math.cos(pa)*BAL.contact.knockback; p.vy+=Math.sin(pa)*BAL.contact.knockback;
+      if(e.contactCd<=0){ contactHurt(BAL.contact.eliteDamage); e.contactCd=BAL.contact.interval; }
+    }
+  }
+}
+function leapImpact(e){
+  const p=G.player, L=BAL.enemies.elite.leap, JD=BAL.combat.justDodge;
+  spawnRing(e.leapX,e.leapY,'#ff7a1a',12,L.radius*2.2);
+  spawnRing(e.leapX,e.leapY,'#ff2b4e',8,L.radius*1.3);
+  for(let k=0;k<24;k++) spawnParticle(e.leapX,e.leapY,rand(-280,280),rand(-280,280),pick(['#ff7a1a','#ffd23f','#fff','#5a3a2a']),rand(2,6),rand(.3,.75),'spark');
+  addShake(13); A.leapLand();
+  const dL=dist(e.leapX,e.leapY,p.x,p.y);
+  if(p.dodge.iframe>0 && dL<=L.radius*JD.judgeRadiusMult){ justDodge(e); }   // 딱 맞춰 피함 → PERFECT
+  else if(dL<=L.radius+p.r){ hurtPlayer(L.damage); }                        // 맞음
+}
+function justDodge(e){
+  const p=G.player, JD=BAL.combat.justDodge;
+  doHitstop(JD.hitstop||0); triggerSlowmo(JD.slowDuration,JD.slowScale);   // 처형식 불릿타임: 짧은 정지 → 슬로우 → 원속도 복귀
+  e.move='exhausted'; e.stateT=0;                                // 탈진(약점 노출)
+  e.stagger=Math.min(e.staggerMax,(e.stagger||0)+JD.staggerCharge+(p.jdStaggerBonus||0));  // 비틀대기 충전
+  spawnText(p.x,p.y-p.r-32,'PERFECT!','#ffd23f',28,true);
+  spawnRing(p.x,p.y,'#ffd23f',12,150); spawnRing(p.x,p.y,'#9ffff2',8,90);
+  addShake(8); A.justDodge();
+  for(let k=0;k<20;k++) spawnParticle(p.x,p.y,rand(-240,240),rand(-240,240),pick(['#ffd23f','#fff','#9ffff2']),rand(2,5),rand(.3,.7),'spark');
+  p.dodge.iframe=Math.max(p.dodge.iframe,0.25); p.invuln=Math.max(p.invuln,0.32);
+  if(e.stagger>=e.staggerMax){ makeGroggy(e); }                  // 게이지 full → 즉시 그로기(처형 가능)
+}
+
+/* =====================================================================
+   SPAWNER — strict 3-minute phased timeline
+   ===================================================================== */
+function setBanner(t1,t2,color){
+  const b=document.getElementById('banner');
+  b.querySelector('.b1').textContent=t1; b.querySelector('.b1').style.color=color;
+  b.querySelector('.b1').style.textShadow='0 0 36px '+color;
+  b.querySelector('.b2').textContent=t2;
+  b.classList.remove('show'); void b.offsetWidth; b.classList.add('show');
+}
+function updatePhase(){
+  const t=G.time, prev=G.phase;
+  if(t<BAL.spawner.phase1.untilSec) G.phase=1; else if(t<BAL.spawner.phase2.untilSec) G.phase=2; else G.phase=3;
+  if(G.phase!==prev){
+    if(G.phase===1) setBanner('PHASE 1','FODDER SWARM','#3aa0ff');
+    if(G.phase===2) setBanner('PHASE 2','ELITE KNIGHT','#ffd23f');
+    if(G.phase===3) setBanner('PHASE 3','COMBO FLURRY','#ff2b4e');
+  }
+}
+function updateSpawner(dt){
+  updatePhase();
+  const p=G.player, S=BAL.spawner;
+  if(G.phase===1){
+    // only low-HP fodder, easy warm-up
+    G.fodderAcc+=dt;
+    const interval=S.phase1.fodderInterval;
+    while(G.fodderAcc>=interval){G.fodderAcc-=interval; if(G.enemies.length<S.phase1.fodderCap)spawnFodder();}
+  } else if(G.phase===2){
+    // stop fodder; spawn exactly ONE elite knight at screen center (once)
+    if(!G.phase2Spawned){
+      G.phase2Spawned=true;
+      spawnElite(p.x, p.y+S.phase2.eliteOffsetY, {noMagnet:true});   // gems will NOT be magnetic
+      setBanner('⬢ ELITE KNIGHT','BREAK IT → LMB EXECUTE','#ffd23f');
+    }
+  } else {
+    // Phase 3: dense fodder + maintain 2~3 elites simultaneously
+    G.fodderAcc+=dt;
+    const interval=S.phase3.fodderInterval;  // higher density
+    while(G.fodderAcc>=interval){G.fodderAcc-=interval; if(G.enemies.length<S.phase3.fodderCap)spawnFodder();}
+    G.eliteAcc+=dt;
+    if(G.eliteAcc>=S.phase3.eliteInterval && countElites()<S.phase3.eliteMax){
+      G.eliteAcc=0;
+      const ang=rand(TAU), R=rand(S.phase3.eliteRadiusMin,S.phase3.eliteRadiusMax);
+      spawnElite(p.x+Math.cos(ang)*R, p.y+Math.sin(ang)*R, {noMagnet:false});
+    }
+  }
+}
+
+/* =====================================================================
+   AUTO MELEE — crescent/cone slash
+   ===================================================================== */
+function nearestEnemy(x,y,maxD){
+  let best=null,bd=(maxD||1e9)**2;
+  // autos only damage 'alive' enemies → aim at 'alive' only, else the cone fixates on a
+  // groggy/executing elite (which autos ignore) and the real targets fall outside the arc.
+  for(const e of G.enemies){if(e.state!=='alive')continue;const d=dist2(x,y,e.x,e.y);if(d<bd){bd=d;best=e;}}
+  return best;
+}
+function playerAttack(dt){
+  const p=G.player; p.atkTimer-=dt; if(p.atkTimer>0)return;
+  p.atkTimer=p.atkBase/overMult();
+  const target=nearestEnemy(p.x,p.y,520);
+  let dir=target?Math.atan2(target.y-p.y,target.x-p.x):p.facing;
+  p.facing=dir;
+  for(let i=0;i<p.slashCount;i++){
+    const off=p.slashCount>1?(-0.5+i/(p.slashCount-1))*1.5:0;
+    doSlash(dir+off);
+  }
+  A.slash();
+}
+function doSlash(dir){
+  const p=G.player;
+  p.slashAnim=1; p.slashDir=dir;
+  for(const e of G.enemies){
+    if(e.state!=='alive')continue;          // groggy/dying ignored by autos
+    const d=dist(p.x,p.y,e.x,e.y);
+    if(d<p.slashReach+e.r){
+      const a=Math.atan2(e.y-p.y,e.x-p.x);
+      const da=Math.abs(((a-dir+PI)%TAU+TAU)%TAU-PI);
+      if(da<p.slashArc/2) damageEnemy(e,p.slashDmg);
+    }
+  }
+  G.slashes.push({x:p.x,y:p.y,dir,reach:p.slashReach,arc:p.slashArc,life:0.18,max:0.18,color:'#1cf0d4'});
+}
+
+/* =====================================================================
+   DAMAGE / DEATH RULES
+   ===================================================================== */
+function damageEnemy(e,dmg){
+  if(e.state!=='alive')return;
+  if(e.reviveInvuln>0)return;               // brief grace right after a revive (balance knob)
+  if(e.kind==='elite' && (e.move==='windup'||e.move==='air')){   // 리프어택 중 무적: 착지(히트) 전까지 피해 X
+    if(Math.random()<0.5) spawnParticle(e.x,(e.y-(e.airH||0)),rand(-45,45),rand(-45,45),'#cfd6e6',rand(2,3),0.2,'spark');  // 막힘 스파크
+    return;
+  }
+  const exhausted = e.kind==='elite' && e.move==='exhausted';
+  const mult = exhausted ? BAL.combat.justDodge.weakpointMult : 1;   // 약점 노출: 받는 피해↑
+  const dealt = dmg*mult;
+  e.hp-=dealt; e.flash=1;
+  spawnText(e.x+rand(-6,6),e.y-e.r-6,Math.round(dealt),exhausted?'#ffd23f':'#fff',exhausted?15:12);
+  if(exhausted){                            // attacking the staggered elite fills the gauge → groggy
+    e.stagger=Math.min(e.staggerMax,(e.stagger||0)+dealt*BAL.combat.justDodge.staggerPerDamage);
+    if(e.stagger>=e.staggerMax){ makeGroggy(e); return; }
+  }
+  if(e.hp<=0){
+    if(e.kind==='fodder') killFodder(e);     // immediate explode → blue shards
+    else makeGroggy(e);                       // elite → groggy
+  }
+}
+function killFodder(e){
+  const F=BAL.enemies.fodder;
+  e.state='dying'; e.fade=1;
+  A.fodderPop();
+  // blue XP shards on the ground (magnetic so swarm-clear feels good)
+  const n=rand()<F.gemBonusChance?F.gemsOnDeath+1:F.gemsOnDeath;
+  for(let i=0;i<n;i++) G.gems.push(makeGem(e.x+rand(-8,8),e.y+rand(-8,8),F.gemValue,true,'#3aa0ff'));
+  for(let k=0;k<6;k++) spawnParticle(e.x,e.y,rand(-120,120),rand(-120,120),'#3aa0ff',rand(2,4),0.35,'spark');
+  G.kills++;
+}
+function makeGroggy(e){
+  e.state='groggy'; e.groggy=GROGGY_TIME; e.vx=0;e.vy=0;
+  if(e.kind==='elite'){ e.stagger=0; e.airH=0; e.move='chase'; e.stateT=0; e.warned=false; }
+  A.groggy();
+  spawnText(e.x,e.y-e.r-12,'GROGGY','#ffd23f',16);
+  for(let i=0;i<12;i++) spawnParticle(e.x,e.y,rand(-90,90),rand(-90,90),'#ffd23f',rand(2,4),0.5,'spark');
+}
+function eliteFade(e){
+  // groggy expired (revive disabled) → fades, drops REGULAR xp (fewer)
+  const E=BAL.enemies.elite;
+  e.state='dying'; e.fade=1;
+  spawnText(e.x,e.y-e.r,'faded','#999',13);
+  for(let i=0;i<E.gemsOnFade;i++) G.gems.push(makeGem(e.x+rand(-12,12),e.y+rand(-12,12),E.gemValue,!e.noMagnet,'#ffd23f'));
+  G.kills++;
+}
+/* groggy window expired without execution → the knight REVIVES (back to alive). */
+function eliteRevive(e){
+  e.state='alive';
+  e.hp=Math.max(1, e.maxHp*BAL.groggy.reviveHpFraction);
+  e.groggy=0; e.vx=0; e.vy=0; e.flash=1; e.sliceFlash=0; e.sliced=false;
+  e.stagger=0; e.airH=0; e.move='chase'; e.stateT=0; e.leapT=rand(BAL.enemies.elite.leap.cooldownMin,BAL.enemies.elite.leap.cooldownMax);
+  e.reviveCount=(e.reviveCount||0)+1; e.warned=false;        // 1회 제한 카운트
+  e.reviveInvuln=BAL.groggy.reviveInvuln||0;
+  A.revive();
+  spawnText(e.x,e.y-e.r-12,'REVIVE','#ff7a1a',18,true);
+  spawnRing(e.x,e.y,'#ff7a1a',e.r,e.r+64);
+  for(let i=0;i<16;i++) spawnParticle(e.x,e.y,rand(-170,170),rand(-170,170),pick(['#ff7a1a','#ffd23f','#fff']),rand(2,5),rand(.4,.85),'spark');
+}
+/* the deferred death event — fires AFTER the full execution cinematic.
+   dissolves the enemy and drops its XP, driving subsequent play. */
+/* the per-enemy DEATH BURST ("팡"). Fired individually & staggered during the
+   execution cinematic (as the player flies on to the next target), NOT all at once. */
+function resolveExecKill(e){
+  if(e.state==='dying')return;
+  e.state='dying'; e.fade=1;
+  spawnRing(e.x,e.y,'#1cf0d4',e.r,120);
+  spawnRing(e.x,e.y,'#ffffff',e.r*0.6,80);
+  for(let k=0;k<24;k++) spawnParticle(e.x,e.y,rand(-280,280),rand(-280,280),pick(['#1cf0d4','#fff','#9ffff2']),rand(2,6),rand(.4,.95),'spark');
+  spawnText(e.x,e.y-e.r-10,'EXECUTED','#1cf0d4',20,true);
+  addShake(BAL.execution.burstShake);              // each pop kicks the camera
+  A.execSlice(1);                                   // metallic burst snap
+  const E=BAL.enemies.elite;
+  for(let i=0;i<E.gemsOnExecute;i++) G.gems.push(makeGem(e.x+rand(-16,16),e.y+rand(-16,16),E.gemValue,!e.noMagnet,'#ffd23f'));
+  G.kills++;
+}
+
+/* =====================================================================
+   EXECUTION (LMB) — "Iai / 一閃" : accelerating route dash in SLOW-MOTION.
+   Flow: cut a target (HP→0, held) → glide to the next → the just-cut one
+   BURSTS ("팡") a beat later → glide → 팡 → ... → on the final cut the
+   slow-mo eases back to normal ("서서히 풀리면서") → world resumes →
+   dropped XP is gathered → level-up if the threshold was reached.
+   Each death VFX is invoked PER-ENEMY & staggered (not all at the end).
+   ===================================================================== */
+function tryExecute(){
+  const p=G.player, ex=G.exec;
+  if(G.execSeq) return;                            // already mid-execution
+  if(ex.cd>0.05){ spawnText(p.x,p.y-p.r-26,'RECHARGING '+ex.cd.toFixed(1)+'s','#888',14); return; }
+  const targets=G.enemies.filter(e=>e.kind==='elite'&&e.state==='groggy'&&dist(p.x,p.y,e.x,e.y)<=p.execRadius+e.r);
+  if(targets.length===0) return;                   // no valid target → no cd consumed
+  targets.sort((a,b)=>dist2(p.x,p.y,a.x,a.y)-dist2(p.x,p.y,b.x,b.y));
+  const n=Math.max(1, BAL.execution.maxTargets||1);   // 처형 1회당 최대 대상 수 (1 = 가장 가까운 1명만)
+  startExecSequence(targets.slice(0,n));
+}
+function startExecSequence(targets){
+  const p=G.player, n=targets.length, X=BAL.execution;
+  // lock targets: held & frozen (no groggy decay, no collision) until they burst
+  targets.forEach(e=>{ e.state='executing'; e.sliceFlash=0; e.sliced=false; });
+  // build the route polyline: start → each target (nearest first)
+  const pts=[{x:p.x,y:p.y}];
+  targets.forEach(e=>pts.push({x:e.x,y:e.y}));
+  const cum=[0];
+  for(let i=1;i<pts.length;i++) cum[i]=cum[i-1]+dist(pts[i-1].x,pts[i-1].y,pts[i].x,pts[i].y);
+  const dur=X.baseDuration+X.perTargetDuration*n;        // dash length (scaled seconds, runs FAST)
+  G.execSeq={
+    targets, pts, cum, total:cum[cum.length-1]||1,
+    elapsed:0, dur,
+    tt:0,                           // real time since press → drives the bullet→fast curve
+    freeze:X.windupFreeze,          // tiny press snap (real-time)
+    slowmo:X.bulletScale,           // START in bullet-time (near freeze)
+    phase:'dash', endT:0,
+    next:1, aiX:p.x, aiY:p.y, killed:n,
+    burstQueue:[],                  // staggered per-enemy deaths {e, t(scaled-sec)}
+  };
+  // invincible across the whole (short) cinematic
+  p.invuln=Math.max(p.invuln, X.bulletTime+X.bulletRamp + dur/Math.max(0.1,X.fastScale) + X.invulnPadding);
+  A.execSlice(n);
+  spawnRing(p.x,p.y,'#9ffff2',12,p.execRadius*0.55);     // charge pop on press
+  addShake(X.shakeStartBase+n*X.shakeStartPerKill);
+}
+// bullet-time → fast timescale curve (real-time seconds since press)
+function execTimescale(seq){
+  const X=BAL.execution, tt=seq.tt;
+  if(tt<X.bulletTime) return X.bulletScale;                                    // ~0.1s bullet time
+  if(tt<X.bulletTime+X.bulletRamp) return lerp(X.bulletScale,X.fastScale,(tt-X.bulletTime)/X.bulletRamp);
+  return X.fastScale;                                                          // then 순식간에 빨라짐
+}
+// schedule a target's death-burst to fire after a slow-mo beat (the delayed "팡")
+function queueBurst(e,delayScaled){ if(G.execSeq) G.execSeq.burstQueue.push({e,t:delayScaled}); }
+function processBurstQueue(sdt){
+  const seq=G.execSeq; if(!seq)return;
+  for(let i=seq.burstQueue.length-1;i>=0;i--){
+    const b=seq.burstQueue[i]; b.t-=sdt;
+    if(b.t<=0){ resolveExecKill(b.e); seq.burstQueue.splice(i,1); }   // 팡 (per-enemy)
+  }
+}
+// position along the route polyline at arc-length d
+function placeAlong(seq,d){
+  const {pts,cum}=seq;
+  if(d<=0) return {x:pts[0].x,y:pts[0].y};
+  for(let i=1;i<pts.length;i++){
+    if(d<=cum[i]){ const seg=cum[i]-cum[i-1]||1, f=(d-cum[i-1])/seg;
+      return {x:lerp(pts[i-1].x,pts[i].x,f), y:lerp(pts[i-1].y,pts[i].y,f)}; }
+  }
+  const L=pts[pts.length-1]; return {x:L.x,y:L.y};
+}
+// a single flashing cut "一閃" at target index ni
+function triggerSlice(ni){
+  const seq=G.execSeq, e=seq.targets[ni], from=seq.pts[ni], to=seq.pts[ni+1];
+  e.sliceFlash=1; e.sliced=true;
+  const ang=Math.atan2(to.y-from.y,to.x-from.x), L=e.r+24;
+  // hard white slash straight through the enemy + a tracer along the route
+  G.slashes.push({line:true,x1:to.x-Math.cos(ang)*L,y1:to.y-Math.sin(ang)*L,x2:to.x+Math.cos(ang)*L,y2:to.y+Math.sin(ang)*L,life:0.22,max:0.22,color:'#ffffff'});
+  G.slashes.push({line:true,x1:from.x,y1:from.y,x2:to.x,y2:to.y,life:0.16,max:0.16,color:'#9ffff2'});
+  spawnRing(to.x,to.y,'#1cf0d4',e.r,72);
+  for(let k=0;k<12;k++) spawnParticle(to.x,to.y,rand(-240,240),rand(-240,240),pick(['#1cf0d4','#fff','#9ffff2']),rand(2,4),rand(.25,.6),'spark');
+  spawnText(to.x,to.y-e.r-12,'SLICE','#eafffd',22,true);
+  addShake(BAL.execution.shakePerCut);             // 셰이크 — 일섬 임팩트
+  A.slash();
+}
+function updateExecSeq(dt){
+  const seq=G.execSeq, p=G.player, X=BAL.execution;
+  p.invuln=Math.max(p.invuln,0.2);
+  // hard freeze-frame snap (real-time; world fully frozen)
+  if(seq.freeze>0){ seq.freeze-=dt; return; }
+  seq.tt+=dt;                                          // real-time clock
+  seq.slowmo=execTimescale(seq);                       // bullet-time → fast
+  const sdt=dt*seq.slowmo;
+  processBurstQueue(sdt);                              // staggered deaths (촥) tick on scaled clock
+  updateFX(sdt);
+  for(const e of seq.targets){
+    if(e.sliceFlash>0) e.sliceFlash=Math.max(0,e.sliceFlash-sdt*4);
+    if(e.state==='dying') e.fade=Math.max(0,e.fade-sdt*3.4);
+  }
+
+  // ---- end phase: drain remaining bursts, brief settle, finish (no slow recover) ----
+  if(seq.phase==='end'){
+    seq.endT+=dt;
+    if(seq.burstQueue.length===0 && seq.endT>=X.endHold) finishExecSequence();
+    return;
+  }
+
+  // ---- dash phase: bullet-time creep, then 순식간에 빨라져 촥촥촥 ----
+  seq.elapsed+=sdt;
+  const t=clamp(seq.elapsed/seq.dur,0,1);
+  const frac=Math.pow(t,X.easePower);
+  const d=frac*seq.total;
+  const pos=placeAlong(seq,d); p.x=pos.x; p.y=pos.y; p.flash=1;
+  if(dist(p.x,p.y,seq.aiX,seq.aiY)>13){
+    G.afterimages.push({x:p.x,y:p.y,life:0.36,max:0.36,color:'#1cf0d4'});
+    seq.aiX=p.x; seq.aiY=p.y;
+  }
+  // reach a target → CUT it (HP→0, held), schedule its quick burst, snap-freeze (촥)
+  if(seq.next<seq.pts.length && d>=seq.cum[seq.next]-0.01){
+    p.x=seq.pts[seq.next].x; p.y=seq.pts[seq.next].y; seq.aiX=p.x; seq.aiY=p.y;
+    triggerSlice(seq.next-1);
+    queueBurst(seq.targets[seq.next-1], X.burstDelay);
+    seq.next++; seq.freeze=X.perCutFreeze;
+    return;
+  }
+  // last cut done → final snap, then quick settle
+  if(t>=1 && seq.next>=seq.pts.length){
+    addShake(X.finalShakeBase+seq.killed*X.finalShakePerKill);
+    seq.phase='end'; seq.endT=0; seq.freeze=X.finalFreeze;
+  }
+}
+function finishExecSequence(){
+  const seq=G.execSeq, p=G.player, ex=G.exec, killed=seq.killed;
+  for(const e of seq.targets){ if(e.state==='executing') resolveExecKill(e); }  // safety: burst stragglers
+  ex.cd=ex.cdMax; ex.cd=Math.max(0,ex.cd-killed*ex.refundPerKill);   // refund AFTER the cinematic
+  ex.pulse=1; A.reset();
+  G.executions+=killed;
+  spawnText(p.x,p.y-p.r-30, killed>1?('CHAIN x'+killed+'  CD RESET'):'CD RESET','#1cf0d4',22,true);
+  grantOverdrive(killed);
+  if(G.phase===2) G.phase2Done=true;
+  p.flash=1; p.invuln=Math.max(p.invuln,0.45);
+  G.execSeq=null;   // world resumes → dropped gems are gathered → level-up after slow-mo
+}
+function grantOverdrive(killed){
+  const p=G.player;
+  p.overStacks=Math.min(BAL.player.overdrive.maxStacks,p.overStacks+killed);
+  p.overTimer=p.overDur;
+  A.overdrive();
+  for(let i=0;i<14;i++) spawnParticle(p.x,p.y,rand(-180,180),rand(-180,180),'#ffd23f',rand(2,5),0.6,'spark');
+}
+
+/* =====================================================================
+   GEMS (per-gem magnet flag — Phase-2 knight gems are NON-magnetic)
+   ===================================================================== */
+function makeGem(x,y,val,magnetic,color){
+  return {x,y,vx:rand(-50,50),vy:rand(-50,50),r:4,val,life:BAL.xp.gemLife,pull:false,wob:rand(TAU),magnetic:!!magnetic,color:color||'#3aa0ff'};
+}
+function updateGems(dt){
+  const p=G.player, X=BAL.xp, magnetR=X.magnetRadius, pickR=p.r+X.pickupPad;
+  for(let i=G.gems.length-1;i>=0;i--){
+    const g=G.gems[i]; g.life-=dt; g.wob+=dt*5;
+    const d=dist(g.x,g.y,p.x,p.y);
+    if(g.magnetic && (d<magnetR||g.pull)){
+      g.pull=true;
+      const a=Math.atan2(p.y-g.y,p.x-g.x), sp=lerp(X.magnetSpeedMin,X.magnetSpeedMax,1-clamp(d/magnetR,0,1));
+      g.x+=Math.cos(a)*sp*dt; g.y+=Math.sin(a)*sp*dt;
+    } else {
+      g.x+=g.vx*dt; g.y+=g.vy*dt; g.vx*=0.9; g.vy*=0.9;   // settle on ground
+    }
+    if(d<pickR){                                          // manual walk-over collect
+      gainXP(g.val); A.pickup();
+      G.gems.splice(i,1); continue;
+    }
+    if(g.life<=0)G.gems.splice(i,1);
+  }
+}
+
+/* =====================================================================
+   XP / LEVEL UP
+   ===================================================================== */
+function gainXP(v){
+  G.xp+=v;
+  while(G.xp>=G.xpNeed){G.xp-=G.xpNeed;G.level++;G.xpNeed=Math.round(G.xpNeed*BAL.xp.growthMult+BAL.xp.growthAdd);G.pendingLevels++;}
+  if(G.pendingLevels>0&&G.state==='play')openLevelUp();
+}
+const UPGRADES=[
+  {id:'atk',name:'공격 속도',ico:'⚔',rar:'common',desc:'자동 베기 속도 +18%',apply:p=>p.atkBase*=0.82},
+  {id:'move',name:'이동 속도',ico:'»',rar:'common',desc:'이동 속도 +12%',apply:p=>p.speed*=1.12},
+  {id:'reach',name:'베기 사거리',ico:'➹',rar:'common',desc:'베기 사거리 +22 · 부채각 확대',apply:p=>{p.slashReach+=22;p.slashArc=Math.min(2.6,p.slashArc+0.12);}},
+  {id:'slash',name:'추가 베기',ico:'✦',rar:'rare',desc:'베기 칼날 +1 (전방위 커버)',apply:p=>p.slashCount++},
+  {id:'dmg',name:'칼날 강화',ico:'▲',rar:'rare',desc:'베기 데미지 +6',apply:p=>p.slashDmg+=6},
+  {id:'exec',name:'처형 반경 확장',ico:'◎',rar:'common',desc:'처형 대시 반경 +45',apply:p=>p.execRadius+=45},
+  {id:'shield',name:'보호막 토메',ico:'🛡',rar:'rare',desc:'최대 보호막 +35 (5초 무피해 시 재생)',apply:p=>{p.maxShield+=35;p.shield+=35;}},
+  {id:'over',name:'오버드라이브 연장',ico:'⚡',rar:'rare',desc:'오버드라이브 지속 +1.2초',apply:p=>p.overDur+=1.2},
+  {id:'maxhp',name:'생명력 강화',ico:'✚',rar:'common',desc:'최대 체력 +30 및 전체 회복',apply:p=>{p.maxHp+=30;p.hp=p.maxHp;}},
+  {id:'cdr',name:'처형 과부하',ico:'☢',rar:'legend',desc:'처형 환급 +5초 · 처형 반경 +60',apply:p=>{G.exec.refundPerKill+=5;p.execRadius+=60;}},
+  {id:'storm',name:'블레이드 스톰',ico:'★',rar:'legend',desc:'베기 +1 · 공격 속도 +20% · 사거리 +20',apply:p=>{p.slashCount++;p.atkBase*=0.8;p.slashReach+=20;}},
+  // ── 회피 빌드 축 ──
+  {id:'dodgecd',name:'회피 재사용 감소',ico:'⟳',rar:'common',desc:'회피 쿨다운 -20%',apply:p=>p.dodge.cooldown*=0.8},
+  {id:'iframe',name:'회피 무적 연장',ico:'❂',rar:'rare',desc:'회피 무적시간 +40% (저스트 회피 쉬워짐)',apply:p=>p.dodge.iframeDur*=1.4},
+  {id:'jdcharge',name:'저스트 단련',ico:'✸',rar:'rare',desc:'저스트 회피 비틀대기 충전 +25',apply:p=>p.jdStaggerBonus+=25},
+  {id:'evade',name:'이베이전 마스터',ico:'❖',rar:'legend',desc:'회피 쿨 -25% · 무적 +35% · 저스트 충전 +20',apply:p=>{p.dodge.cooldown*=0.75;p.dodge.iframeDur*=1.35;p.jdStaggerBonus+=20;}},
+];
+function openLevelUp(){
+  G.state='levelup';
+  const pool=[...UPGRADES],chosen=[];
+  while(chosen.length<3&&pool.length){
+    const w=pool.map(u=>u.rar==='common'?60:u.rar==='rare'?30:10);
+    let tot=w.reduce((a,b)=>a+b,0),r=rand(tot),idx=0;
+    for(let i=0;i<pool.length;i++){r-=w[i];if(r<=0){idx=i;break;}}
+    chosen.push(pool.splice(idx,1)[0]);
+  }
+  const row=document.getElementById('cardrow'); row.innerHTML='';
+  for(const u of chosen){
+    const rc=u.rar==='common'?'rar-common':u.rar==='rare'?'rar-rare':'rar-legend';
+    const rl=u.rar==='common'?'COMMON':u.rar==='rare'?'RARE':'LEGENDARY';
+    const c=document.createElement('div'); c.className='upcard '+rc;
+    c.innerHTML=`<div class="glow"></div><div class="rar">${rl}</div><div class="upico">${u.ico}</div><h4>${u.name}</h4><div class="desc">${u.desc}</div>`;
+    c.onclick=()=>{u.apply(G.player);G.pendingLevels--;document.getElementById('levelup').classList.add('hidden');
+      if(G.pendingLevels>0)openLevelUp(); else {G.state='play';lastFrame=now();}};
+    row.appendChild(c);
+  }
+  document.getElementById('levelup').classList.remove('hidden');
+  A.levelup();
+}
+
+/* =====================================================================
+   PLAYER DAMAGE
+   ===================================================================== */
+function hurtPlayer(dmg){     // DISCRETE hit (e.g. leap impact) — grants invulnOnHit grace
+  const p=G.player; if(p.invuln>0)return;
+  if(p.shield>0){const s=Math.min(p.shield,dmg);p.shield-=s;dmg-=s;p.shieldTimer=0;}
+  if(dmg>0){
+    p.hp-=dmg;p.flash=1;p.shieldTimer=0;
+    if(dmg>1.4){addShake(4);A.hurt();spawnText(p.x,p.y-p.r-8,'-'+Math.round(dmg),'#ff2b4e',15);}
+    p.invuln=Math.max(p.invuln,BAL.player.invulnOnHit);
+    if(p.hp<=0){p.hp=0;endGame(false);}
+  }
+}
+/* CONTACT tick damage (VS-style): small per-tick, NO invuln granted (so being
+   surrounded stacks), but still respects existing invuln (dodge i-frames protect). */
+function contactHurt(amount){
+  const p=G.player; if(p.invuln>0||amount<=0)return;
+  if(p.shield>0){const s=Math.min(p.shield,amount);p.shield-=s;amount-=s;p.shieldTimer=0;}
+  if(amount>0){
+    p.hp-=amount; p.flash=1; p.shieldTimer=0;
+    spawnText(p.x+rand(-8,8),p.y-p.r-6,'-'+Math.round(amount),'#ff6b80',12);
+    addShake(1.5);
+    if(p.hurtSfxCd<=0){ A.hurt(); p.hurtSfxCd=0.18; }   // throttle the hurt sound
+    if(p.hp<=0){p.hp=0;endGame(false);}
+  }
+}
+
+/* =====================================================================
+   UPDATES
+   ===================================================================== */
+function updatePlayer(dt){
+  const p=G.player; let ix=0,iy=0;
+  if(keys['a']||keys['arrowleft'])ix--; if(keys['d']||keys['arrowright'])ix++;
+  if(keys['w']||keys['arrowup'])iy--; if(keys['s']||keys['arrowdown'])iy++;
+  if(ix||iy){const l=Math.hypot(ix,iy);ix/=l;iy/=l;}
+  const od=overMult();
+  p.vx+=((ix*p.speed*od)-p.vx)*Math.min(1,dt*p.friction);
+  p.vy+=((iy*p.speed*od)-p.vy)*Math.min(1,dt*p.friction);
+  if(!ix&&!iy){p.vx*=Math.max(0,1-dt*p.friction);p.vy*=Math.max(0,1-dt*p.friction);}
+  // dodge dash: i-frame burst overriding normal movement
+  if(p.dodge.active>0){
+    p.dodge.active-=dt;
+    p.vx=Math.cos(p.dodge.dir)*p.dodge.speed; p.vy=Math.sin(p.dodge.dir)*p.dodge.speed;
+    if(Math.random()<0.7) G.afterimages.push({x:p.x,y:p.y,life:0.28,max:0.28,color:'#9ffff2'});
+  }
+  p.dodge.iframe=Math.max(0,p.dodge.iframe-dt);
+  p.dodge.cd=Math.max(0,p.dodge.cd-dt);
+  if(p.dodge.iframe>0) p.invuln=Math.max(p.invuln,0.04);
+  p.x+=p.vx*dt; p.y+=p.vy*dt;
+  const wmx=mouse.x+G.camX,wmy=mouse.y+G.camY; p.facing=Math.atan2(wmy-p.y,wmx-p.x);
+  p.overTimer=Math.max(0,p.overTimer-dt); if(p.overTimer===0)p.overStacks=0;
+  p.invuln=Math.max(0,p.invuln-dt); p.flash=Math.max(0,p.flash-dt*5); p.slashAnim=Math.max(0,p.slashAnim-dt*7);
+  if(p.maxShield>0){p.shieldTimer+=dt;if(p.shieldTimer>=p.shieldDelay&&p.shield<p.maxShield)p.shield=Math.min(p.maxShield,p.shield+p.maxShield*BAL.player.shieldRegenPerSec*dt);}
+  // execution cooldown
+  if(G.exec.cd>0)G.exec.cd=Math.max(0,G.exec.cd-dt);
+  G.exec.pulse=Math.max(0,G.exec.pulse-dt*3);
+  p.hurtSfxCd=Math.max(0,p.hurtSfxCd-dt);
+  playerAttack(dt);
+}
+function updateEnemies(dt){
+  const p=G.player;
+  for(let i=G.enemies.length-1;i>=0;i--){
+    const e=G.enemies[i]; e.flash=Math.max(0,e.flash-dt*5); e.wob+=dt*6;
+    if(e.reviveInvuln>0) e.reviveInvuln=Math.max(0,e.reviveInvuln-dt);
+    if(e.contactCd>0) e.contactCd=Math.max(0,e.contactCd-dt);   // contact-tick cooldown
+    if(e.state==='dying'){e.fade-=dt*3.4;if(e.fade<=0)G.enemies.splice(i,1);continue;}
+    if(e.state==='groggy'){          // elite only — NO collision, NO movement
+      e.groggy-=dt;
+      // 만료 ~1초 전 경고 (본체/타이머 깜빡임은 draw에서, 텍스트·사운드는 1회만)
+      if(!e.warned && e.groggy<=(BAL.groggy.warnTime||1)){
+        e.warned=true;
+        const willRevive = BAL.groggy.reviveEnabled && e.kind==='elite' && (BAL.groggy.maxRevives<=0 || (e.reviveCount||0)<BAL.groggy.maxRevives);
+        spawnText(e.x,e.y-e.r-16, willRevive?'곧 부활!':'곧 소멸!', willRevive?'#ff7a1a':'#999', 16, true);
+        A.warn();
+      }
+      if(e.groggy<=0){
+        // 부활 횟수 제한: maxRevives<=0 이면 무한(테스트), N이면 N회까지. 그 외(잡몹·한도 초과)는 소멸.
+        const canRevive = BAL.groggy.reviveEnabled && e.kind==='elite' && (BAL.groggy.maxRevives<=0 || (e.reviveCount||0)<BAL.groggy.maxRevives);
+        if(canRevive) eliteRevive(e); else eliteFade(e);
+      }
+      continue;
+    }
+    // alive
+    if(e.kind==='elite'){ updateEliteAI(e,dt); }     // leap pattern state machine
+    else {                                            // fodder: simple chase
+      const a=Math.atan2(p.y-e.y,p.x-e.x);
+      e.vx=lerp(e.vx,Math.cos(a)*e.speed,0.08); e.vy=lerp(e.vy,Math.sin(a)*e.speed,0.08);
+      e.x+=e.vx*dt; e.y+=e.vy*dt;
+      if(dist(e.x,e.y,p.x,p.y)<e.r+p.r){       // contact: VS-style tick damage + knockback
+        const pa=Math.atan2(p.y-e.y,p.x-e.x); p.vx+=Math.cos(pa)*BAL.contact.knockback; p.vy+=Math.sin(pa)*BAL.contact.knockback;
+        if(e.contactCd<=0){ contactHurt(BAL.contact.fodderDamage); e.contactCd=BAL.contact.interval; }
+      }
+    }
+  }
+  // screen-tone threat ramp (telegraph readability in the swarm)
+  let tg=false; for(const e of G.enemies){ if(e.kind==='elite'&&(e.move==='windup'||e.move==='air')){tg=true;break;} }
+  G.threat=lerp(G.threat, tg?1:0, clamp(dt*(tg?12:5),0,1));
+  separate();
+}
+function separate(){
+  const a=G.enemies; if(a.length>200)return;
+  for(let i=0;i<a.length;i++){const x=a[i];if(x.state!=='alive'||x.kind!=='fodder')continue;
+    for(let j=i+1;j<a.length;j++){const y=a[j];if(y.state!=='alive'||y.kind!=='fodder')continue;
+      const dx=y.x-x.x,dy=y.y-x.y,rr=x.r+y.r,d2=dx*dx+dy*dy;
+      if(d2<rr*rr&&d2>0.01){const d=Math.sqrt(d2),ov=(rr-d)*0.5,nx=dx/d,ny=dy/d;x.x-=nx*ov;x.y-=ny*ov;y.x+=nx*ov;y.y+=ny*ov;}}}
+}
+function updateFX(dt){
+  for(let i=G.particles.length-1;i>=0;i--){const pt=G.particles[i];pt.life-=dt;if(pt.life<=0){G.particles.splice(i,1);continue;}pt.x+=pt.vx*dt;pt.y+=pt.vy*dt;if(pt.kind==='debris'){pt.vy+=520*dt;}else{pt.vx*=0.92;pt.vy*=0.92;}}
+  for(let i=G.rings.length-1;i>=0;i--){G.rings[i].life-=dt;if(G.rings[i].life<=0)G.rings.splice(i,1);}
+  for(let i=G.slashes.length-1;i>=0;i--){G.slashes[i].life-=dt;if(G.slashes[i].life<=0)G.slashes.splice(i,1);}
+  for(let i=G.afterimages.length-1;i>=0;i--){G.afterimages[i].life-=dt;if(G.afterimages[i].life<=0)G.afterimages.splice(i,1);}
+  for(let i=G.texts.length-1;i>=0;i--){const t=G.texts[i];t.life-=dt;t.y+=t.vy*dt;t.x+=t.vx*dt;t.vy*=0.94;if(t.life<=0)G.texts.splice(i,1);}
+}
+
+/* ---------- VFX helpers ---------- */
+function spawnParticle(x,y,vx,vy,color,size,life,kind){if(G.particles.length>1000)return;G.particles.push({x,y,vx,vy,color,size,life,max:life,kind:kind||'spark'});}
+function spawnRing(x,y,color,r0,r1){G.rings.push({x,y,color,r:r0,to:r1,life:0.5,max:0.5});}
+function spawnText(x,y,txt,color,size,crit){G.texts.push({x,y,txt:''+txt,color,size:size||13,life:crit?1.1:0.7,max:crit?1.1:0.7,vy:crit?-58:-42,vx:rand(-12,12),crit:!!crit});}
+function addShake(v){G.shake=Math.min(40,G.shake+v);}
+function doHitstop(ms){G.hitstop=Math.max(G.hitstop,ms/1000);}
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+function render(){
+  ctx.clearRect(0,0,W,H);
+  const p=G.player; let sx=0,sy=0;
+  if(G.shake>0.2){sx=rand(-G.shake,G.shake);sy=rand(-G.shake,G.shake);}
+  G.camX=p.x-W/2; G.camY=p.y-H/2;
+  ctx.save(); ctx.translate(-G.camX+sx,-G.camY+sy);
+  drawFloor();
+  for(const g of G.gems) drawGem(g);
+  ctx.globalCompositeOperation='lighter';
+  for(const r of G.rings){const t=1-r.life/r.max,rad=lerp(r.r,r.to,t);ctx.beginPath();ctx.arc(r.x,r.y,rad,0,TAU);ctx.strokeStyle=hexA(r.color,1-t);ctx.lineWidth=lerp(8,1,t);ctx.stroke();}
+  ctx.globalCompositeOperation='source-over';
+  for(const e of G.enemies) drawEnemy(e);
+  drawExecutionFX();
+  if(G.execSeq){                                   // accelerating-route preview during cinematic
+    const sq=G.execSeq;
+    ctx.globalCompositeOperation='lighter';
+    ctx.strokeStyle=hexA('#1cf0d4',0.28);ctx.lineWidth=2;ctx.setLineDash([6,9]);
+    ctx.beginPath();ctx.moveTo(sq.pts[0].x,sq.pts[0].y);
+    for(let i=1;i<sq.pts.length;i++)ctx.lineTo(sq.pts[i].x,sq.pts[i].y);
+    ctx.stroke();ctx.setLineDash([]);
+    ctx.globalCompositeOperation='source-over';
+  }
+  ctx.globalCompositeOperation='lighter';
+  for(const a of G.afterimages){const al=a.life/a.max*0.6;ctx.beginPath();ctx.arc(a.x,a.y,16,0,TAU);ctx.fillStyle=hexA(a.color,al);ctx.fill();}
+  for(const s of G.slashes){const al=s.life/s.max;if(s.line){ctx.strokeStyle=hexA(s.color,al);ctx.lineWidth=lerp(7,1,1-al);ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();}else{ctx.strokeStyle=hexA(s.color,al*0.9);ctx.lineWidth=lerp(10,2,1-al);ctx.beginPath();ctx.arc(s.x,s.y,s.reach*lerp(0.6,1,1-al),s.dir-s.arc/2,s.dir+s.arc/2);ctx.stroke();}}
+  ctx.globalCompositeOperation='source-over';
+  drawPlayer(p);
+  ctx.globalCompositeOperation='lighter';
+  for(const pt of G.particles){const al=clamp(pt.life/pt.max,0,1);ctx.globalAlpha=al;ctx.fillStyle=pt.color;ctx.beginPath();ctx.arc(pt.x,pt.y,pt.size*(pt.kind==='debris'?1:al*0.6+0.4),0,TAU);ctx.fill();}
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+  for(const t of G.texts){const al=clamp(t.life/t.max,0,1);ctx.globalAlpha=al;ctx.font=`900 ${t.size}px "Segoe UI",sans-serif`;ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='rgba(0,0,0,.65)';ctx.strokeText(t.txt,t.x,t.y);ctx.fillStyle=t.color;ctx.fillText(t.txt,t.x,t.y);if(t.crit){ctx.shadowBlur=18;ctx.shadowColor=t.color;ctx.fillText(t.txt,t.x,t.y);ctx.shadowBlur=0;}}
+  ctx.globalAlpha=1;ctx.textAlign='left';
+  ctx.restore();
+  // ── screen-tone dip during elite telegraph (생명선: 떼 속에서도 위협이 보이게) ──
+  if(G.threat>0.01){
+    const a=clamp(G.threat,0,1);
+    const g=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.22,W/2,H/2,Math.max(W,H)*0.72);
+    g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(34,0,10,'+(0.5*a)+')');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  }
+  drawExecutePrompt();
+}
+function drawFloor(){
+  const grid=72,x0=Math.floor(G.camX/grid)*grid,y0=Math.floor(G.camY/grid)*grid;
+  ctx.lineWidth=1;ctx.strokeStyle='rgba(28,240,212,0.06)';ctx.beginPath();
+  for(let x=x0;x<G.camX+W+grid;x+=grid){ctx.moveTo(x,G.camY-grid);ctx.lineTo(x,G.camY+H+grid);}
+  for(let y=y0;y<G.camY+H+grid;y+=grid){ctx.moveTo(G.camX-grid,y);ctx.lineTo(G.camX+W+grid,y);}
+  ctx.stroke();
+  ctx.fillStyle='rgba(28,240,212,0.10)';
+  for(let x=x0;x<G.camX+W+grid;x+=grid)for(let y=y0;y<G.camY+H+grid;y+=grid)ctx.fillRect(x-1,y-1,2,2);
+}
+function shadow(x,y,r){ctx.fillStyle='rgba(0,0,0,0.35)';ctx.beginPath();ctx.ellipse(x,y+r*0.55,r*0.95,r*0.42,0,0,TAU);ctx.fill();}
+function drawEnemy(e){
+  ctx.save();
+  ctx.globalAlpha=e.state==='dying'?clamp(e.fade,0,1):(e.state==='groggy'?clamp(e.groggy/GROGGY_TIME*0.5+0.5,0,1):1);
+  const bob=Math.sin(e.wob)*2, cy=e.y+bob;
+  shadow(e.x,e.y+e.r*0.4,e.r);
+  if(e.kind==='fodder'){
+    let col=e.flash>0?'#fff':'#3aa0ff';
+    ctx.globalCompositeOperation='lighter';ctx.beginPath();ctx.arc(e.x,cy,e.r*1.4,0,TAU);ctx.fillStyle=hexA('#3aa0ff',0.12);ctx.fill();ctx.globalCompositeOperation='source-over';
+    ctx.beginPath();ctx.arc(e.x,cy,e.r,0,TAU);ctx.fillStyle=col;ctx.fill();
+    ctx.lineWidth=2;ctx.strokeStyle='rgba(0,0,0,.4)';ctx.stroke();
+    ctx.beginPath();ctx.arc(e.x,cy,e.r*0.4,0,TAU);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fill();
+  } else {
+    const L=BAL.enemies.elite.leap;
+    // ── leap landing telegraph: 노란 네온 데칼 (반짝!) · PRE 판정 = 흰색 강조(회피 타이밍) ──
+    if(e.move==='windup'||e.move==='air'){
+      const fillF=e.move==='windup'?clamp(e.stateT/L.windup,0,1):1;
+      const pre=!!e.prePhase;
+      const imminent=(e.move==='air')||(e.move==='windup'&&fillF>0.6);
+      const flash=pre?(0.6+0.4*Math.sin(G.gameTime*60)):(imminent?(0.5+0.5*Math.sin(G.gameTime*40)):fillF*0.25);
+      const ringCol=pre?'#ffffff':'#ffe66b', glowCol=pre?'#ffffff':'#ffd23f';
+      ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor=glowCol;ctx.shadowBlur=(pre?26:16)+flash*30;
+      ctx.beginPath();ctx.arc(e.leapX,e.leapY,L.radius,0,TAU);ctx.fillStyle=hexA(pre?'#ffffff':'#ffd23f',0.05+0.10*fillF+(pre?0.22:0.16)*flash);ctx.fill();
+      ctx.beginPath();ctx.arc(e.leapX,e.leapY,L.radius,0,TAU);ctx.strokeStyle=hexA(ringCol,0.55+0.45*flash);ctx.lineWidth=(pre?4:3)+flash*4;ctx.stroke();
+      ctx.beginPath();ctx.arc(e.leapX,e.leapY,L.radius-7,-PI/2,-PI/2+TAU*fillF);ctx.strokeStyle='#fff7a0';ctx.lineWidth=5;ctx.stroke();
+      ctx.strokeStyle=hexA(ringCol,0.35+0.4*flash);ctx.lineWidth=2;                  // crosshair for readability
+      ctx.beginPath();ctx.moveTo(e.leapX-L.radius*0.5,e.leapY);ctx.lineTo(e.leapX+L.radius*0.5,e.leapY);ctx.moveTo(e.leapX,e.leapY-L.radius*0.5);ctx.lineTo(e.leapX,e.leapY+L.radius*0.5);ctx.stroke();
+      ctx.shadowBlur=0;ctx.globalCompositeOperation='source-over';ctx.restore();
+    }
+    // elite knight — hexagon body (lifts while airborne)
+    const airH=e.airH||0, ecy=cy-airH;
+    const held=e.state==='groggy'||e.state==='executing', sf=e.sliceFlash||0, exhausted=e.move==='exhausted';
+    const charging=e.move==='windup', chargeP=charging?(0.5+0.5*Math.sin(G.gameTime*30)):0;          // 도약 충전 → 노란 점멸
+    const warnBlink=e.state==='groggy' && e.groggy<(BAL.groggy.warnTime||1) && Math.sin(G.gameTime*22)>0;   // 만료 임박 깜빡임
+    let col=(sf>0.01)?'#ffffff':(warnBlink?'#ff3b54':(charging&&chargeP>0.55?'#ffe66b':(held?'#ffd23f':(exhausted?'#ff9a3a':(e.flash>0?'#fff':'#b061ff')))));
+    const auraC=held?'#ffd23f':(charging?'#ffd23f':(exhausted?'#ff7a1a':'#b061ff'));
+    if(exhausted){ ctx.globalCompositeOperation='lighter';const pul=0.5+0.5*Math.sin(G.gameTime*12);ctx.beginPath();ctx.arc(e.x,ecy,e.r*(1.6+pul*0.35),0,TAU);ctx.fillStyle=hexA('#ff7a1a',0.10+0.16*pul);ctx.fill();ctx.globalCompositeOperation='source-over'; }
+    if(charging){ ctx.save();ctx.globalCompositeOperation='lighter';ctx.shadowColor='#ffd23f';ctx.shadowBlur=14+chargeP*22;ctx.beginPath();ctx.arc(e.x,ecy,e.r*(1.5+chargeP*0.45),0,TAU);ctx.fillStyle=hexA('#ffd23f',0.14+0.22*chargeP);ctx.fill();ctx.shadowBlur=0;ctx.globalCompositeOperation='source-over';ctx.restore(); }
+    ctx.globalCompositeOperation='lighter';ctx.beginPath();ctx.arc(e.x,ecy,e.r*(1.5+sf*0.8),0,TAU);ctx.fillStyle=hexA(sf>0.01?'#ffffff':auraC,0.14+sf*0.3);ctx.fill();ctx.globalCompositeOperation='source-over';
+    ctx.save();ctx.translate(e.x,ecy);ctx.rotate(e.wob*0.2);
+    ctx.beginPath();for(let i=0;i<6;i++){const a=i/6*TAU;const px=Math.cos(a)*e.r,py=Math.sin(a)*e.r;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();
+    ctx.fillStyle=col;ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=held?'#fff7cc':(exhausted?'#ffd9a0':'rgba(0,0,0,.45)');ctx.stroke();
+    ctx.beginPath();ctx.arc(0,0,e.r*0.34,0,TAU);ctx.fillStyle='rgba(0,0,0,.55)';ctx.fill();
+    ctx.restore();
+  }
+  const ecy2=cy-(e.airH||0);
+  // HP bar (alive)
+  if(e.state==='alive'&&e.hp<e.maxHp){const w=e.r*2,hpr=clamp(e.hp/e.maxHp,0,1);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(e.x-w/2,ecy2-e.r-9,w,4);ctx.fillStyle=e.kind==='elite'?'#b061ff':'#36e06a';ctx.fillRect(e.x-w/2,ecy2-e.r-9,w*hpr,4);}
+  // elite stagger gauge (비틀대기 게이지 — second path to groggy)
+  if(e.kind==='elite'&&e.state==='alive'&&(e.stagger||0)>0){const w=e.r*2,sr=clamp(e.stagger/e.staggerMax,0,1);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(e.x-w/2,ecy2-e.r-14,w,3);ctx.fillStyle=e.move==='exhausted'?'#ffd23f':'#1cf0d4';ctx.fillRect(e.x-w/2,ecy2-e.r-14,w*sr,3);}
+  // groggy radial timer
+  if(e.state==='groggy'){
+    const f=clamp(e.groggy/GROGGY_TIME,0,1);
+    const warn=e.groggy<(BAL.groggy.warnTime||1), tcol=warn?'#ff2b4e':'#ffd23f', lw=warn?3.5+Math.sin(G.gameTime*22)*1.5:3.5;
+    ctx.beginPath();ctx.arc(e.x,cy-e.r-16,10,-PI/2,-PI/2+TAU*f);ctx.strokeStyle=tcol;ctx.lineWidth=lw;ctx.stroke();
+    ctx.beginPath();ctx.arc(e.x,cy-e.r-16,10,0,TAU);ctx.strokeStyle=hexA(tcol,0.25);ctx.lineWidth=3.5;ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawPlayer(p){
+  ctx.save();
+  shadow(p.x,p.y+p.r*0.4,p.r);
+  if(p.overTimer>0){ctx.globalCompositeOperation='lighter';const pulse=0.5+0.5*Math.sin(G.gameTime*14);const ag=ctx.createRadialGradient(p.x,p.y,p.r*0.4,p.x,p.y,p.r*(2.2+pulse*0.6));ag.addColorStop(0,hexA('#ffd23f',0.4));ag.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=ag;ctx.beginPath();ctx.arc(p.x,p.y,p.r*(2.2+pulse*0.6),0,TAU);ctx.fill();ctx.globalCompositeOperation='source-over';}
+  if(p.invuln>0){ctx.globalCompositeOperation='lighter';ctx.beginPath();ctx.arc(p.x,p.y,p.r*1.7,0,TAU);ctx.fillStyle=hexA('#1cf0d4',0.22);ctx.fill();ctx.globalCompositeOperation='source-over';}
+  if(p.shield>0){ctx.beginPath();ctx.arc(p.x,p.y,p.r+7,0,TAU);ctx.strokeStyle=hexA('#3aa0ff',0.5+0.3*(p.shield/Math.max(1,p.maxShield)));ctx.lineWidth=3;ctx.stroke();}
+  ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,TAU);ctx.fillStyle=p.flash>0?'#fff':'#1cf0d4';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#fff';ctx.stroke();
+  ctx.beginPath();ctx.moveTo(p.x+Math.cos(p.facing)*p.r,p.y+Math.sin(p.facing)*p.r);ctx.lineTo(p.x+Math.cos(p.facing+2.6)*p.r*0.6,p.y+Math.sin(p.facing+2.6)*p.r*0.6);ctx.lineTo(p.x+Math.cos(p.facing-2.6)*p.r*0.6,p.y+Math.sin(p.facing-2.6)*p.r*0.6);ctx.closePath();ctx.fillStyle='#fff';ctx.fill();
+  ctx.beginPath();ctx.arc(p.x,p.y,p.r*0.4,0,TAU);ctx.fillStyle='rgba(0,0,0,.4)';ctx.fill();
+  ctx.restore();
+  if(p.slashAnim>0){ctx.save();ctx.globalCompositeOperation='lighter';const a=p.slashAnim;ctx.strokeStyle=hexA('#1cf0d4',a);ctx.lineWidth=lerp(2,9,a);ctx.beginPath();ctx.arc(p.x,p.y,p.slashReach*(0.7+0.3*a),p.slashDir-p.slashArc/2,p.slashDir+p.slashArc/2);ctx.stroke();ctx.restore();}
+}
+function drawExecutionFX(){
+  const p=G.player; const inRange=[];
+  for(const e of G.enemies) if(e.kind==='elite'&&e.state==='groggy'&&dist(p.x,p.y,e.x,e.y)<=p.execRadius+e.r) inRange.push(e);
+  G._execReady=inRange.length>0 && G.exec.cd<=0.05;
+  if(inRange.length){
+    const pulse=0.5+0.5*Math.sin(G.gameTime*7);
+    ctx.beginPath();ctx.arc(p.x,p.y,p.execRadius,0,TAU);ctx.setLineDash([10,12]);ctx.strokeStyle=hexA('#ff2b4e',0.16+0.16*pulse);ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([]);
+    ctx.globalCompositeOperation='lighter';
+    for(const e of inRange){ctx.strokeStyle=hexA('#ff2b4e',0.55+0.3*pulse);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(e.x,e.y);ctx.stroke();ctx.beginPath();ctx.arc(e.x,e.y,e.r+6,0,TAU);ctx.strokeStyle=hexA('#ff2b4e',0.7);ctx.lineWidth=2;ctx.stroke();}
+    ctx.globalCompositeOperation='source-over';
+  }
+}
+function drawExecutePrompt(){
+  if(!G._execReady)return;
+  const p=G.player,sx=p.x-G.camX,sy=p.y-G.camY,blink=0.5+0.5*Math.sin(G.gameTime*10);
+  ctx.save();ctx.globalAlpha=0.6+0.4*blink;ctx.font='900 22px "Segoe UI",sans-serif';ctx.textAlign='center';ctx.lineWidth=5;ctx.strokeStyle='rgba(0,0,0,.7)';ctx.strokeText('▼ LMB EXECUTE ▼',sx,sy-46);ctx.fillStyle='#ff2b4e';ctx.shadowBlur=18;ctx.shadowColor='#ff2b4e';ctx.fillText('▼ LMB EXECUTE ▼',sx,sy-46);ctx.restore();ctx.textAlign='left';ctx.shadowBlur=0;
+}
+function drawGem(g){
+  const a=clamp(g.life>3?1:g.life/3,0,1);
+  ctx.save();ctx.globalAlpha=a;ctx.globalCompositeOperation='lighter';const bob=Math.sin(g.wob)*2;ctx.translate(g.x,g.y+bob);ctx.rotate(g.wob*0.5);
+  ctx.fillStyle=g.color;ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(5,0);ctx.lineTo(0,6);ctx.lineTo(-5,0);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.arc(0,0,9,0,TAU);ctx.fillStyle=hexA(g.color,0.25);ctx.fill();
+  ctx.restore();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+}
+
+/* =====================================================================
+   HUD
+   ===================================================================== */
+const skillCtx=document.getElementById('skillRing').getContext('2d');
+function drawSkillRing(){
+  const c=skillCtx,cx=84,cy=84,R=66;
+  c.clearRect(0,0,168,168);
+  const ex=G.exec, ready=ex.cd<=0.05;
+  const frac=ready?1:1-ex.cd/ex.cdMax;
+  // bg ring
+  c.beginPath();c.arc(cx,cy,R,0,TAU);c.lineWidth=10;c.strokeStyle='rgba(255,255,255,.08)';c.stroke();
+  // fill
+  c.beginPath();c.arc(cx,cy,R,-PI/2,-PI/2+TAU*frac);c.lineWidth=10;c.strokeStyle=ready?'#1cf0d4':'#ff2b4e';
+  c.shadowBlur=ready?18+ex.pulse*22:6;c.shadowColor=ready?'#1cf0d4':'#ff2b4e';c.stroke();c.shadowBlur=0;
+  // icon
+  c.fillStyle=ready?'#1cf0d4':'#ff6680';c.font='900 40px "Segoe UI",sans-serif';c.textAlign='center';c.textBaseline='middle';
+  c.fillText('⚔',cx,cy+3);
+  if(!ready){c.fillStyle='#fff';c.font='800 22px "Segoe UI",sans-serif';c.fillText(ex.cd.toFixed(1),cx,cy+4);}
+}
+function updateHUD(){
+  const p=G.player;
+  const m=Math.floor(G.time/60),s=Math.floor(G.time%60);
+  document.getElementById('timer').textContent=m+':'+(s<10?'0':'')+s;
+  document.getElementById('phaseTag').textContent='PHASE '+G.phase;
+  document.getElementById('killTag').textContent='⚡ '+G.executions;
+  document.getElementById('xpfill').style.width=(G.xp/G.xpNeed*100)+'%';
+  document.getElementById('lvlTag').textContent='LV '+G.level;
+  document.getElementById('hpfill').style.transform='scaleX('+clamp(p.hp/p.maxHp,0,1)+')';
+  document.getElementById('hptext').textContent=Math.ceil(p.hp)+' / '+p.maxHp;
+  document.getElementById('shfill').style.transform='scaleX('+clamp(p.maxShield?p.shield/p.maxShield:0,0,1)+')';
+  document.getElementById('shtext').textContent=p.maxShield?('SHIELD '+Math.ceil(p.shield)):'SHIELD —';
+  const lab=document.getElementById('skillLabel'),ready=G.exec.cd<=0.05;
+  lab.textContent=ready?'EXECUTE':'CD '+G.exec.cd.toFixed(1);
+  lab.classList.toggle('ready',ready);
+  const od=document.getElementById('odTag');
+  if(p.overTimer>0){od.classList.add('on');od.textContent='⚡ OVERDRIVE x'+p.overStacks+' · '+p.overTimer.toFixed(1)+'s';}else od.classList.remove('on');
+  const dEl=document.getElementById('dodgeTag'), dReady=p.dodge.cd<=0.02;
+  dEl.classList.toggle('cd',!dReady);
+  dEl.innerHTML=(dReady?'⟳ DODGE ':'⟳ '+p.dodge.cd.toFixed(1)+'s ')+'<span>SPACE</span>';
+  drawSkillRing();
+}
+
+/* =====================================================================
+   MAIN LOOP
+   ===================================================================== */
+let lastFrame=now();
+function loop(){
+  requestAnimationFrame(loop);
+  const t=now(); let dt=(t-lastFrame)/1000; lastFrame=t; dt=Math.min(dt,1/30);
+  if(G.state==='play'){
+    G.gameTime+=dt;
+    let ts=1;
+    if(G.execSeq){                       // execution cinematic drives itself (FX scaled inside)
+      updateExecSeq(dt); ts=G.execSeq?G.execSeq.slowmo:1;
+    } else if(G.hitstop>0){ G.hitstop-=dt; ts=0; }
+    else{
+      // global slow-mo (just-dodge reward) eases the whole world clock back to 1
+      if(G.slow.t>0){ G.slow.t-=dt; ts=lerp(G.slow.scale,1,1-clamp(G.slow.t/G.slow.dur,0,1)); } else ts=1;
+      const sdt=dt*ts;
+      G.time+=sdt;
+      updatePlayer(sdt); updateEnemies(sdt); updateGems(sdt); updateSpawner(sdt); updateFX(sdt);
+    }
+    G.shake=Math.max(0,G.shake-dt*60*Math.max(0,ts));   // shake lingers in slow-mo, frozen in hitstop
+    render(); updateHUD();
+  } else if(G.state==='levelup'||G.state==='end'){ render(); }
+}
+
+/* =====================================================================
+   FLOW
+   ===================================================================== */
+function startGame(){
+  A.init();A.resume();
+  G.player=makePlayer();
+  G.state='play';
+  document.getElementById('start').classList.add('hidden');
+  setBanner('PHASE 1','FODDER SWARM','#3aa0ff');
+  lastFrame=now();
+}
+function endGame(win){
+  if(G.state==='end')return; G.state='end';
+  const r=document.getElementById('endResult');
+  r.textContent=win?'SURVIVED':'DEFEATED'; r.className=win?'win':'lose';
+  document.getElementById('endStats').innerHTML=
+    `생존 시간 <b>${Math.floor(G.time)}초</b><br>처형 <b style="color:var(--crimson)">${G.executions}</b> · 처치 <b>${G.kills}</b> · 레벨 <b style="color:var(--teal)">${G.level}</b>`;
+  document.getElementById('end').classList.remove('hidden');
+}
+document.getElementById('startBtn').addEventListener('click',startGame);
+
+/* Load external balance (gameBalance.json) before the loop. Falls back to the
+   in-file FALLBACK_BALANCE when fetch is unavailable (e.g. file:// double-click). */
+async function boot(){
+  try{
+    const res=await fetch('gameBalance.json',{cache:'no-store'});
+    if(!res.ok) throw new Error('http '+res.status);
+    applyBalance(await res.json());
+    console.log('[balance] gameBalance.json loaded ✓');
+  }catch(err){
+    console.warn('[balance] gameBalance.json not reachable → using in-file fallback ('+err+'). Run via a local server to edit balance live.');
+  }
+  loop();
+}
+boot();
+</script>
+</body>
+</html>
