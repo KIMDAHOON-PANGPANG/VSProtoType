@@ -1,6 +1,6 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.10.0",
+  "_version": "0.10.1",
 
   "player": {
     "radius": 16,
@@ -74,9 +74,9 @@
     "reviveEnabled": true,
     "reviveHpFraction": 0.4,
     "reviveInvuln": 0.4,
-    "maxRevives": 0,
+    "maxRevives": 1,
     "warnTime": 1.0,
-    "_comment": "정예만 그로기/부활(잡몹은 즉사). reviveEnabled=부활 on/off, reviveHpFraction=부활 체력비(0.4=40%), reviveInvuln=부활 직후 무적(초), maxRevives=최대 부활 횟수(0=무한[테스트], N=N회 후 소멸), warnTime=만료 N초 전 경고 깜빡임. ※ index_9 이하 구버전은 maxRevives 0을 1로 처리(코드 ||1)하여 1회 제한 유지, index_10부터 0=무한."
+    "_comment": "정예만 그로기/부활(잡몹은 즉사). reviveEnabled=부활 on/off, reviveHpFraction=부활 체력비(0.4=40%), reviveInvuln=부활 직후 무적(초), maxRevives=최대 부활 횟수(1=1회 후 소멸 / N=N회 / 0=무한[테스트만]), warnTime=만료 N초 전 경고 깜빡임. v0.10.1: 무한(0) 테스트가 밸런스를 해쳐 1회 제한으로 복귀. ※ index_10은 코드상 0=무한이지만 이 JSON이 1이면 1회 제한으로 동작."
   },
 
   "enemies": {
