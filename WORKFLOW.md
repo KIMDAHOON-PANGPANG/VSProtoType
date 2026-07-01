@@ -10,8 +10,8 @@
 
 | 항목 | 값 |
 |---|---|
-| 최신 버전 | **v0.10.1** |
-| 최신 플레이 파일 | **`build/index_12.html`** |
+| 최신 버전 | **v0.10.2** |
+| 최신 플레이 파일 | **`build/index_13.html`** |
 | 밸런스 단일 소스 | **`build/gameBalance.json`** |
 | 패치 내역 | **`build log/PATCH_LOG.txt`** (내림차순) |
 | GitHub 리포 | **`KIMDAHOON-PANGPANG/VSProtoType`** (`origin/main`) |
@@ -187,7 +187,8 @@ spawner(phase1·2·3) / xp / contactDamageScale
 | `build/index_9.html` | v0.9.0 — 틱 접촉 피해·리프 호밍·네온 텔레그래프·처형 멈춤↓ (부활 1회 제한) |
 | `build/index_10.html` | v0.9.1 — 부활 무한(테스트). maxRevives 0=무한 |
 | `build/index_11.html` | v0.10.0 — 리프어택 중 무적 + PRE 저스트 회피 윈도우 |
-| `build/index_12.html` | v0.10.1 — 부활 1회 제한 복귀(maxRevives 1) (**현재 최신**) |
+| `build/index_12.html` | v0.10.1 — 부활 1회 제한 복귀(maxRevives 1) |
+| `build/index_13.html` | v0.10.2 — 처형 1회당 1명(execution.maxTargets 1) (**현재 최신**) |
 | `build/gameBalance.json` | 모든 PC·몬스터 밸런스 수치 (단일 소스) |
 | `build log/PATCH_LOG.txt` | 패치 내역 (내림차순) |
 | `WORKFLOW.md` | 이 문서 — 작업 규칙 (루트) |

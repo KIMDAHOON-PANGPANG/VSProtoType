@@ -1,6 +1,6 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.10.1",
+  "_version": "0.10.2",
 
   "player": {
     "radius": 16,
@@ -47,6 +47,7 @@
   "execution": {
     "cooldownMax": 10,
     "refundPerKill": 10,
+    "maxTargets": 1,
     "baseDuration": 0.1,
     "perTargetDuration": 0.09,
     "easePower": 1.0,
@@ -66,7 +67,7 @@
     "burstShake": 7,
     "finalShakeBase": 9,
     "finalShakePerKill": 2.5,
-    "_comment": "처형 연출: 누르면 bulletTime(초)동안 bulletScale 배율로 불릿타임 → bulletRamp(초)에 걸쳐 fastScale로 가속 → 고속 체인. baseDuration+perTargetDuration*N = 대시 길이(scaled초). burstDelay=베고 적이 터질 때까지(scaled초). windup/perCut/finalFreeze=스냅 정지(실시간초). endHold=종료 전 정착(초)."
+    "_comment": "maxTargets=처형 1회(LMB 1번)당 처형할 최대 대상 수(1=가장 가까운 1명만, N=반경 내 최대 N명 체인). 처형 연출: 누르면 bulletTime(초)동안 bulletScale 배율로 불릿타임 → bulletRamp(초)에 걸쳐 fastScale로 가속 → 고속 체인. baseDuration+perTargetDuration*N = 대시 길이(scaled초). burstDelay=베고 적이 터질 때까지(scaled초). windup/perCut/finalFreeze=스냅 정지(실시간초). endHold=종료 전 정착(초)."
   },
 
   "groggy": {
