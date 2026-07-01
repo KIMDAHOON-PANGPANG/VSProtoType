@@ -14,21 +14,25 @@
 | 최신 플레이 파일 | **`build/index_11.html`** |
 | 밸런스 단일 소스 | **`build/gameBalance.json`** |
 | 패치 내역 | **`build log/PATCH_LOG.txt`** (내림차순) |
+| GitHub 리포 | **`KIMDAHOON-PANGPANG/VSProtoType`** (`origin/main`) |
 
 ### 폴더 구조 (중요)
 ```
-project-VSLike/
+project-VSLike/           ← git 저장소 (origin: KIMDAHOON-PANGPANG/VSProtoType)
 ├─ build/                 ← 모든 게임 빌드 + 밸런스 (여기서 작업한다)
-│   ├─ index.html … index_6.html
+│   ├─ index.html … index_11.html
 │   └─ gameBalance.json   ← 게임이 fetch 로 읽으므로 인덱스와 같은 폴더에 둔다
 ├─ build log/             ← 패치 로그 누적
 │   └─ PATCH_LOG.txt
+├─ ppt/토론/               ← 설계 토론 덱
 ├─ WORKFLOW.md            ← 이 문서 (작업 규칙, 루트 유지)
+├─ .gitignore             ← .claude/settings.local.json 등 개인/로컬 파일 제외
 └─ .claude/launch.json    ← 로컬 미리보기 서버 설정
 ```
 - **앞으로 모든 인덱스 작업은 `build/` 안에서 한다.** (새 `index_N.html`도 `build/`에 생성)
 - **로그는 항상 `build log/PATCH_LOG.txt`** 에 내림차순으로 누적한다.
 - `gameBalance.json` 은 인덱스와 **같은 `build/`** 안에 둔다(상대경로 `fetch('gameBalance.json')` 유지).
+- **구현이 완료되면 GitHub 리포(`origin/main`)에 커밋·푸시한다.** (자세히는 §6)
 
 ---
 
@@ -39,6 +43,7 @@ project-VSLike/
 2. **작업이 끝나면 `build log/PATCH_LOG.txt`를 내림차순(최신이 맨 위)으로 갱신한다.**
 3. **구현/기능이 추가될 때마다 관련 밸런스 수치는 `build/gameBalance.json`에 추가·갱신한다.**
    (동시에 HTML 내장 `FALLBACK_BALANCE`도 같은 값으로 동기화한다.)
+4. **구현이 완료되면 GitHub 리포(`origin/main`)에 커밋·푸시한다.** (버전업 1개 = 커밋 1개 권장, 자세히는 §6)
 
 ---
 
@@ -132,7 +137,26 @@ spawner(phase1·2·3) / xp / contactDamageScale
 
 ---
 
-## 6. 작업 완료 체크리스트 ✅
+## 6. Git 커밋/푸시 규칙 ⭐
+
+> **구현이 완료되면(버전업 + 로그 + JSON 동기 + 검증까지 끝나면) GitHub 리포에 커밋·푸시한다.**
+
+- **원격**: `https://github.com/KIMDAHOON-PANGPANG/VSProtoType` (`origin/main`).
+- **단위**: 보통 **버전업 1개 = 커밋 1개**. 관련 변경(새 `index_N.html` · `gameBalance.json` · `PATCH_LOG.txt` · `WORKFLOW.md`)을 한 커밋에 함께 담는다.
+- **절차**:
+  ```
+  git add -A
+  git commit -m "vX.Y.Z — <한 줄 요약>" -m "<상세>" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+  git push origin main
+  ```
+- **커밋 메시지**: 무엇을 왜 바꿨는지 한 줄 요약 + 상세, **마지막 줄은 항상**
+  `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`.
+- **제외**: `.claude/settings.local.json`(개인/로컬 설정) 등은 `.gitignore`로 제외. 이전 버전 인덱스는 **삭제하지 않으므로** 그대로 커밋에 포함(히스토리 보존).
+- **주의**: 인증은 로그인된 `gh`(KIMDAHOON-PANGPANG) 자격을 사용. 강제 푸시(`-f`)·히스토리 재작성은 지양(요청 시에만).
+
+---
+
+## 7. 작업 완료 체크리스트 ✅
 
 작업을 끝낼 때마다 아래를 모두 만족하는지 확인한다.
 
@@ -144,10 +168,11 @@ spawner(phase1·2·3) / xp / contactDamageScale
 - [ ] `gameBalance.json` 의 `_version` 을 갱신했다.
 - [ ] **`build log/PATCH_LOG.txt`** 맨 위에 이번 변경 항목을 **내림차순**으로 추가했다.
 - [ ] 로컬 서버로 `build/index_N.html`을 실행해 **콘솔 에러 0건** 및 동작을 확인했다.
+- [ ] **GitHub 리포에 커밋·푸시**했다 (`git add -A` → commit(끝줄 Co-Authored-By) → `git push origin main`).
 
 ---
 
-## 7. 파일 맵
+## 8. 파일 맵
 
 | 경로 | 역할 |
 |---|---|
