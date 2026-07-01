@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<!-- VSDebate 슬라이드덱 · 2026-07-02 · 게임 구조: 20분 버티기 vs 라운드 방식 -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>라운드 방식 vs 20분 버티기 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 8vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1.1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.6vw,3.4rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.4rem,3.2vw,2.3rem); line-height:1.18; font-weight:800; margin-bottom:1.4rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.95rem,1.45vw,1.18rem); line-height:1.6; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  em{font-style:normal; color:var(--gold);}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);}
+
+  .title-wrap{max-width:920px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.8rem;}
+  .title-meta{margin-top:2rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.05rem,1.8vw,1.45rem); line-height:1.55; max-width:60ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.4rem 0;
+    font-size:clamp(1.05rem,1.9vw,1.5rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote.red{border-color:var(--red);}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.8rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+  .threads{display:flex; gap:1rem; margin-top:1.8rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.08rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem 2.6rem; align-items:start; margin-top:.6rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.2rem 1.3rem;}
+  .card.bad{border-color:rgba(255,43,78,.35);}
+  .card.good{border-color:rgba(95,227,154,.35);}
+  .card h3{font-size:1rem; font-weight:800; margin-bottom:.5rem; display:flex; align-items:center; gap:.5rem;}
+  .card p{font-size:.92rem; color:var(--dim); line-height:1.5;}
+  .tag{display:inline-block; font-size:.7rem; letter-spacing:.1em; padding:.15em .55em; border-radius:5px; font-weight:700;}
+  .tag.x{background:rgba(255,43,78,.14); color:var(--red);}
+  .tag.o{background:rgba(95,227,154,.14); color:var(--good);}
+
+  .curve{margin-top:1.2rem; width:100%; max-width:720px;}
+
+  table{border-collapse:collapse; width:100%; margin-top:.4rem; font-size:.92rem;}
+  th,td{text-align:left; padding:.7rem .9rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700;}
+  td .pillar{font-weight:800; color:#fff;}
+  td .ko{color:var(--dim); font-size:.82rem;}
+  tr.exec td .pillar{color:var(--red);}
+  tr.reap td .pillar{color:var(--blue);}
+  tr.over td .pillar{color:var(--gold);}
+  .evo{margin-top:1.2rem; display:flex; gap:1rem; flex-wrap:wrap;}
+  .evo .e{flex:1 1 240px; background:linear-gradient(135deg,rgba(28,240,212,.08),rgba(255,210,63,.05));
+    border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .evo .e b{color:var(--teal2);} .evo .e p{font-size:.84rem; color:var(--dim); margin-top:.3rem;}
+
+  .spikes{display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:1.4rem;}
+  .spike{display:flex; gap:.9rem; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem;}
+  .spike .n{flex:0 0 2rem; height:2rem; border-radius:8px; background:var(--teal); color:#04201c; font-weight:800;
+    display:grid; place-items:center; font-size:1rem;}
+  .spike .b{font-size:.92rem; line-height:1.45;}
+  .spike .b b{color:#fff;} .spike .b span{color:var(--dim); font-size:.84rem;}
+
+  .open{display:flex; gap:1.4rem; margin-top:1rem; flex-wrap:wrap;}
+  .open .q{flex:1 1 320px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.4rem 1.5rem;}
+  .open .q .lab{font-size:.78rem; letter-spacing:.14em; color:var(--gold); font-weight:800;}
+  .open .q h3{font-size:1.15rem; margin:.55rem 0 .6rem; font-weight:800; line-height:1.3;}
+  .open .q p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+
+  .checklist{display:flex; flex-direction:column; gap:.55rem; margin-top:1.2rem; max-width:820px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.7rem .9rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.2rem; height:1.2rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#04201c; font-size:.85rem; font-weight:900;}
+  .checklist .ct{font-size:.95rem; line-height:1.45; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- ===== 1. 표지 ===== -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>한 판을 어떻게 담을까 —<br><span class="teal">라운드 방식</span> vs <span class="gold">20분 버티기</span></h1>
+      <p class="lead dim">코어(처형·그로기·회피)는 잡혔다. 이제 그 코어를 "어떤 그릇"에 담을지 정한다.</p>
+      <div class="title-meta">
+        <div>기반 빌드 · <b>v0.10.3 (index_14)</b></div>
+        <div>날짜 · <b>2026-07-02</b></div>
+        <div>형식 · <b>아젠다 → 세부 → 결론</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 2. 아젠다 ===== -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>이번에 정할 단 하나</h2>
+    <div class="quote">"한 판의 구조를 <span class="gold">뱀서식 20분 연속 버티기</span>로 갈까, <span class="teal">브로테이토식 라운드(웨이브+상점)</span>로 갈까?"</div>
+    <p class="dim">이건 단순 취향이 아니라 <b>성장 시스템·승리 조건·적 스폰 설계</b>가 통째로 갈리는 갈림길이다. 지금 정해야 뒤에 만들 상점/웨이브/보스가 흔들리지 않는다.</p>
+    <div class="threads">
+      <div class="thread"><div class="t">Thread ①</div><h3>코어와의 궁합</h3><p>우리 손맛은 '끊임없는 곡선'인가, '딱 떨어지는 순간'인가?</p></div>
+      <div class="thread"><div class="t">Thread ②</div><h3>숏폼·세션 길이</h3><p>한 번에 얼마나 붙잡아야 하나. 깔끔한 정지점이 있는가?</p></div>
+      <div class="thread"><div class="t">Thread ③</div><h3>빌드가 살 곳</h3><p>그동안 판 빌드 깊이는 어디서 결정되게 할까 — 전투 중? 상점?</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 3. 세부 ① 코어 궁합 ===== -->
+  <section class="slide" data-t="코어 궁합">
+    <div class="kicker">02 · 세부 — 코어와의 궁합</div>
+    <h2><span class="num">①</span>우리 손맛은 '곡선'이 아니라 '순간'이다</h2>
+    <div class="cols">
+      <div class="card bad">
+        <h3><span class="tag x">뱀서</span> 눈덩이 곡선이 주인공</h3>
+        <p>뱀서의 재미는 20분에 걸친 <b>매끄러운 상승</b> 그 자체. 약했던 내가 화면을 쓸어담는 신이 되는 곡선이 보상이다. 그래서 연속 생존이 정답이다.</p>
+      </div>
+      <div class="card good">
+        <h3><span class="tag o">우리</span> 처형 '한 방'이 주인공</h3>
+        <p>우리 보상은 곡선이 아니라 <b>처형이라는 딱 떨어지는 순간</b>. 잡몹은 이미 자동 즉사(배경), 진짜 손맛은 정예 처형 한 번 한 번에 있다.</p>
+      </div>
+    </div>
+    <div class="quote teal">불연속 보상(처형)은 불연속 단위(라운드)와 궁합이 맞는다.</div>
+    <p class="dim">"정예 다 처형 → 웨이브 클리어"가 처형을 <b>한 판의 클라이맥스</b>로 세워준다. 연속 생존은 그 한 방 한 방을 끝없는 강물에 희석시킨다.</p>
+  </section>
+
+  <!-- ===== 4. 세부 ② 숏폼·세션 ===== -->
+  <section class="slide" data-t="숏폼·세션">
+    <div class="kicker">03 · 세부 — 숏폼 시대와 세션 길이</div>
+    <h2><span class="num">②</span>라운드는 '깔끔하게 멈출 곳'을 준다</h2>
+    <svg class="curve" viewBox="0 0 720 190" xmlns="http://www.w3.org/2000/svg">
+      <!-- 축 -->
+      <line x1="40" y1="150" x2="700" y2="150" stroke="#1f2738" stroke-width="1.5"/>
+      <!-- 연속: 매끄러운 곡선, 나갈 곳 없음 -->
+      <path d="M40,150 Q370,20 700,20" fill="none" stroke="#ffd23f" stroke-width="2.5" opacity=".85"/>
+      <text x="360" y="15" fill="#ffd23f" font-size="12" font-family="sans-serif">뱀서 · 20분 한 덩어리 (중간에 못 나감)</text>
+      <!-- 라운드: 계단, 각 마디에 정지점 -->
+      <path d="M40,150 L150,150 L150,110 L280,110 L280,78 L410,78 L410,50 L540,50 L540,30 L660,30"
+            fill="none" stroke="#1cf0d4" stroke-width="2.5"/>
+      <!-- 정지점 마커 -->
+      <circle cx="150" cy="110" r="4.5" fill="#1cf0d4"/><circle cx="280" cy="78" r="4.5" fill="#1cf0d4"/>
+      <circle cx="410" cy="50" r="4.5" fill="#1cf0d4"/><circle cx="540" cy="30" r="4.5" fill="#1cf0d4"/>
+      <text x="150" y="175" fill="#8b97ad" font-size="11" font-family="sans-serif" text-anchor="middle">W1</text>
+      <text x="280" y="175" fill="#8b97ad" font-size="11" font-family="sans-serif" text-anchor="middle">W2</text>
+      <text x="410" y="175" fill="#8b97ad" font-size="11" font-family="sans-serif" text-anchor="middle">W3</text>
+      <text x="540" y="175" fill="#8b97ad" font-size="11" font-family="sans-serif" text-anchor="middle">W4…</text>
+      <text x="300" y="128" fill="#1cf0d4" font-size="12" font-family="sans-serif">라운드 · 마디마다 나갈 수 있는 정지점 ●</text>
+    </svg>
+    <ul class="clean" style="margin-top:1rem;">
+      <li><b>깔끔한 출구.</b> 45~75초 웨이브 하나가 "숏폼 한 편" 길이. 두 웨이브 하고 멈춰도 판을 버린 기분이 안 든다.</li>
+      <li><b>20분 연속 런은 나가기 어렵다.</b> 중간에 끊으면 손해라는 감각 → 오히려 "지금 시작 못 하겠다"로 이어진다.</li>
+      <li class="teal">사용자 직감이 맞다 — 2026년 리텐션 관점에서 정지점은 진짜 지렛대다.</li>
+    </ul>
+  </section>
+
+  <!-- ===== 5. 세부 ③ 빌드가 살 곳 ===== -->
+  <section class="slide" data-t="빌드가 살 곳">
+    <div class="kicker">04 · 세부 — 빌드 깊이가 결정되는 곳</div>
+    <h2><span class="num">③</span>우리가 판 '빌드 분기'는 상점에서 산다</h2>
+    <p class="dim" style="margin-bottom:.4rem;">그동안 토론해 온 것들 — 처형/휩쓸기/몰아치기 빌드, 각인, 탈리스만, 시련 전직. 전부 <b>깊은 선택</b>을 전제로 한다.</p>
+    <div class="cols">
+      <div class="card bad">
+        <h3><span class="tag x">전투 중 카드</span> 급한 3택</h3>
+        <p>뱀서식 레벨업 카드는 적이 몰려오는 <b>압박 속 3초 선택</b>. 시너지를 곱씹을 틈이 없어 빌드 깊이가 죽는다. 리롤·재투자도 어색하다.</p>
+      </div>
+      <div class="card good">
+        <h3><span class="tag o">웨이브 사이 상점</span> 차분한 설계</h3>
+        <p>브로테이토 상점 = 리롤·아이템 시너지·스탯 투자까지 되는 <b>차분하고 풍부한 결정 공간</b>. 우리가 원하는 빌드를 담기엔 이쪽이 압도적이다.</p>
+      </div>
+    </div>
+    <div class="quote">이미 화폐 씨앗이 있다 — 처형이 <b>골드 젬 5개</b>를 떨군다(v0.10.3). 상점 재화로 그대로 쓸 수 있다.</div>
+  </section>
+
+  <!-- ===== 6. 세부 ④ 정면 비교 ===== -->
+  <section class="slide" data-t="정면 비교">
+    <div class="kicker">05 · 세부 — 두 방식 정면 비교</div>
+    <h2><span class="num">④</span>축별로 나란히 놓고 보면</h2>
+    <table>
+      <thead><tr><th>축</th><th>뱀서식 · 20분 버티기</th><th>브로테이토식 · 라운드</th></tr></thead>
+      <tbody>
+        <tr class="over"><td><span class="pillar">보상 리듬</span></td><td>끊임없는 상승 곡선</td><td class="teal">긴장 → 상점 휴식 → 긴장 (마디)</td></tr>
+        <tr class="exec"><td><span class="pillar">우리 코어 궁합</span></td><td>처형이 강물에 희석</td><td class="teal">처형 = 웨이브 클라이맥스</td></tr>
+        <tr class="reap"><td><span class="pillar">세션·숏폼</span></td><td>20분 한 덩어리, 출구 없음</td><td class="teal">웨이브마다 깔끔한 정지점</td></tr>
+        <tr class="over"><td><span class="pillar">빌드 깊이</span></td><td>급한 3택, 얕음</td><td class="teal">상점에서 리롤·시너지·투자</td></tr>
+        <tr><td><span class="pillar">난이도</span></td><td>완만한 경사(피로 누적)</td><td class="teal">계단식 — 숨 돌릴 틈 설계 가능</td></tr>
+        <tr><td><span class="pillar">구현 부담</span></td><td class="good">지금 상태에 가까움(적음)</td><td>상점·경제·전환 상태(추가 있음)</td></tr>
+        <tr><td><span class="pillar">승리 조건</span></td><td>20:00까지 생존</td><td>전 웨이브 클리어 / 최종 보스</td></tr>
+      </tbody>
+    </table>
+    <p class="dim" style="margin-top:1rem;">구현 부담 한 축을 빼면 나머지 모든 축이 <b class="teal">라운드</b>로 기운다. 그리고 그 부담조차 아래에서 보듯 생각보다 작다.</p>
+  </section>
+
+  <!-- ===== 7. 세부 ⑤ 치를 대가 / 이미 가깝다 ===== -->
+  <section class="slide" data-t="치를 대가">
+    <div class="kicker">06 · 세부 — 라운드로 가면 바뀌는 것</div>
+    <h2><span class="num">⑤</span>대가는 정직하게 — 그런데 이미 반쯤 와 있다</h2>
+    <div class="evo">
+      <div class="e"><b>손수 짠 페이즈 → 웨이브</b><p>이미 "3분 페이즈 타임라인(Phase 1·2·3)"을 손으로 짜고 있다. 웨이브는 이걸 반복 단위로 정식화하는 것뿐 — 무한 스케일링 곡선보다 <b>덜 먼 길</b>.</p></div>
+      <div class="e"><b>화폐는 이미 떨어진다</b><p>처형이 골드 젬 5개 드랍. 남은 건 "젬 → 상점 재화"로 이름표 바꾸고 상점 UI를 붙이는 일.</p></div>
+      <div class="e"><b>성장: 카드 → 상점 이전</b><p>가장 큰 재설계. 전투 중 레벨업 카드를 웨이브 사이 상점 구매로 옮긴다. 카드 풀 자산은 상점 상품으로 재활용 가능.</p></div>
+      <div class="e"><b>승리 화면·점수 모델</b><p>"생존 시간 카운트업" → "웨이브 N 클리어". 게임오버/승리 조건과 결과 화면을 새로 정의.</p></div>
+    </div>
+    <div class="quote teal">라운드 전환은 '새로 만들기'보다 <b>이미 있는 조각의 재배치</b>에 가깝다.</div>
+  </section>
+
+  <!-- ===== 8. 미해결 쟁점 ===== -->
+  <section class="slide" data-t="미해결 쟁점">
+    <div class="kicker">07 · 토론 계속 — 미해결 쟁점</div>
+    <h2>라운드로 간다면, 다음 갈림길</h2>
+    <div class="open">
+      <div class="q"><div class="lab">쟁점 A</div><h3>웨이브 길이 · 개수</h3><p>액션 코어엔 <b>45~75초 × 12~15웨이브</b> 권장(합 ≈ 12~18분). 너무 짧으면 처형 리듬이 안 살고, 너무 길면 정지점 이점이 죽는다.</p></div>
+      <div class="q"><div class="lab">쟁점 B</div><h3>상점이냐 카드냐</h3><p>정식 상점(권장) vs 가벼운 절충 — "웨이브 사이 카드 3택". 상점이 빌드 깊이를 살리지만 UI/경제 비용이 크다. 절충안은 빠르게 프로토 가능.</p></div>
+      <div class="q"><div class="lab">쟁점 C</div><h3>연속 모드는 남길까</h3><p>기존 20분 연속을 <b>해금형 '엔드리스 모드'</b>로 남기면 두 세계 다 가진다. 코드도 이미 있음.</p></div>
+      <div class="q"><div class="lab">쟁점 D</div><h3>처형 쿨다운 경제</h3><p>처치 시 쿨다운 환급(사실상 리셋) 구조가 <b>짧은 웨이브</b>에서도 그대로 맞나? 웨이브 시작 리셋 등 재점검 필요.</p></div>
+    </div>
+    <p class="dim" style="margin-top:1.4rem;">⮕ A·B가 정해지면 곧바로 <b>라운드 프로토(index_15)</b> 스파이크로 넘어갈 수 있다.</p>
+  </section>
+
+  <!-- ===== 9. 결론 + 체크리스트 ===== -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">08 · 결론</div>
+    <h2>결론 — 라운드로 가되, 20분 아크는 살린다</h2>
+    <div class="quote gold" style="border-color:var(--gold);">"브로테이토식 라운드로 간다. 단 '한 판 = 여러 웨이브의 합 + 최종 보스'로 묶어 VS의 러닝 아크를 라운드 안에 녹인다."</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct">방향 확정 — 라운드 방식(웨이브+상점) 채택, 20분 연속은 후순위 '엔드리스 모드'로 보류</span></label>
+      <label><input type="checkbox"><span class="ct">웨이브 스펙 결정 — 웨이브 길이(45~75초?)와 개수(12~15?), 한 판 총 길이 목표 확정</span></label>
+      <label><input type="checkbox"><span class="ct">웨이브 사이 처리 결정 — 정식 상점 vs 가벼운 '카드 3택' 절충안 중 프로토용 하나 선택</span></label>
+      <label><input type="checkbox"><span class="ct">경제 설계 — 골드 젬을 상점 재화로 승격, 웨이브 클리어 보상/가격/리롤 초안</span></label>
+      <label><input type="checkbox"><span class="ct">승리·패배 재정의 — "웨이브 N 클리어" 승리 조건 + 결과 화면, 카운트업 타이머 대체</span></label>
+      <label><input type="checkbox"><span class="ct">보스 배치 — 최종 보스(또는 5웨이브마다 미니보스)로 처형 클라이맥스 지점 설계</span></label>
+      <label><input type="checkbox"><span class="ct">처형 쿨다운 경제 — 짧은 웨이브에 맞게 환급/리셋 규칙 재점검</span></label>
+      <label><input type="checkbox"><span class="ct">스파이크 착수 — index_15에 최소 라운드 루프(웨이브→클리어→상점→다음) 프로토타입</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 00</div>
+<div class="foot">라운드 방식 vs 20분 버티기 · v0.10.3 (index_14) 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 웨이브 길이를 60초로 / 상점은 리롤 1회 무료..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>

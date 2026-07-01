@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<!-- VSDebate 슬라이드덱 · 2026-07-02 · 무기 추가(VS식 자동 무기고) 아이데이션 -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>무기 추가 아이데이션 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 8vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1.1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.6vw,3.4rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.4rem,3.2vw,2.3rem); line-height:1.18; font-weight:800; margin-bottom:1.4rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.95rem,1.45vw,1.18rem); line-height:1.6; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  em{font-style:normal; color:var(--gold);}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);}
+
+  .title-wrap{max-width:920px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.8rem;}
+  .title-meta{margin-top:2rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.05rem,1.8vw,1.45rem); line-height:1.55; max-width:60ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.4rem 0;
+    font-size:clamp(1.05rem,1.9vw,1.5rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote.red{border-color:var(--red);}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.8rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+  .threads{display:flex; gap:1rem; margin-top:1.8rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.08rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem 2.6rem; align-items:start; margin-top:.6rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.2rem 1.3rem;}
+  .card.bad{border-color:rgba(255,43,78,.35);}
+  .card.good{border-color:rgba(95,227,154,.35);}
+  .card h3{font-size:1rem; font-weight:800; margin-bottom:.5rem; display:flex; align-items:center; gap:.5rem;}
+  .card p{font-size:.92rem; color:var(--dim); line-height:1.5;}
+  .tag{display:inline-block; font-size:.7rem; letter-spacing:.1em; padding:.15em .55em; border-radius:5px; font-weight:700;}
+  .tag.x{background:rgba(255,43,78,.14); color:var(--red);}
+  .tag.o{background:rgba(95,227,154,.14); color:var(--good);}
+
+  .curve{margin-top:1.2rem; width:100%; max-width:720px;}
+
+  table{border-collapse:collapse; width:100%; margin-top:.4rem; font-size:.9rem;}
+  th,td{text-align:left; padding:.55rem .8rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700;}
+  td .pillar{font-weight:800; color:#fff;}
+  td .ko{color:var(--dim); font-size:.82rem;}
+  tr.exec td .pillar{color:var(--red);}
+  tr.reap td .pillar{color:var(--blue);}
+  tr.over td .pillar{color:var(--gold);}
+  .evo{margin-top:1.2rem; display:flex; gap:1rem; flex-wrap:wrap;}
+  .evo .e{flex:1 1 240px; background:linear-gradient(135deg,rgba(28,240,212,.08),rgba(255,210,63,.05));
+    border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .evo .e b{color:var(--teal2);} .evo .e p{font-size:.84rem; color:var(--dim); margin-top:.3rem;}
+
+  .spikes{display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:1.4rem;}
+  .spike{display:flex; gap:.9rem; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem;}
+  .spike .n{flex:0 0 2rem; height:2rem; border-radius:8px; background:var(--teal); color:#04201c; font-weight:800;
+    display:grid; place-items:center; font-size:1rem;}
+  .spike .b{font-size:.92rem; line-height:1.45;}
+  .spike .b b{color:#fff;} .spike .b span{color:var(--dim); font-size:.84rem;}
+
+  .open{display:flex; gap:1.4rem; margin-top:1rem; flex-wrap:wrap;}
+  .open .q{flex:1 1 300px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.3rem 1.45rem;}
+  .open .q .lab{font-size:.78rem; letter-spacing:.14em; color:var(--gold); font-weight:800;}
+  .open .q h3{font-size:1.12rem; margin:.5rem 0 .55rem; font-weight:800; line-height:1.3;}
+  .open .q p{font-size:.88rem; color:var(--dim); line-height:1.5;}
+
+  .checklist{display:flex; flex-direction:column; gap:.55rem; margin-top:1.2rem; max-width:820px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.7rem .9rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.2rem; height:1.2rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#04201c; font-size:.85rem; font-weight:900;}
+  .checklist .ct{font-size:.95rem; line-height:1.45; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- ===== 1. 표지 ===== -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>무기가 <span class="teal">늘어나는</span> 빌드로 —<br>뱀서식 자동 무기고 아이데이션</h1>
+      <p class="lead dim">지금 강화는 전부 '숫자만 올리는' 패시브. 무기 자체를 늘리는 형태를 어떻게, 어디서 가져올까.</p>
+      <div class="title-meta">
+        <div>기반 빌드 · <b>v0.10.3 (index_14)</b></div>
+        <div>날짜 · <b>2026-07-02</b></div>
+        <div>형식 · <b>아젠다 → 세부 → 결론</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 2. 아젠다 ===== -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>이번에 정할 단 하나</h2>
+    <div class="quote">"뱀서처럼 <span class="teal">자동 무기를 여러 개 쌓는</span> 빌드를 넣을까 — 그리고 그 무기 아이디어는 <span class="gold">어디서, 어떻게</span> 뽑아낼까?"</div>
+    <p class="dim">지금 무기는 사실상 <b>하나(자동 부채꼴 베기)</b>뿐. 강화 16종이 전부 그 하나에 붙는 숫자 보정이라 매 판이 똑같이 느껴진다.</p>
+    <div class="threads">
+      <div class="thread"><div class="t">Thread ①</div><h3>왜 지금은 밋밋한가</h3><p>무기 1개 + 전부 패시브. 새 공격 패턴이 안 늘어난다.</p></div>
+      <div class="thread"><div class="t">Thread ②</div><h3>아이디어는 어디서</h3><p>뱀서 개발자들의 실제 방법론 — 훔치기·모양·밈.</p></div>
+      <div class="thread"><div class="t">Thread ③</div><h3>처형 코어와 충돌?</h3><p>자동 무기가 우리 주인공(수동 처형)을 안 잡아먹나.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 3. 세부 ① 진단 ===== -->
+  <section class="slide" data-t="진단">
+    <div class="kicker">02 · 세부 — 지금 상태 진단</div>
+    <h2><span class="num">①</span>무기는 하나, 강화는 전부 '숫자 보정'</h2>
+    <p class="dim" style="margin-bottom:.3rem;">현재 UPGRADES 16종을 뜯어보면 — 새 공격이 추가되는 카드는 <b>0개</b>다.</p>
+    <div class="cols">
+      <div class="card bad">
+        <h3><span class="tag x">지금</span> 한 무기에 붙는 패시브</h3>
+        <p>공격속도 +18% · 사거리 +22 · 칼날 +1 · 데미지 +6 · 처형 반경 +45 … 전부 <b>자동 베기 하나</b>를 조금씩 키운다. 화면에 새로 나타나는 건 없다.</p>
+      </div>
+      <div class="card good">
+        <h3><span class="tag o">뱀서</span> 무기 슬롯 + 패시브 슬롯</h3>
+        <p>무기 6칸 + 패시브 6칸. 무기마다 <b>완전히 다른 자동 발사</b>(채찍·유도·궤도·장판…)가 화면에 쌓인다. 패시브는 그 위에 전역 보정.</p>
+      </div>
+    </div>
+    <div class="quote red">"밋밋함"의 정체 = 빌드가 <b>더 강해질</b> 뿐, <b>달라지지</b> 않는다.</div>
+  </section>
+
+  <!-- ===== 4. 세부 ② 아이디어 출처 ===== -->
+  <section class="slide" data-t="아이디어 출처">
+    <div class="kicker">03 · 세부 — 아이디어는 어디서 오나</div>
+    <h2><span class="num">②</span>영감이 아니라 '방법'이다</h2>
+    <ul class="clean">
+      <li><b>① 장르 조상에서 훔친다(오마주).</b> 뱀서 무기는 대부분 캐슬바니아 것 — 채찍·성경·도끼·십자가·성수. 뱀서 자체도 한국 게임 <em>매직 서바이벌</em>의 리프. 조상 무기는 <b>설명이 필요 없다</b>.</li>
+      <li><b>② 발사 모양을 먼저 정하고 테마는 나중에 칠한다.</b> (다음 장 · 핵심 트릭)</li>
+      <li><b>③ 빌드의 빈 역할을 메운다.</b> 단일 폭딜↔광역, 앞↔사방, 지속딜 부재… "아직 없는 도구"가 다음 무기다.</li>
+      <li><b>④ 진화 페어.</b> 무기 최대 + 특정 패시브 → 진화형(채찍+마음=블러디 티어). "극단까지 밀면?"에서 배로 나온다.</li>
+      <li><b>⑤ 밈·IP·엉뚱함.</b> 메가봉크의 <em>바나나·뼈다귀</em>, 브로테이토의 황당템. 알아보기 쉬운 사물 = <b>숏폼 클립 소재</b>.</li>
+    </ul>
+  </section>
+
+  <!-- ===== 5. 세부 ③ 발사 모양 어휘 ===== -->
+  <section class="slide" data-t="발사 모양">
+    <div class="kicker">04 · 세부 — 핵심 트릭: 모양 먼저</div>
+    <h2><span class="num">③</span>자동 공격의 '모양'은 정해진 어휘 세트다</h2>
+    <p class="dim" style="margin-bottom:.2rem;">테마(불·얼음·뼈다귀)는 페인트일 뿐. 진짜 뼈대는 이 발사 모양들. 빈 칸을 골라 채우면 그게 새 무기다.</p>
+    <table>
+      <thead><tr><th>발사 모양</th><th>뱀서 예시</th><th>메우는 역할</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pillar">조준 발사</span></td><td>단검 · 매직 미사일</td><td>가까운 적 단일·직선</td></tr>
+        <tr><td><span class="pillar">유도</span></td><td>매직 완드</td><td>알아서 표적 추적</td></tr>
+        <tr class="over"><td><span class="pillar">궤도 회전</span></td><td>킹 바이블</td><td>몸 주변 상시 방어·접촉딜</td></tr>
+        <tr><td><span class="pillar">포물선 투척</span></td><td>도끼 · <b>뼈다귀</b></td><td>머리 위·엄폐물 너머</td></tr>
+        <tr class="exec"><td><span class="pillar">근접 부채꼴</span></td><td>채찍 · 검</td><td>앞을 쓸기 (지금 우리 것)</td></tr>
+        <tr><td><span class="pillar">주변 오라</span></td><td>마늘 · 성역</td><td>둘러싸일 때 지속 피해</td></tr>
+        <tr class="reap"><td><span class="pillar">바닥 장판</span></td><td>성수 · 화염장판</td><td>길목 지속 피해·슬로우</td></tr>
+        <tr><td><span class="pillar">랜덤 낙하</span></td><td>번개 반지</td><td>화면 전체 솎아내기</td></tr>
+        <tr><td><span class="pillar">부메랑 / 관통 직선</span></td><td>십자가 / 레이저</td><td>뒤 커버 / 일렬 관통</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===== 6. 세부 ④ 우리 무기 아이데이션 ===== -->
+  <section class="slide" data-t="우리 무기">
+    <div class="kicker">05 · 세부 — 우리 게임용 무기 후보</div>
+    <h2><span class="num">④</span>모양 × 테마 × <span class="red">처형 시너지</span></h2>
+    <p class="dim" style="margin-bottom:.2rem;">그냥 뱀서 무기를 붙이지 않는다. 각 무기가 <b>우리 코어(그로기·처형)와 맞물리게</b> 설계한다.</p>
+    <table>
+      <thead><tr><th>무기(가안)</th><th>모양</th><th>처형 코어와의 연결</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pillar teal">도깨비불 표창</span></td><td>유도</td><td>맞은 엘리트 <b>비틀대기(그로기) 게이지 +</b></td></tr>
+        <tr class="over"><td><span class="pillar">궤도 검(위성날)</span></td><td>궤도 회전</td><td>몸 주변 잡몹 정리 + 엘리트 접촉 시 스태거</td></tr>
+        <tr class="reap"><td><span class="pillar">봉인 장판</span></td><td>바닥 장판</td><td>밟은 엘리트 슬로우 + 그로기 유도(처형 셋업)</td></tr>
+        <tr class="exec"><td><span class="pillar">처형 충격파</span></td><td>근접 광역</td><td><b>처형 성공 순간</b> 주변으로 참격 파문(처형=무기)</td></tr>
+        <tr class="exec"><td><span class="pillar">연쇄 발도</span></td><td>관통 직선</td><td>처형이 근처 그로기로 <b>번져</b> 연속 처형 유도</td></tr>
+        <tr><td><span class="pillar">뼈다귀 투척</span></td><td>포물선</td><td>밈 무기(메가봉크 오마주) · 착탄 광역 · 숏폼용</td></tr>
+        <tr><td><span class="pillar">낙뢰/유성</span></td><td>랜덤 낙하</td><td>떼거리 배경 정리 → 손은 엘리트에 집중</td></tr>
+      </tbody>
+    </table>
+    <p class="dim" style="margin-top:.6rem;">⮕ 상단 5개는 <b class="red">처형 루프에 직접 기여</b>. 하단 2개는 떼거리·재미(밈) 담당.</p>
+  </section>
+
+  <!-- ===== 7. 세부 ⑤ 정체성 지키기 ===== -->
+  <section class="slide" data-t="정체성">
+    <div class="kicker">06 · 세부 — 처형이 주인공을 유지하려면</div>
+    <h2><span class="num">⑤</span>무기는 처형을 '먹여 살린다' — 잡아먹지 않는다</h2>
+    <div class="cols">
+      <div class="card bad">
+        <h3><span class="tag x">위험</span> 뱀서 수프가 되는 것</h3>
+        <p>자동 무기를 무작정 6개 쌓으면 화면이 자동 이펙트로 가득 차고, 우리가 <b>주인공으로 세운 수동 처형</b>이 파묻힌다. 지난 덱에서 세운 "처형=클라이맥스"가 무너진다.</p>
+      </div>
+      <div class="card good">
+        <h3><span class="tag o">해법</span> 2층 계약</h3>
+        <p><b>자동 무기 = 떼거리(배경) 담당</b>, <b>내 손 = 엘리트 처형</b> 담당. 무기는 그로기를 <b>더 자주 만들어</b> 처형 기회를 늘리는 쪽으로 설계 → 처형이 오히려 더 빛난다.</p>
+      </div>
+    </div>
+    <div class="quote teal">좋은 무기의 기준: "이 무기가 처형을 <b>더 자주/더 크게</b> 만드는가?"</div>
+    <p class="dim">이 기준이 무기 후보를 걸러주는 필터가 된다. 순수 딜만 올리는 무기는 후순위.</p>
+  </section>
+
+  <!-- ===== 8. 세부 ⑥ 진화 & 상점 연결 ===== -->
+  <section class="slide" data-t="진화·상점">
+    <div class="kicker">07 · 세부 — 확장 축과 이전 결정 연결</div>
+    <h2><span class="num">⑥</span>진화 페어 + 라운드 상점에 얹기</h2>
+    <div class="evo">
+      <div class="e"><b>진화 페어</b><p>무기 최대 + 특정 패시브 → 진화형. 예: <em>궤도 검 + 처형 반경 → 궤도 처형날</em>(회전하다 그로기 적을 자동 처형). 아이디어가 배로 늘고 목표가 생긴다.</p></div>
+      <div class="e"><b>전속 vs 공용</b><p>지난 덱(05·07) 결론과 정합: <em>기본 무기·처형 형태는 캐릭터 전속</em>, <em>추가 자동 무기는 공용 풀</em>에서 뽑아 재활용.</p></div>
+      <div class="e"><b>상점에서 산다</b><p>라운드 방식 덱 결론과 직결 — 새 무기는 <em>웨이브 사이 상점</em>에서 구매/진화. 차분히 시너지를 고르는 자리가 곧 무기 획득처.</p></div>
+      <div class="e"><b>슬롯 상한</b><p>뱀서(6+6)보다 <em>적게</em> — 예: 무기 4 + 패시브 4. 처형이 파묻히지 않도록 화면 밀도를 통제.</p></div>
+    </div>
+    <p class="dim" style="margin-top:1rem;">⮕ 이 토론은 <b>라운드 방식</b>·<b>탈리스만 A/B/C</b>·<b>캐릭터 전속 키트</b> 결정 위에 자연스럽게 얹힌다.</p>
+  </section>
+
+  <!-- ===== 9. 미해결 쟁점 ===== -->
+  <section class="slide" data-t="미해결 쟁점">
+    <div class="kicker">08 · 토론 계속 — 미해결 쟁점</div>
+    <h2>무기를 넣는다면, 다음 갈림길</h2>
+    <div class="open">
+      <div class="q"><div class="lab">쟁점 A</div><h3>슬롯 몇 개?</h3><p>무기 4+패시브 4(권장, 처형 보호) vs 뱀서식 6+6(풍성하지만 수프 위험). 화면 밀도와 직결.</p></div>
+      <div class="q"><div class="lab">쟁점 B</div><h3>자동이 떼거리를 너무 쉽게?</h3><p>자동 딜이 넘치면 이동·카이팅이 필요 없어진다. 엘리트를 '유일한 시험'으로 남기는 튜닝 필요.</p></div>
+      <div class="q"><div class="lab">쟁점 C</div><h3>진화 시스템 지금? 나중?</h3><p>진화는 강력하지만 무기 풀이 어느 정도 쌓여야 의미. MVP엔 무기 3~4개만 먼저?</p></div>
+      <div class="q"><div class="lab">쟁점 D</div><h3>첫 무기 세트 범위</h3><p>MVP로 검증할 최소 무기 몇 개 + 어떤 모양부터? (유도·궤도·처형충격파 3종 제안)</p></div>
+    </div>
+    <p class="dim" style="margin-top:1.3rem;">⮕ A·D가 정해지면 곧바로 <b>무기 슬롯 프로토(index_15+)</b>로 넘어갈 수 있다.</p>
+  </section>
+
+  <!-- ===== 10. 결론 + 체크리스트 ===== -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">09 · 결론</div>
+    <h2>결론 — 자동 무기고를 넣되, 처형에 '먹인다'</h2>
+    <div class="quote gold" style="border-color:var(--gold);">"모양 어휘에서 무기를 뽑고, 각 무기가 그로기·처형을 더 자주 만들도록 설계한다. 자동=떼거리, 손=엘리트의 2층 계약을 지킨다."</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct">방향 확정 — 단일 무기+패시브 구조를 버리고, '자동 무기 슬롯 + 패시브 슬롯' 구조로 전환</span></label>
+      <label><input type="checkbox"><span class="ct">무기 필터 규칙 채택 — "처형을 더 자주/더 크게 만드는가?"를 무기 채택 1차 기준으로</span></label>
+      <label><input type="checkbox"><span class="ct">첫 무기 세트 확정 — MVP 무기 3~4종 선정(유도·궤도·처형 충격파 제안)과 발사 모양</span></label>
+      <label><input type="checkbox"><span class="ct">슬롯 상한 결정 — 무기 4 + 패시브 4(권장) vs 6+6, 화면 밀도 상한</span></label>
+      <label><input type="checkbox"><span class="ct">떼거리 밸런스 — 자동 딜이 이동·카이팅을 무력화하지 않게 엘리트 위협 유지</span></label>
+      <label><input type="checkbox"><span class="ct">획득 경로 연결 — 라운드 방식 상점에서 무기 구매·진화(이전 덱 결정과 정합)</span></label>
+      <label><input type="checkbox"><span class="ct">진화 페어 스코프 — 지금 넣을지/나중일지 결정, 넣는다면 최소 1쌍 예시 설계</span></label>
+      <label><input type="checkbox"><span class="ct">스파이크 착수 — index_15+에 무기 슬롯 1~2개 자동 발사 프로토타입</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 00</div>
+<div class="foot">무기 추가 아이데이션 · v0.10.3 (index_14) 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 첫 무기는 유도 표창부터 / 궤도 검 이펙트를 화려하게..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
