@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>비틀대는 적 처리 토론 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a; --orange:#ff7a1a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 8vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1.1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.6vw,3.4rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.4rem,3.2vw,2.3rem); line-height:1.18; font-weight:800; margin-bottom:1.4rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.95rem,1.45vw,1.18rem); line-height:1.6; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  em{font-style:normal; color:var(--gold);}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);} .orange{color:var(--orange);}
+
+  .title-wrap{max-width:920px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.8rem;}
+  .title-meta{margin-top:2rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.05rem,1.8vw,1.45rem); line-height:1.55; max-width:62ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.4rem 0;
+    font-size:clamp(1.05rem,1.9vw,1.5rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote.red{border-color:var(--red);}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.8rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+  .threads{display:flex; gap:1rem; margin-top:1.8rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.08rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem 2.6rem; align-items:start; margin-top:.6rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.2rem 1.3rem;}
+  .card.bad{border-color:rgba(255,43,78,.35);}
+  .card.good{border-color:rgba(95,227,154,.35);}
+  .card.teal{border-color:rgba(28,240,212,.4);}
+  .card.blue{border-color:rgba(58,160,255,.4);}
+  .card h3{font-size:1.05rem; font-weight:800; margin-bottom:.5rem; display:flex; align-items:center; gap:.5rem;}
+  .card p{font-size:.92rem; color:var(--dim); line-height:1.5;}
+  .tag{display:inline-block; font-size:.7rem; letter-spacing:.1em; padding:.15em .55em; border-radius:5px; font-weight:700;}
+  .tag.x{background:rgba(255,43,78,.14); color:var(--red);}
+  .tag.o{background:rgba(95,227,154,.14); color:var(--good);}
+
+  table{border-collapse:collapse; width:100%; margin-top:.4rem; font-size:.95rem;}
+  th,td{text-align:left; padding:.7rem .95rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; font-weight:700;}
+  td .pillar{font-weight:800; color:#fff;}
+  .col-a{color:var(--red);} .col-b{color:var(--teal);}
+
+  .spikes{display:grid; grid-template-columns:repeat(2,1fr); gap:.9rem; margin-top:1.2rem;}
+  .spike{display:flex; gap:.9rem; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.95rem 1.1rem;}
+  .spike .n{flex:0 0 1.9rem; height:1.9rem; border-radius:8px; background:var(--teal); color:#04201c; font-weight:800;
+    display:grid; place-items:center; font-size:1rem;}
+  .spike .b{font-size:.9rem; line-height:1.4;}
+  .spike .b b{color:#fff;} .spike .b span{color:var(--dim); font-size:.82rem;}
+  .note{margin-top:1rem; font-size:.86rem; color:var(--dim);}
+  .note code{color:var(--teal2); background:rgba(28,240,212,.08); padding:.05em .4em; border-radius:4px; font-size:.92em;}
+  code{font-family:"Cascadia Code",Consolas,monospace;}
+
+  .quote2{margin-top:1.2rem; border-left:3px solid var(--teal); padding-left:1.1rem; font-size:1.05rem; font-weight:700; line-height:1.4;}
+
+  /* 체크리스트 — 결론 마무리용 (클릭 토글) */
+  .checklist{display:flex; flex-direction:column; gap:.5rem; margin-top:1.1rem; max-width:820px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.6rem .9rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.2rem; height:1.2rem; flex:0 0 auto;
+    margin-top:.04rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#04201c; font-size:.85rem; font-weight:900;}
+  .checklist .ct{font-size:.92rem; line-height:1.4; color:var(--ink);}
+  .checklist .ct code{color:var(--teal2); font-size:.92em;}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- 1. 표지 -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>비틀대는 적, 안 베면 <span class="teal">죽일까 살릴까</span></h1>
+      <p class="lead dim">비틀대기(그로기) 시간이 다 됐는데 처형하지 않은 정예 —<br>경험치 구슬을 적게 주고 <b style="color:var(--red)">사라지게</b> 할지, 아니면 다시 <b style="color:var(--teal)">살아나게</b> 할지 정한다.</p>
+      <div class="title-meta">
+        <div>기반 버전 · <b>v0.4 (부활 + gameBalance.json)</b></div>
+        <div>날짜 · <b>2026-06-30</b></div>
+        <div>형식 · <b>토론 아젠다 → 세부 → 결론·체크리스트</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 토론 아젠다 -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>비틀대기 시간이 끝나면, 죽일까 살릴까?</h2>
+    <div class="quote">처형을 놓친 정예 — <span class="red">사라짐(A)</span> 이냐, <span class="teal">되살아남(B)</span> 이냐?</div>
+    <p class="dim"><b class="orange">지금 상태</b>: v0.4는 <b class="teal">이미 부활(B)이 켜져 있다</b>(<code>reviveEnabled:true</code>). 단 <b>풀피(100%)·무적0·횟수 무제한</b> — 가장 거친 버전. 사용자도 <b class="teal">B를 선호</b>. 그래서 진짜 질문은 'A냐 B냐'가 아니라 <b>'B를 어떻게 다듬나'</b>이다.</p>
+    <div class="threads">
+      <div class="thread"><div class="t">갈래 ①</div><h3>사라짐 (A)</h3><p>옅어지며 사라짐 + 경험치 구슬 적게(3개). 안 베도 손해가 작다.</p></div>
+      <div class="thread"><div class="t">갈래 ②</div><h3>되살아남 (B) · 지금 기본</h3><p>다시 살아나 위협. 처형에 긴장이 생긴다. 사용자 선호.</p></div>
+      <div class="thread"><div class="t">갈래 ③</div><h3>진짜 질문</h3><p>부활의 '체력·무적·횟수'를 어떻게 잡아야 노동이 안 되나.</p></div>
+    </div>
+  </section>
+
+  <!-- 3. 세부 ① 비교 -->
+  <section class="slide" data-t="① 비교">
+    <div class="kicker">02 · 세부 ① — 두 갈래 비교</div>
+    <h2>사라짐(A) <span class="dim">vs</span> 되살아남(B)</h2>
+    <table>
+      <thead><tr><th>보는 항목</th><th class="col-a">A · 그냥 사라짐</th><th class="col-b">B · 다시 살아남</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pillar">처형하고 싶어지나</span></td><td class="dim">약함 — 안 해도 그만</td><td><b>강함</b> — 안 베면 다시 위협</td></tr>
+        <tr><td><span class="pillar">화면 깔끔함</span></td><td><b>좋음</b> — 알아서 정리됨</td><td class="dim">나빠짐 — 적이 쌓임</td></tr>
+        <tr><td><span class="pillar">후반 난이도</span></td><td class="dim">자동으로 안 오름</td><td><b>자연스럽게 조여짐</b></td></tr>
+        <tr><td><span class="pillar">노동이 될 위험</span></td><td><b>낮음</b></td><td class="red">높음 — 무한 반복 우려(지금 값)</td></tr>
+        <tr><td><span class="pillar">쓸어담는 손맛</span></td><td><b>유지</b></td><td class="dim">너무 거칠면 깨질 수 있음</td></tr>
+        <tr><td><span class="pillar">지금 코드 상태</span></td><td class="dim">꺼져 있음</td><td class="teal"><b>✓ 켜져 있음 (기본)</b></td></tr>
+      </tbody>
+    </table>
+    <p class="note">한 줄 정리: B는 재미(긴장)를 주지만, 지금처럼 거칠게 두면 무한 반복 노동이 된다. → 핵심은 <b class="teal">'B를 똑똑하게'</b>.</p>
+  </section>
+
+  <!-- 4. 세부 ② 약화된 부활 -->
+  <section class="slide" data-t="② 약화된 부활">
+    <div class="kicker">03 · 세부 ② — 전문가 권고</div>
+    <h2>B를 고르되 <span class="teal">'약화된 부활'</span>로 — 값만 다듬으면 된다</h2>
+    <p class="lead dim" style="margin-bottom:.4rem;">지금은 풀피·무적0·무제한이라 거칠다. 아래 손잡이(밸런스 값)만 바꾸면 사용자가 원하는 B와 재미를 둘 다 잡는다.</p>
+    <div class="spikes">
+      <div class="spike"><div class="n">1</div><div class="b"><b>부활 체력 낮추기</b><br><span><code>reviveHpFraction</code> 1.0 → 0.4. 풀피 부활은 다시 깎기 지옥. 절반 이하로.</span></div></div>
+      <div class="spike"><div class="n">2</div><div class="b"><b>부활 횟수 제한</b><br><span>새 값 <code>reviveMaxCount</code> = 1. 그다음 만료는 사라짐(A). 무한 반복 차단.</span></div></div>
+      <div class="spike"><div class="n">3</div><div class="b"><b>짧은 무적 살짝</b><br><span><code>reviveInvuln</code> 0 → 0.3초. 살아나자마자 또 베여 제자리 비틀대기 되는 것 방지.</span></div></div>
+      <div class="spike"><div class="n">4</div><div class="b"><b>약해진 채 부활</b><br><span>새 값: 이동·공격 속도↓. 되살아난 좀비 느낌. 위협은 남기되 처리 쉽게.</span></div></div>
+      <div class="spike"><div class="n">5</div><div class="b"><b>끝나기 직전 경고</b><br><span>만료 1초 전 깜빡임/색 변화로 "지금 베!" 신호. 예고 없는 부활은 화남.</span></div></div>
+      <div class="spike"><div class="n">✓</div><div class="b"><b>보상은 그대로</b><br><span>부활 적은 경험치 0. 처형(구슬 5)·최종 소멸(구슬 3)만 보상 → 처형 동기 유지.</span></div></div>
+    </div>
+  </section>
+
+  <!-- 5. 세부 ③ 정예/잡몹 -->
+  <section class="slide" data-t="③ 정예/잡몹">
+    <div class="kicker">04 · 세부 ③ — 잡몹은 어떻게</div>
+    <h2>정예만 되살리고, 잡몹은 그냥 죽이고</h2>
+    <div class="cols">
+      <div class="card teal"><h3 class="teal">정예 = 되살아남 (B)</h3><p>수가 적고 위협적이라 되살아나면 긴장이 산다. 처형 표적으로 딱 맞다. <b>지금 구조 그대로.</b></p></div>
+      <div class="card blue"><h3 class="blue">잡몹 = 즉사 (A)</h3><p>수가 많아 되살리면 후반이 지옥. 자동으로 쓸어담는 맛(뱀서다움)을 지킨다. <b>잡몹은 비틀대기 자체가 없음 = 이미 이 구조.</b></p></div>
+    </div>
+    <div class="quote2">되살아남은 후반을 자연스럽게 조이는 <span class="teal">'난이도 손잡이'</span> — 처형을 잘할수록 오래 산다.</div>
+    <p class="note">※ 지난 토론 '기절을 잡몹까지 넓히기'를 택한다면, 부활은 <b class="red">절대 잡몹에 붙이지 말 것</b> — 후반 통제 불능.</p>
+  </section>
+
+  <!-- 6. 결론 + 체크리스트 (마지막) -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">05 · 결론 — 결정 & 체크리스트</div>
+    <h2>부활(B) 유지 + <span class="teal">'약화' 값</span>으로 조정</h2>
+    <div class="quote gold" style="border-color:var(--gold);"><span class="teal">부활(B)</span>은 옳다(이미 켜짐). 단 지금의 <b>풀피·무적0·무제한</b>을<br><b>저체력·짧은 무적·1회 제한</b>으로 바꿔 노동을 막는다.</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct"><code>reviveEnabled: true</code> 유지 — 정예만 적용</span></label>
+      <label><input type="checkbox"><span class="ct"><code>reviveHpFraction</code> 1.0 → 0.4 로 낮추기</span></label>
+      <label><input type="checkbox"><span class="ct"><code>reviveInvuln</code> 0 → 0.3초</span></label>
+      <label><input type="checkbox"><span class="ct">새 값 <code>reviveMaxCount</code> = 1 추가 — 초과 시 사라짐(A)</span></label>
+      <label><input type="checkbox"><span class="ct">부활 약화 효과(이동·공격 속도↓) 값 추가</span></label>
+      <label><input type="checkbox"><span class="ct">만료 1초 전 경고 연출(깜빡임) 넣기</span></label>
+      <label><input type="checkbox"><span class="ct">잡몹엔 부활 절대 미적용 (즉사 유지)</span></label>
+      <label><input type="checkbox"><span class="ct">후반 난무 구간에서 부활이 '압박'으로 잘 작동하는지 체감 테스트</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 06</div>
+<div class="foot">비틀대는 적 처리 토론 · v0.4 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 처형 연출을 더 화려하게 / 엘리트 색을 더 눈에 띄게..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>

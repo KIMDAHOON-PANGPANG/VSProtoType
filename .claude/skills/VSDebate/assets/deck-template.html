@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  VSDebate · 슬라이드덱 템플릿  (EXECUTE // Survivors 기획 토론용)
+  ----------------------------------------------------------------------------
+  채우는 법:
+   1) <title> 과 표지 슬라이드의 제목/메타를 이번 토론 주제로 교체.
+   2) <section class="slide"> 들을 순서대로 채운다.
+        흐름 고정:  표지 → 아젠다 → 세부(N장) → (선택)미해결 쟁점 → 결론+체크리스트(항상 맨 끝)
+   3) data-t="..." 는 하단 네비 점의 툴팁(슬라이드 이름) — 짧게.
+   4) 슬라이드 개수가 바뀌어도 JS/네비/카운터는 자동 계산되므로 손댈 필요 없음.
+   5) CSS/JS(=골격)는 건드리지 말 것. 아래 "컴포넌트 라이브러리"만 조합해 본문 구성.
+
+  컴포넌트 라이브러리 (본문에서 골라 조합):
+   • .kicker            슬라이드 상단 라벨 (예: "01 · 토론 아젠다")
+   • h2 > .num          섹션 번호 강조
+   • .quote(.teal/.red/.gold)   핵심 명제·인용 강조 박스
+   • .lead              큰 리드 문단
+   • ul.clean > li      ▸ 불릿 리스트
+   • .cols + .card(.good/.bad)  2단 비교 카드 (찬/반, 성공/실패)
+   • .threads > .thread 3분할 아젠다 카드
+   • table              기둥/비교 표 (tr.exec/.reap/.over 색상)
+   • .evo > .e          진화/시너지 강조 박스
+   • .spikes > .spike   번호 매긴 실행 항목(검증 스파이크 등)
+   • .open > .q         미해결 쟁점 카드
+   • .checklist         체크 가능한 마무리 목록 — 결론 슬라이드는 반드시 이걸로 닫는다
+   • [공통] .mk-btn + #promptModal  덱 맨 끝 고정 블록. 체크한 항목만 모아 Claude 요청 프롬프트 생성·복사
+                          (</body> 직전 공통 블록 — 새 덱에도 그대로 포함, 건드리지 말 것)
+   • <svg class="curve"> 개념 곡선 그래프 (필요 시 좌표만 수정)
+   • 색 유틸: .teal .blue .red .gold .good .dim,  <b>/<em>
+  ============================================================================
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>__제목__ · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 8vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1.1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.6vw,3.4rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.4rem,3.2vw,2.3rem); line-height:1.18; font-weight:800; margin-bottom:1.4rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.95rem,1.45vw,1.18rem); line-height:1.6; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  em{font-style:normal; color:var(--gold);}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);}
+
+  .title-wrap{max-width:920px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.8rem;}
+  .title-meta{margin-top:2rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.05rem,1.8vw,1.45rem); line-height:1.55; max-width:60ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.4rem 0;
+    font-size:clamp(1.05rem,1.9vw,1.5rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote.red{border-color:var(--red);}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.8rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+  .threads{display:flex; gap:1rem; margin-top:1.8rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.08rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem 2.6rem; align-items:start; margin-top:.6rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.2rem 1.3rem;}
+  .card.bad{border-color:rgba(255,43,78,.35);}
+  .card.good{border-color:rgba(95,227,154,.35);}
+  .card h3{font-size:1rem; font-weight:800; margin-bottom:.5rem; display:flex; align-items:center; gap:.5rem;}
+  .card p{font-size:.92rem; color:var(--dim); line-height:1.5;}
+  .tag{display:inline-block; font-size:.7rem; letter-spacing:.1em; padding:.15em .55em; border-radius:5px; font-weight:700;}
+  .tag.x{background:rgba(255,43,78,.14); color:var(--red);}
+  .tag.o{background:rgba(95,227,154,.14); color:var(--good);}
+
+  .curve{margin-top:1.2rem; width:100%; max-width:720px;}
+
+  table{border-collapse:collapse; width:100%; margin-top:.4rem; font-size:.92rem;}
+  th,td{text-align:left; padding:.7rem .9rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700;}
+  td .pillar{font-weight:800; color:#fff;}
+  td .ko{color:var(--dim); font-size:.82rem;}
+  tr.exec td .pillar{color:var(--red);}
+  tr.reap td .pillar{color:var(--blue);}
+  tr.over td .pillar{color:var(--gold);}
+  .evo{margin-top:1.2rem; display:flex; gap:1rem; flex-wrap:wrap;}
+  .evo .e{flex:1 1 240px; background:linear-gradient(135deg,rgba(28,240,212,.08),rgba(255,210,63,.05));
+    border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .evo .e b{color:var(--teal2);} .evo .e p{font-size:.84rem; color:var(--dim); margin-top:.3rem;}
+
+  .spikes{display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:1.4rem;}
+  .spike{display:flex; gap:.9rem; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem;}
+  .spike .n{flex:0 0 2rem; height:2rem; border-radius:8px; background:var(--teal); color:#04201c; font-weight:800;
+    display:grid; place-items:center; font-size:1rem;}
+  .spike .b{font-size:.92rem; line-height:1.45;}
+  .spike .b b{color:#fff;} .spike .b span{color:var(--dim); font-size:.84rem;}
+
+  .open{display:flex; gap:1.4rem; margin-top:1rem; flex-wrap:wrap;}
+  .open .q{flex:1 1 320px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.4rem 1.5rem;}
+  .open .q .lab{font-size:.78rem; letter-spacing:.14em; color:var(--gold); font-weight:800;}
+  .open .q h3{font-size:1.15rem; margin:.55rem 0 .6rem; font-weight:800; line-height:1.3;}
+  .open .q p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+
+  /* 체크리스트 — 결론 슬라이드 마무리용. 클릭하면 체크/취소 */
+  .checklist{display:flex; flex-direction:column; gap:.55rem; margin-top:1.2rem; max-width:780px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.7rem .9rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.2rem; height:1.2rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#04201c; font-size:.85rem; font-weight:900;}
+  .checklist .ct{font-size:.95rem; line-height:1.45; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- ===== 1. 표지 (필수) ===== -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>__토론 제목 / 핵심 질문__</h1>
+      <p class="lead dim">__한 줄 부제: 무엇을 결정하려는 토론인가__</p>
+      <div class="title-meta">
+        <div>기반 빌드 · <b>__vX.Y.Z__</b></div>
+        <div>날짜 · <b>__YYYY-MM-DD__</b></div>
+        <div>형식 · <b>토론 아젠다 → 세부 → 결론</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 2. 토론 아젠다 (필수) ===== -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>__핵심 질문 / 의사결정 게이트__</h2>
+    <div class="quote">"__이번 토론으로 결정해야 할 단 하나의 질문__"</div>
+    <p class="dim">__왜 중요한가 / Yes·No가 무엇을 가르는가__</p>
+    <div class="threads">
+      <div class="thread"><div class="t">Thread ①</div><h3>__쟁점 1__</h3><p>__요약__</p></div>
+      <div class="thread"><div class="t">Thread ②</div><h3>__쟁점 2__</h3><p>__요약__</p></div>
+      <div class="thread"><div class="t">Thread ③</div><h3>__쟁점 3__</h3><p>__요약__</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 3+. 세부 (주제당 1장, 필요한 만큼 복제) ===== -->
+  <section class="slide" data-t="__세부 1__">
+    <div class="kicker">02 · 세부 — __소제목__</div>
+    <h2><span class="num">①</span>__세부 논점 제목__</h2>
+    <!-- 예시: 비교 카드 -->
+    <div class="cols">
+      <div class="card bad"><h3><span class="tag x">실패/반대</span> __제목__</h3><p>__설명__</p></div>
+      <div class="card good"><h3><span class="tag o">성공/찬성</span> __제목__</h3><p>__설명__</p></div>
+    </div>
+    <!-- 또는 ul.clean / table / quote / curve 등 컴포넌트 자유 조합 -->
+  </section>
+
+  <!-- ===== (선택) 미해결 쟁점 / 토론 계속 — 결론 '앞'에 둔다 ===== -->
+  <section class="slide" data-t="미해결 쟁점">
+    <div class="kicker">0N · 토론 계속 — 미해결 쟁점</div>
+    <h2>다음 갈림길</h2>
+    <div class="open">
+      <div class="q"><div class="lab">쟁점 A</div><h3>__열린 질문 A__</h3><p>__입장/트레이드오프__</p></div>
+      <div class="q"><div class="lab">쟁점 B</div><h3>__열린 질문 B__</h3><p>__입장/트레이드오프__</p></div>
+    </div>
+    <p class="dim" style="margin-top:1.8rem;">⮕ __A·B 결정 시 다음 단계__</p>
+  </section>
+
+  <!-- ===== 마지막. 결론 + 체크리스트 (필수 · 항상 맨 끝) ===== -->
+  <!-- 필요하면 .spikes(실행 항목)를 먼저 넣어도 되지만, 슬라이드는 반드시 .checklist 로 닫는다. -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">0N · 결론</div>
+    <h2>__결론 한 줄 / 의사결정__</h2>
+    <div class="quote gold" style="border-color:var(--gold);">"__핵심 결론 / 통과 기준__"</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct">__다음에 점검·결정·실행할 항목 1__</span></label>
+      <label><input type="checkbox"><span class="ct">__항목 2__</span></label>
+      <label><input type="checkbox"><span class="ct">__항목 3__</span></label>
+      <label><input type="checkbox"><span class="ct">__항목 4__</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 00</div>
+<div class="foot">__주제__ · __vX.Y.Z__ 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) =====
+     결론 체크리스트에서 ✓ 체크한 항목만 모아 Claude 요청 프롬프트를 만들어 복사한다.
+     새 덱을 만들 때 이 블록을 </body> 직전에 반드시 그대로 포함한다. -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 처형 연출을 더 화려하게 / 엘리트 색을 더 눈에 띄게..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+# EXECUTE // 개발 워크플로우 & 컨벤션
+
+> 이 문서는 프로젝트의 **작업 규칙(단일 소스)** 이다.
+> 새 기능을 구현하거나 수정할 때마다 아래 규칙을 따른다.
+> (Claude / 협업자 모두 이 문서를 기준으로 작업한다.)
+
+---
+
+## 0. 현재 상태
+
+| 항목 | 값 |
+|---|---|
+| 최신 버전 | **v0.10.0** |
+| 최신 플레이 파일 | **`build/index_11.html`** |
+| 밸런스 단일 소스 | **`build/gameBalance.json`** |
+| 패치 내역 | **`build log/PATCH_LOG.txt`** (내림차순) |
+
+### 폴더 구조 (중요)
+```
+project-VSLike/
+├─ build/                 ← 모든 게임 빌드 + 밸런스 (여기서 작업한다)
+│   ├─ index.html … index_6.html
+│   └─ gameBalance.json   ← 게임이 fetch 로 읽으므로 인덱스와 같은 폴더에 둔다
+├─ build log/             ← 패치 로그 누적
+│   └─ PATCH_LOG.txt
+├─ WORKFLOW.md            ← 이 문서 (작업 규칙, 루트 유지)
+└─ .claude/launch.json    ← 로컬 미리보기 서버 설정
+```
+- **앞으로 모든 인덱스 작업은 `build/` 안에서 한다.** (새 `index_N.html`도 `build/`에 생성)
+- **로그는 항상 `build log/PATCH_LOG.txt`** 에 내림차순으로 누적한다.
+- `gameBalance.json` 은 인덱스와 **같은 `build/`** 안에 둔다(상대경로 `fetch('gameBalance.json')` 유지).
+
+---
+
+## 1. 핵심 규칙 (요약)
+
+1. **작업이 끝나면 인덱스는 갱신(덮어쓰기)하지 않고 새 버전 파일로 만든다.**
+   `build/index_5.html` → `build/index_6.html` → … (이전 버전은 그대로 보존, 전부 `build/` 안)
+2. **작업이 끝나면 `build log/PATCH_LOG.txt`를 내림차순(최신이 맨 위)으로 갱신한다.**
+3. **구현/기능이 추가될 때마다 관련 밸런스 수치는 `build/gameBalance.json`에 추가·갱신한다.**
+   (동시에 HTML 내장 `FALLBACK_BALANCE`도 같은 값으로 동기화한다.)
+
+---
+
+## 2. 버전(인덱스) 규칙
+
+- 변경 요청을 받으면 **`build/` 안의 최신 `index_N.html`을 복사해 `build/index_(N+1).html`을 만들고** 거기서 작업한다.
+- **이전 버전 파일은 절대 수정/삭제하지 않는다.** (롤백·비교용 보존)
+- 새 파일 안의 버전 표기도 함께 올린다:
+  - `<title>EXECUTE vX.Y // …</title>`
+  - 시작 화면 `.subtitle` 의 `vX.Y · …`
+- 다음 작업 시작 시 "최신 파일"은 가장 번호가 큰 `index_N.html`.
+
+### 버전 넘버링
+- `MAJOR.MINOR.PATCH` (현재 `0.MINOR.0` 흐름)
+- 기능 추가/시스템 변경 → MINOR 증가 (예: 0.3.0 → 0.4.0)
+- 작은 수정/버그픽스 → PATCH 증가
+- 새 `index_N.html` 1개 = 보통 MINOR 1 증가
+
+---
+
+## 3. 패치 로그 규칙 (`build log/PATCH_LOG.txt`)
+
+- **내림차순**: 새 항목을 **파일 맨 위(헤더 바로 아래)** 에 추가한다.
+- 항목 포맷:
+
+```
+================================================================================
+[vX.Y.Z]  YYYY-MM-DD  —  index_N.html (+ 추가 파일)   "한 줄 타이틀"
+================================================================================
+기반: 어떤 버전에서 파생했는지.
+초점: 이번 작업의 핵심 한두 줄.
+
+[ADDED]   새로 추가된 것
+[CHANGED] 변경된 것
+[FIXED]   고친 것
+[KEPT]    유지된 핵심 사양
+```
+
+- 태그: `[ADDED] / [CHANGED] / [FIXED] / [REMOVED] / [KEPT]`
+- 날짜는 작업일 기준 절대표기(YYYY-MM-DD).
+
+---
+
+## 4. 밸런스 JSON 규칙 (`build/gameBalance.json`) ⭐
+
+> **새 기능에 "조절 가능한 수치"가 생기면 반드시 여기에 등록한다.**
+> 하드코딩 금지 — PC·몬스터·스폰·진행 관련 숫자는 전부 JSON에서 읽는다.
+
+### 4.1 무엇을 넣는가
+- **밸런스 수치** = 게임 플레이/난이도/감각을 결정하는 숫자.
+  - 예: 체력, 데미지, 속도, 쿨다운, 스폰 간격/수, 페이즈 경계, 그로기 시간,
+    부활 설정, XP 성장, 처형 타이밍/셰이크 강도 등.
+- **연출 전용 수치(파티클 개수, 링 반경, 색상 등)** 는 굳이 넣지 않아도 됨(취향).
+
+### 4.2 현재 섹션 구조
+```
+player / execution / groggy / enemies(fodder·elite) /
+spawner(phase1·2·3) / xp / contactDamageScale
+```
+새 시스템이 생기면 알맞은 섹션에 키를 추가하거나, 필요 시 새 섹션을 만든다.
+
+### 4.3 추가 절차 (중요 — 3곳을 함께 맞춘다)
+새 밸런스 값을 도입할 때:
+1. **`gameBalance.json`** 에 키를 추가한다. (단일 소스 / 권위 있는 값)
+2. **`index_N.html` 내장 `FALLBACK_BALANCE`** 에 동일 키를 추가한다.
+   (file:// 더블클릭 폴백용 — 두 곳이 항상 같아야 한다.)
+3. **코드에서 하드코딩 대신 `BAL.<경로>` 로 읽는다.**
+   - 런타임에 값이 필요한 함수(스폰/공격 등)는 호출 시점에 `BAL`을 읽으므로 OK.
+   - 로드 시점 상수(`GROGGY_TIME`, `G.exec`, `G.xpNeed` 등)는 `applyBalance()`에서
+     재동기화하도록 추가한다.
+
+### 4.4 로드 동작 (참고)
+- 부팅 시 `fetch('gameBalance.json')` → 성공하면 그 값이 **실시간 소스 오브 트루스**.
+  콘솔에 `[balance] gameBalance.json loaded ✓` 출력.
+- 실패(파일 없음/`file://` 차단) → 내장 `FALLBACK_BALANCE` 사용, 콘솔에 경고.
+- `gameBalance.json` 의 `_version` 도 인덱스 버전에 맞춰 올린다.
+
+### 4.5 밸런스 편집/실행
+- **밸런스를 실시간 수정하려면 로컬 서버로 실행한다** (`file://` 더블클릭은 fetch 차단됨).
+  - Launch 패널의 `vslike` 서버로 **`/build/index_N.html`** 열기 → `build/gameBalance.json` 수정 → 새로고침.
+- 더블클릭으로만 테스트할 거면, JSON 값과 `FALLBACK_BALANCE` 값을 똑같이 맞춰둔다.
+
+---
+
+## 5. 검증 규칙
+
+- 변경 후 **로컬 서버(`vslike`)로 해당 `build/index_N.html`을 열어** 동작을 확인한다.
+- **콘솔 에러 0건** 확인.
+- 핵심 시스템은 가능하면 수치로 검증(상태 전이, 드랍 수, 쿨다운 등).
+- 밸런스 변경은 `gameBalance.json` 값이 실제 동작에 반영되는지 확인.
+
+---
+
+## 6. 작업 완료 체크리스트 ✅
+
+작업을 끝낼 때마다 아래를 모두 만족하는지 확인한다.
+
+- [ ] 이전 `index_N.html`은 그대로 두고 **새 `index_(N+1).html`** 로 작업했다.
+- [ ] 새 파일의 **title / subtitle 버전 표기**를 올렸다.
+- [ ] 새 기능의 **밸런스 수치를 `gameBalance.json`에 추가**했다.
+- [ ] **`FALLBACK_BALANCE`(HTML 내장)** 를 JSON과 동일하게 동기화했다.
+- [ ] 코드가 해당 수치를 **`BAL.*` 로 읽는다** (하드코딩 없음).
+- [ ] `gameBalance.json` 의 `_version` 을 갱신했다.
+- [ ] **`build log/PATCH_LOG.txt`** 맨 위에 이번 변경 항목을 **내림차순**으로 추가했다.
+- [ ] 로컬 서버로 `build/index_N.html`을 실행해 **콘솔 에러 0건** 및 동작을 확인했다.
+
+---
+
+## 7. 파일 맵
+
+| 경로 | 역할 |
+|---|---|
+| `build/index.html` | v0.1.0 — 초기 프로토타입 (직업 2종 + 보스) |
+| `build/index_2.html` | v0.2.0 — 이중 몬스터 시스템 + 3분 페이싱 |
+| `build/index_3.html` | v0.3.0 — 일섬 루트 처형 + 지연 사망 |
+| `build/index_4.html` | v0.4.0 — 그로기 부활 + 밸런스 JSON 연동 |
+| `build/index_5.html` | v0.5.0 — 스태거드 슬로우모션 처형 피니셔 |
+| `build/index_6.html` | v0.6.0 — 불릿타임 인트로 + 고속 체인 처형 |
+| `build/index_7.html` | v0.7.0 — 저스트 회피 + 엘리트 도약 패턴 |
+| `build/index_8.html` | v0.8.0 — 부활 리워크(저체력·짧은무적·1회·경고) |
+| `build/index_9.html` | v0.9.0 — 틱 접촉 피해·리프 호밍·네온 텔레그래프·처형 멈춤↓ (부활 1회 제한) |
+| `build/index_10.html` | v0.9.1 — 부활 무한(테스트). maxRevives 0=무한 |
+| `build/index_11.html` | v0.10.0 — 리프어택 중 무적 + PRE 저스트 회피 윈도우 (**현재 최신**) |
+| `build/gameBalance.json` | 모든 PC·몬스터 밸런스 수치 (단일 소스) |
+| `build log/PATCH_LOG.txt` | 패치 내역 (내림차순) |
+| `WORKFLOW.md` | 이 문서 — 작업 규칙 (루트) |
+| `.claude/launch.json` | 로컬 미리보기 서버(`vslike`) 설정 |

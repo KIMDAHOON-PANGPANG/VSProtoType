@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>처형 빌드 키우기 토론 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  /* ---- deck shell ---- */
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 8vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1.1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.6vw,3.4rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.4rem,3.2vw,2.3rem); line-height:1.18; font-weight:800; margin-bottom:1.4rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.95rem,1.45vw,1.18rem); line-height:1.6; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  em{font-style:normal; color:var(--gold);}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);}
+
+  /* ---- title slide ---- */
+  .title-wrap{max-width:920px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.8rem;}
+  .title-meta{margin-top:2rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  /* ---- generic blocks ---- */
+  .lead{font-size:clamp(1.05rem,1.8vw,1.45rem); line-height:1.55; max-width:60ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.4rem 0;
+    font-size:clamp(1.05rem,1.9vw,1.5rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote.red{border-color:var(--red);}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.8rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+  .threads{display:flex; gap:1rem; margin-top:1.8rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.08rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem 2.6rem; align-items:start; margin-top:.6rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.2rem 1.3rem;}
+  .card.bad{border-color:rgba(255,43,78,.35);}
+  .card.good{border-color:rgba(95,227,154,.35);}
+  .card h3{font-size:1rem; font-weight:800; margin-bottom:.5rem; display:flex; align-items:center; gap:.5rem;}
+  .card p{font-size:.92rem; color:var(--dim); line-height:1.5;}
+  .tag{display:inline-block; font-size:.7rem; letter-spacing:.1em; padding:.15em .55em; border-radius:5px; font-weight:700;}
+  .tag.x{background:rgba(255,43,78,.14); color:var(--red);}
+  .tag.o{background:rgba(95,227,154,.14); color:var(--good);}
+
+  /* curve svg */
+  .curve{margin-top:1.2rem; width:100%; max-width:720px;}
+
+  /* table */
+  table{border-collapse:collapse; width:100%; margin-top:.4rem; font-size:.92rem;}
+  th,td{text-align:left; padding:.7rem .9rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700;}
+  td .pillar{font-weight:800; color:#fff;}
+  td .ko{color:var(--dim); font-size:.82rem;}
+  tr.exec td .pillar{color:var(--red);}
+  tr.reap td .pillar{color:var(--blue);}
+  tr.over td .pillar{color:var(--gold);}
+  .evo{margin-top:1.2rem; display:flex; gap:1rem; flex-wrap:wrap;}
+  .evo .e{flex:1 1 240px; background:linear-gradient(135deg,rgba(28,240,212,.08),rgba(255,210,63,.05));
+    border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .evo .e b{color:var(--teal2);} .evo .e p{font-size:.84rem; color:var(--dim); margin-top:.3rem;}
+
+  /* spike list */
+  .spikes{display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:1.4rem;}
+  .spike{display:flex; gap:.9rem; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem;}
+  .spike .n{flex:0 0 2rem; height:2rem; border-radius:8px; background:var(--teal); color:#04201c; font-weight:800;
+    display:grid; place-items:center; font-size:1rem;}
+  .spike .b{font-size:.92rem; line-height:1.45;}
+  .spike .b b{color:#fff;} .spike .b span{color:var(--dim); font-size:.84rem;}
+
+  .open{display:flex; gap:1.4rem; margin-top:1rem; flex-wrap:wrap;}
+  .open .q{flex:1 1 320px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.4rem 1.5rem;}
+  .open .q .lab{font-size:.78rem; letter-spacing:.14em; color:var(--gold); font-weight:800;}
+  .open .q h3{font-size:1.15rem; margin:.55rem 0 .6rem; font-weight:800; line-height:1.3;}
+  .open .q p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+
+  /* ---- chrome ---- */
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- 1. TITLE -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>처형 플레이를 <span class="teal">빌드로 키울</span> 수 있을까</h1>
+      <p class="lead dim">플레이어가 직접 누르는 '처형' 한 방이 15~20분 플레이 동안 스킬 빌드로 점점 강해질 수 있는지 —<br>본 개발로 넘어가기 위한 <b style="color:var(--gold)">단 하나의 관문</b>을 확인한다.</p>
+      <div class="title-meta">
+        <div>기반 버전 · <b>v0.3.0 · 순간 베기 처형 / 늦은 죽음</b></div>
+        <div>날짜 · <b>2026-06-30</b></div>
+        <div>형식 · <b>토론 아젠다 → 세부 → 결론</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. AGENDA -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>본 개발로 갈지 정하는 핵심 질문</h2>
+    <div class="quote">"플레이어가 직접 누르는 <span class="teal">처형</span>이, 15~20분 플레이 동안<br>스킬 빌드로 점점 강해지는 <span class="gold">성장</span>이 가능한가?"</div>
+    <p class="dim"><b class="good">그렇다</b> → 본 개발 시작 &nbsp;·&nbsp; <b class="red">아니다</b> → 핵심 설계 다시 짜기. 아래 따져볼 점 3개는 따로 노는 안건이 아니라 <b>모두 이 질문에 딸린 질문</b>이다.</p>
+    <div class="threads">
+      <div class="thread"><div class="t">갈래 ①</div><h3>ZZZ식 늦은 죽음</h3><p>체력 0이어도 바로 안 죽음. 처형 연출이 끝나야 죽음. 기절 게이지 → 비틀대기 → 마무리 일격.</p></div>
+      <div class="thread"><div class="t">갈래 ②</div><h3>처형을 꼭 해야 하나</h3><p>정예마다 직접 처형을 꼭 하게 만들지, 잘하는 사람의 선택으로 둘지.</p></div>
+      <div class="thread"><div class="t">갈래 ③</div><h3>강화 카드 갈래 나누기</h3><p>단순 능력치 카드를 성격별로 갈라 20분 성장 곡선을 만들 수 있는가.</p></div>
+    </div>
+  </section>
+
+  <!-- 3. THESIS -->
+  <section class="slide" data-t="핵심 명제">
+    <div class="kicker">02 · 세부 — 핵심 주장</div>
+    <h2>자동 무기 키우기 <span class="dim">≠</span> 직접 누르는 처형 키우기</h2>
+    <div class="quote teal">빌드 투자는 <b class="red">누르는 횟수</b>가 아니라<br><b class="good">한 번 누를 때의 위력</b>을 키워야 한다.</div>
+    <div class="cols">
+      <div class="card bad"><h3><span class="tag x">실패</span> 더 자주 누르는 빌드</h3><p>처형 쿨타임이 짧아져 18분엔 처형 연타 → 손목 부상 + 연출 지겨움. 사람 손과 연출 감상엔 한계가 있다.</p></div>
+      <div class="card good"><h3><span class="tag o">성공</span> 더 세게 터지는 빌드</h3><p>18분엔 <b>덜 누르지만</b>, 한 번 눌러 <b class="teal">연속 처형 12회</b>로 화면을 통째로 쓸어버리는 한 방이 된다.</p></div>
+    </div>
+    <svg class="curve" viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3aa0ff"/><stop offset="1" stop-color="#1cf0d4"/></linearGradient></defs>
+      <line x1="60" y1="200" x2="700" y2="200" stroke="#1f2738"/>
+      <line x1="60" y1="200" x2="60" y2="20" stroke="#1f2738"/>
+      <path d="M60,185 C260,180 430,150 700,40" fill="none" stroke="url(#g)" stroke-width="3.5"/>
+      <circle cx="110" cy="183" r="5" fill="#3aa0ff"/><text x="120" y="178" fill="#8b97ad" font-size="13">2분 · 1마리 (수동 잡일)</text>
+      <circle cx="690" cy="44" r="6" fill="#1cf0d4"/><text x="455" y="36" fill="#1cf0d4" font-size="13" font-weight="700">18분 · 연속 처형 12회, 화면 청소</text>
+      <text x="58" y="222" fill="#5a6478" font-size="11">런 경과 →</text>
+      <text x="-205" y="16" transform="rotate(-90)" fill="#5a6478" font-size="11">처형 1회의 화면 영향력 →</text>
+    </svg>
+    <p class="dim" style="margin-top:.5rem;">⮕ 이 <b class="teal">오른쪽 위로 솟는 곡선</b>이 느껴지면 관문 통과. 안 그려지면 핵심 설계 다시.</p>
+  </section>
+
+  <!-- 4. DETAIL ① -->
+  <section class="slide" data-t="① 기절 장치">
+    <div class="kicker">03 · 세부 ① — ZZZ식 기절 장치</div>
+    <h2><span class="num">①</span>늦은 죽음 = 빌드를 굴리는 연료통</h2>
+    <div class="cols">
+      <div>
+        <ul class="clean">
+          <li><b>지금</b>: 비틀대기(그로기)는 <span class="dim">정예에게만 + 자동 베기로 체력 0을 만들 때만</span> 생김 → 처형 연료가 부족.</li>
+          <li><b class="teal">제안</b>: 비틀대기를 <b>모든 적의 기절 게이지</b>로 넓히기(ZZZ 방식). 게이지가 차면 → 비틀대기(죽음 대기).</li>
+          <li>처형 키 한 번으로 <b>대기 중인 적 전부를 연속 처형</b> → "모았다 한 방"이 규칙으로 자리 잡음.</li>
+          <li>늦은 죽음 = 연속 처형을 <b>모으는 대기 시간</b>. 단순 멋이 아니라 <b class="gold">빌드의 연료통</b>이라는 이유가 생김.</li>
+        </ul>
+      </div>
+      <div class="card" style="align-self:start;">
+        <h3>⚠ 화면 완전 멈춤은 관문의 적</h3>
+        <p>18분엔 처형이 잦아지는데 매번 <b>화면이 완전히 멈추면</b> 게임이 뚝뚝 끊긴다.</p>
+        <p style="margin-top:.6rem;"><b class="teal">→ 완전 멈춤 대신 크게 느려지기(0.1~0.2배) + 짧은 무적.</b> 멋은 살리고 · 무한 멈춤 악용은 막기.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. DETAIL ② -->
+  <section class="slide" data-t="② 처형 필수성">
+    <div class="kicker">04 · 세부 ② — 처형을 꼭 해야 하나</div>
+    <h2><span class="num">②</span>'억지로 시키기'가 아니라 '하고 싶게 만들기'로</h2>
+    <p class="lead dim" style="margin-bottom:1.4rem;">15~20분 플레이에서 "정예마다 직접 처형을 꼭 하게" 만들면 빌드 키우기와 정면으로 부딪힌다.<br>18분에 기절한 적 40마리를 하나씩 누르면 강해지는 손맛이 아니라 <b class="red">노동</b>이다.</p>
+    <div class="cols">
+      <div class="card bad"><h3>억지로 ❌</h3><p>안 누르면 안 죽음 → 잔손질 강요 → 손목 부상.</p></div>
+      <div class="card good"><h3>끌리게 ✅</h3><p><b>그냥 둔 적</b>: 죽긴 죽되 보상 적음(지금 <span class="dim">faded</span> 처리와 같은 생각).<br><b>처형한 적</b>: 빌드로 커진 위력(넓은 폭발·연속 기절·회복·가속 강화)이 터짐.</p></div>
+    </div>
+    <div class="quote teal" style="margin-top:1.6rem;">꼭 누르게 만드는 힘은 규칙(안 누르면 안 죽음)이 아니라<br><b>이득(누르면 내 가장 센 수단이 터짐)</b>에서 나온다.</div>
+  </section>
+
+  <!-- 6. DETAIL ③ -->
+  <section class="slide" data-t="③ 카드 갈래">
+    <div class="kicker">05 · 세부 ③ — 강화 카드 갈래 나누기</div>
+    <h2><span class="num">③</span>한 방의 위력을 키우는 세 갈래 + 진화</h2>
+    <table>
+      <thead><tr><th>갈래</th><th>성격</th><th>빌드가 키우는 것</th><th>곡선에 주는 도움</th></tr></thead>
+      <tbody>
+        <tr class="exec"><td><span class="pillar">처형 빌드</span><br><span class="ko">한 방형</span></td><td>모았다 한 방</td><td>처형 범위 · 연속 처형 최대 수 · 비틀대기 시간 · 처형 시 넓은 폭발</td><td><b class="red">위력 ↑↑ (핵심)</b></td></tr>
+        <tr class="reap"><td><span class="pillar">휩쓸기 빌드</span><br><span class="ko">자동 정리형</span></td><td>기절 자동으로 뿌리기</td><td>베기 수 · 공격 속도 · 사정거리 + <b>베기가 기절 게이지 쌓음</b></td><td>처형 연료 공급 ↑</td></tr>
+        <tr class="over"><td><span class="pillar">몰아치기 빌드</span><br><span class="ko">속도형</span></td><td>박자 · 눈덩이 효과</td><td>오버드라이브(가속) 중첩/지속 · 처형마다 강화 · 피 흡수 · 생존</td><td>처형 → 다음 처형 빨라짐</td></tr>
+      </tbody>
+    </table>
+    <div class="evo">
+      <div class="e"><b>★ 진화 · 화면 전체 처형</b><p>처형 범위 최대 + 연속 처형 최대 → 화면에 비틀대는 적 전부를 한꺼번에 처형.</p></div>
+      <div class="e"><b>★ 진화 · 자동 기절 장판</b><p>베기 최대 + 기절 최대 → 근처 잡몹이 알아서 처형 대기 상태가 됨. <span class="teal">자동 무기가 처형 연료를 계속 공급 = 뱀서다운 눈덩이 효과 되살리기.</span></p></div>
+    </div>
+  </section>
+
+  <!-- 7. CONCLUSION -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">06 · 결론 — 먼저 확인할 것</div>
+    <h2>본 개발로 넘어가기 전, 증명할 단 하나</h2>
+    <div class="quote gold" style="border-color:var(--gold);">"같은 처형 키인데, <span class="blue">2분엔 1마리</span> / <span class="teal">18분엔 12마리 + 화면 청소</span>로<br>느껴지는가?" — 이 곡선 하나만 느껴지면 관문 통과.</div>
+    <div class="spikes">
+      <div class="spike"><div class="n">1</div><div class="b"><b>기절 게이지를 모든 적으로</b><br><span>정예 전용 비틀대기 → 잡몹까지. 자동 베기가 기절 게이지 쌓음.</span></div></div>
+      <div class="spike"><div class="n">2</div><div class="b"><b>쿨타임 환급 없애기 → 위력으로</b><br><span>연속 처형 수에 넓은 폭발·기절 퍼뜨리기 보상을 몰아줌.</span></div></div>
+      <div class="spike"><div class="n">3</div><div class="b"><b>화면 완전 멈춤 → 느린 화면</b><br><span>무한 멈춤 악용 막고, 멋은 살리기.</span></div></div>
+      <div class="spike"><div class="n">4</div><div class="b"><b>세 갈래 카드 + 진화 1개</b><br><span>화면 전체 처형 또는 자동 기절 장판 + 적 강해지는 구간 18분까지 늘리기.</span></div></div>
+    </div>
+  </section>
+
+  <!-- 8. OPEN QUESTIONS -->
+  <section class="slide" data-t="미해결 쟁점">
+    <div class="kicker">07 · 토론 계속 — 미해결 쟁점</div>
+    <h2>다음 갈림길 2개</h2>
+    <div class="open">
+      <div class="q">
+        <div class="lab">쟁점 A</div>
+        <h3>쿨타임 환급을 <span class="red">완전히 없앨까</span>?</h3>
+        <p>지금은 "한 마리 잡을 때마다 쿨타임 즉시 초기화"라 손맛은 있지만, 이게 성장 곡선을 평평하게 만드는 주범 → <b class="teal">없애자는 입장</b>. 즉시 초기화되는 손맛에 미련이 있는가?</p>
+      </div>
+      <div class="q">
+        <div class="lab">쟁점 B</div>
+        <h3>기절을 <span class="gold">잡몹까지</span> 넓힐까?</h3>
+        <p>넓히는 순간 무게추가 뱀서(자동으로 쓸기) → <b>ZZZ식 액션(직접 처형)</b>으로 넘어간다. 이 성격 변화를 <b>일부러 노리는가</b>, 아니면 기절은 정예에게만 두고 뱀서다움을 지킬 것인가?</p>
+      </div>
+    </div>
+    <p class="dim" style="margin-top:1.8rem;">⮕ A·B 입장이 정해지면 <b>세 갈래 카드 전체 설계</b> 또는 <b>먼저 확인할 검증 코드</b>로 진행.</p>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 08</div>
+<div class="foot">처형 빌드 키우기 토론 · v0.3.0 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+</body>
+</html>

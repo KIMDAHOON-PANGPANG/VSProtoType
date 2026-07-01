@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기획 토론 목차 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --panel2:#141926; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a; --orange:#ff7a1a; --purple:#b061ff;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(1200px 600px at 70% -10%, rgba(28,240,212,.06), transparent 60%), var(--bg);
+    color:var(--ink); min-height:100vh;
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    letter-spacing:-0.01em; padding:5vh 6vw 8vh;
+  }
+  .wrap{max-width:1180px; margin:0 auto;}
+  .brand{font-size:.74rem; letter-spacing:.22em; color:var(--teal); font-weight:800; text-transform:uppercase; margin-bottom:.9rem;}
+  h1{font-size:clamp(2rem,5vw,3.2rem); font-weight:800; line-height:1.1;}
+  h1 .ex{color:var(--teal);}
+  .sub{color:var(--dim); margin-top:.7rem; font-size:1rem;}
+  .sub b{color:var(--ink); font-weight:700;}
+  .flow{margin-top:1.3rem; padding:.7rem 1rem; background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    color:var(--faint); font-size:.82rem; line-height:1.6; word-break:keep-all;}
+  .flow b{color:var(--dim); font-weight:700;}
+
+  .grid{margin-top:2.2rem; display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:1.1rem;}
+  .card{
+    display:flex; flex-direction:column; text-decoration:none; color:inherit;
+    background:linear-gradient(160deg, var(--panel2), var(--panel)); border:1px solid var(--line);
+    border-left:3px solid var(--ac,var(--teal)); border-radius:14px; padding:1.3rem 1.4rem 1.1rem;
+    transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease; position:relative; overflow:hidden;
+  }
+  .card:hover{transform:translateY(-3px); border-color:var(--ac,var(--teal)); box-shadow:0 12px 34px rgba(0,0,0,.45), 0 0 0 1px var(--ac,var(--teal)) inset;}
+  .card .num{font-size:.78rem; font-weight:800; letter-spacing:.14em; color:var(--ac,var(--teal)); font-variant-numeric:tabular-nums;}
+  .card h2{font-size:1.22rem; font-weight:800; margin:.45rem 0 .55rem; line-height:1.25;}
+  .card p{font-size:.9rem; color:var(--dim); line-height:1.5; flex:1;}
+  .card .foot{margin-top:1rem; display:flex; justify-content:space-between; align-items:center; gap:.6rem; flex-wrap:wrap;}
+  .card .concl{font-size:.78rem; font-weight:700; color:var(--ac,var(--teal)); background:color-mix(in srgb, var(--ac,var(--teal)) 12%, transparent);
+    padding:.18em .6em; border-radius:6px; line-height:1.35;}
+  .card .open{font-size:.78rem; color:var(--faint); white-space:nowrap;}
+  .card:hover .open{color:var(--ac,var(--teal));}
+
+  .c1{--ac:var(--teal);} .c2{--ac:var(--orange);} .c3{--ac:var(--blue);} .c4{--ac:var(--gold);}
+  .c5{--ac:var(--purple);} .c6{--ac:var(--good);} .c7{--ac:var(--red);}
+
+  footer{margin-top:2.6rem; color:var(--faint); font-size:.78rem; line-height:1.6;}
+  footer code{color:var(--teal2); background:rgba(28,240,212,.08); padding:.05em .4em; border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">EXECUTE // SURVIVORS · EXECUTION CORE</div>
+    <h1><span class="ex">처형 코어</span> 뱀서라이크 — 기획 토론 목차</h1>
+    <p class="sub">설계 토론 슬라이드덱 모음 · <b>7개</b> · v0.9 기반 · 2026-06-30</p>
+    <div class="flow"><b>설계 흐름</b> &nbsp;처형 빌드화 → 그로기 만료 → 저스트 회피·엘리트 패턴 → 메타 스텟·스킬 → 캐릭터 키트·각인 → 특수 각인 시련 전직 → 탈리스만식 강화</div>
+  </header>
+
+  <div class="grid">
+
+    <a class="card c1" href="2026-06-30_처형-빌드화-토론.html">
+      <div class="num">01 · 코어</div>
+      <h2>처형 빌드 키우기</h2>
+      <p>능동·이산 행동인 처형이 15~20분 런에서 스킬 빌드로 점점 강해질 수 있는가 — 프로덕션 점프를 위한 단일 관문.</p>
+      <div class="foot"><span class="concl">결론 · 한 번 누를 때의 위력</span><span class="open">열기 →</span></div>
+    </a>
+
+    <a class="card c2" href="2026-06-30_그로기-만료-처리-토론.html">
+      <div class="num">02 · 메카닉</div>
+      <h2>비틀대는 적, 죽일까 살릴까</h2>
+      <p>그로기 시간이 끝났는데 처형 안 한 정예 — 사라지게(A) vs 다시 살아남(B). 코드는 이미 B(부활)가 켜져 있다.</p>
+      <div class="foot"><span class="concl">결론 · 약화된 부활(B)</span><span class="open">열기 →</span></div>
+    </a>
+
+    <a class="card c3" href="2026-06-30_저스트회피-엘리트패턴-토론.html">
+      <div class="num">03 · 액션</div>
+      <h2>딱 맞춰 피하기 & 엘리트 패턴</h2>
+      <p>저스트 회피 + 엘리트 위협 패턴(돌진·도약·내려찍기…)을 넣되, 뱀서의 떼거리 정체성을 어떻게 지키나.</p>
+      <div class="foot"><span class="concl">결론 · 2층 구조</span><span class="open">열기 →</span></div>
+    </a>
+
+    <a class="card c4" href="2026-06-30_메타-스텟-스킬구조-토론.html">
+      <div class="num">04 · 메타</div>
+      <h2>스텟 개념 & 스킬 구조</h2>
+      <p>뱀서 스텟을 린하게 데드카피 + 게이지 통합(C, 피해량=제압) + 스킬 4트랙(무기·장신구·능동 기술·각인).</p>
+      <div class="foot"><span class="concl">결론 · 4트랙 · 게이지 통합</span><span class="open">열기 →</span></div>
+    </a>
+
+    <a class="card c5" href="2026-06-30_각인-재활용-캐릭터정체성-토론.html">
+      <div class="num">05 · 캐릭터</div>
+      <h2>캐릭터 키트 & 각인 구조</h2>
+      <p>무기·처형 형태·시그니처 각인은 캐릭터 전속(컨셉), 공용 각인 트리·스텟은 공유 재활용. 사무라이≠메테오.</p>
+      <div class="foot"><span class="concl">결론 · 클래스 키트(전속)</span><span class="open">열기 →</span></div>
+    </a>
+
+    <a class="card c6" href="2026-06-30_특수각인-시련전직-토론.html">
+      <div class="num">06 · 획득</div>
+      <h2>특수 각인 · 시련 전직</h2>
+      <p>특수 각인·전직은 레벨업이 아니라 시련(보스 처치 / 맵 보물 스팟)으로 쟁취. 레벨업은 공용 풀만.</p>
+      <div class="foot"><span class="concl">결론 · 2채널(시련=세로)</span><span class="open">열기 →</span></div>
+    </a>
+
+    <a class="card c7" href="2026-06-30_특수각인-탈리스만강화-토론.html">
+      <div class="num">07 · 빌드</div>
+      <h2>특수 각인 · 탈리스만식 강화</h2>
+      <p>던파 탈리스만처럼 스킬마다 A/B/C 강화 분기 — 처형 = A 광역 / B 연쇄 / C 흡혈. 같은 캐릭터도 빌드가 갈린다.</p>
+      <div class="foot"><span class="concl">결론 · 스킬별 A/B/C 분기</span><span class="open">열기 →</span></div>
+    </a>
+
+  </div>
+
+  <footer>
+    각 카드를 클릭하면 해당 토론 덱이 열립니다. 덱은 <code>← →</code> / 스페이스로 이동, 결론 슬라이드의 <b>📋 버튼</b>으로 체크 항목을 Claude 요청 프롬프트로 변환할 수 있습니다.<br>
+    새 토론을 추가하면 이 목차도 함께 갱신됩니다. · EXECUTE // Survivors · VSDebate
+  </footer>
+</div>
+</body>
+</html>

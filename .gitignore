@@ -15,3 +15,12 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# --- VSProtoType (HTML prototype) additions ---
+# Local Claude Code settings (personal/machine-specific)
+.claude/settings.local.json
+
+# OS junk
+Thumbs.db
+desktop.ini
+.DS_Store

@@ -1,0 +1,160 @@
+{
+  "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
+  "_version": "0.10.0",
+
+  "player": {
+    "radius": 16,
+    "maxHp": 100,
+    "speed": 240,
+    "friction": 9,
+    "attackInterval": 0.34,
+    "slashCount": 1,
+    "slashReach": 96,
+    "slashArc": 1.5,
+    "slashDamage": 14,
+    "execRadius": 175,
+    "invulnOnHit": 0.4,
+    "shieldRegenDelay": 5,
+    "shieldRegenPerSec": 0.5,
+    "overdrive": {
+      "duration": 3,
+      "perStackBonus": 0.25,
+      "maxStacks": 4
+    },
+    "dodge": {
+      "cooldown": 1.3,
+      "duration": 0.18,
+      "iframe": 0.2,
+      "speed": 760,
+      "_comment": "기본 회피(SPACE/SHIFT): duration=대시시간 / iframe=무적시간(초) / speed=대시속도. 떼거리 생존기."
+    }
+  },
+
+  "combat": {
+    "justDodge": {
+      "hitstop": 45,
+      "slowDuration": 0.45,
+      "slowScale": 0.16,
+      "staggerCharge": 55,
+      "staggerPerDamage": 0.6,
+      "weakpointMult": 2.0,
+      "exhaustDuration": 1.6,
+      "judgeRadiusMult": 1.6,
+      "_comment": "엘리트 도약을 무적창 안에 딱 맞춰 피하면 발동. hitstop=짧은 정지(ms,처형식 불릿타임 시작) / slowDuration·slowScale=정지 후 슬로우→원속도 복귀 / staggerCharge=비틀대기 충전 / staggerPerDamage=탈진 중 피격당 충전 / weakpointMult=탈진 중 받는 피해 배수 / exhaustDuration=탈진 지속 / judgeRadiusMult=저스트 판정 반경 배수."
+    }
+  },
+
+  "execution": {
+    "cooldownMax": 10,
+    "refundPerKill": 10,
+    "baseDuration": 0.1,
+    "perTargetDuration": 0.09,
+    "easePower": 1.0,
+    "bulletTime": 0.05,
+    "bulletScale": 0.22,
+    "bulletRamp": 0.04,
+    "fastScale": 1.0,
+    "windupFreeze": 0.0,
+    "perCutFreeze": 0.012,
+    "finalFreeze": 0.0,
+    "endHold": 0.03,
+    "burstDelay": 0.04,
+    "invulnPadding": 0.4,
+    "shakeStartBase": 6,
+    "shakeStartPerKill": 1.5,
+    "shakePerCut": 9,
+    "burstShake": 7,
+    "finalShakeBase": 9,
+    "finalShakePerKill": 2.5,
+    "_comment": "처형 연출: 누르면 bulletTime(초)동안 bulletScale 배율로 불릿타임 → bulletRamp(초)에 걸쳐 fastScale로 가속 → 고속 체인. baseDuration+perTargetDuration*N = 대시 길이(scaled초). burstDelay=베고 적이 터질 때까지(scaled초). windup/perCut/finalFreeze=스냅 정지(실시간초). endHold=종료 전 정착(초)."
+  },
+
+  "groggy": {
+    "duration": 3,
+    "reviveEnabled": true,
+    "reviveHpFraction": 0.4,
+    "reviveInvuln": 0.4,
+    "maxRevives": 0,
+    "warnTime": 1.0,
+    "_comment": "정예만 그로기/부활(잡몹은 즉사). reviveEnabled=부활 on/off, reviveHpFraction=부활 체력비(0.4=40%), reviveInvuln=부활 직후 무적(초), maxRevives=최대 부활 횟수(0=무한[테스트], N=N회 후 소멸), warnTime=만료 N초 전 경고 깜빡임. ※ index_9 이하 구버전은 maxRevives 0을 1로 처리(코드 ||1)하여 1회 제한 유지, index_10부터 0=무한."
+  },
+
+  "enemies": {
+    "fodder": {
+      "radius": 12,
+      "hp": 10,
+      "speedMin": 95,
+      "speedMax": 130,
+      "damage": 8,
+      "gemsOnDeath": 1,
+      "gemBonusChance": 0.25,
+      "gemValue": 1
+    },
+    "elite": {
+      "radius": 26,
+      "hp": 50,
+      "speed": 58,
+      "damage": 20,
+      "gemsOnFade": 3,
+      "gemsOnExecute": 5,
+      "gemValue": 2,
+      "staggerMax": 100,
+      "leap": {
+        "cooldownMin": 3.0,
+        "cooldownMax": 4.6,
+        "initMin": 2.0,
+        "initMax": 3.2,
+        "windup": 0.78,
+        "air": 0.36,
+        "recover": 0.6,
+        "radius": 88,
+        "damage": 24,
+        "rise": 50,
+        "triggerRange": 560,
+        "homing": 0.2,
+        "homingRate": 16,
+        "preWindow": 0.2,
+        "_comment": "도약 패턴: 도약 중(windup+air)에는 무적, 착지(hit)부터 피해. windup=예고(초) → air=체공(초) → 착지 radius(px) AoE damage. cooldownMin/Max=재시전 간격, initMin/Max=첫 도약 지연. triggerRange=이 거리 안일 때만 도약. homing=데칼이 PC 추적하는 시간(초), homingRate=추적 속도. preWindow=착지(hit) 몇 초 전부터 PRE 판정(흰색 강조)이 열려 회피 시 저스트 회피 발동(크면 쉬움). PRE 판정 크기=hit radius."
+      }
+    }
+  },
+
+  "spawner": {
+    "phase1": {
+      "untilSec": 15,
+      "fodderInterval": 0.62,
+      "fodderCap": 120
+    },
+    "phase2": {
+      "untilSec": 30,
+      "eliteOffsetY": -160
+    },
+    "phase3": {
+      "fodderInterval": 0.26,
+      "fodderCap": 340,
+      "eliteInterval": 1.6,
+      "eliteMax": 3,
+      "eliteRadiusMin": 220,
+      "eliteRadiusMax": 360
+    }
+  },
+
+  "xp": {
+    "firstLevel": 5,
+    "growthMult": 1.3,
+    "growthAdd": 4,
+    "magnetRadius": 100,
+    "pickupPad": 8,
+    "magnetSpeedMin": 140,
+    "magnetSpeedMax": 640,
+    "gemLife": 18
+  },
+
+  "contact": {
+    "interval": 0.5,
+    "fodderDamage": 2,
+    "eliteDamage": 7,
+    "knockback": 36,
+    "_comment": "뱀서식 접촉 피해: 접촉 중 interval(초)마다 fodder/eliteDamage 만큼 소량 피해(적별 독립 틱이라 둘러싸이면 누적). knockback=접촉 시 밀려나는 힘. 회피 무적 중엔 피해 없음(통과)."
+  }
+}

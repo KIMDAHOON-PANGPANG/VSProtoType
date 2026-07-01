@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>저스트 회피 & 엘리트 패턴 토론 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a; --orange:#ff7a1a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 7.5vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.4vw,3.3rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.35rem,3vw,2.2rem); line-height:1.18; font-weight:800; margin-bottom:1.2rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.92rem,1.4vw,1.15rem); line-height:1.58; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);} .orange{color:var(--orange);}
+
+  .title-wrap{max-width:940px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.6rem;}
+  .title-meta{margin-top:1.9rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.02rem,1.7vw,1.4rem); line-height:1.55; max-width:64ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.2rem 0;
+    font-size:clamp(1.02rem,1.8vw,1.45rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote2{margin-top:1.1rem; border-left:3px solid var(--teal); padding-left:1.1rem; font-size:1.02rem; font-weight:700; line-height:1.4;}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.7rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+
+  .threads{display:flex; gap:1rem; margin-top:1.6rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.05rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.05rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.85rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.3rem 2.4rem; align-items:start; margin-top:.5rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.25rem;}
+  .card.teal{border-color:rgba(28,240,212,.4);}
+  .card.blue{border-color:rgba(58,160,255,.4);}
+  .card.gold{border-color:rgba(255,210,63,.4);}
+  .card h3{font-size:1.02rem; font-weight:800; margin-bottom:.45rem;}
+  .card p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+
+  table{border-collapse:collapse; width:100%; margin-top:.3rem; font-size:.9rem;}
+  th,td{text-align:left; padding:.6rem .85rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; font-weight:700;}
+  td .pillar{font-weight:800; color:#fff;}
+  tr.hot td .pillar{color:var(--teal);}
+
+  .spikes{display:grid; grid-template-columns:repeat(2,1fr); gap:.85rem; margin-top:1.1rem;}
+  .spike{display:flex; gap:.85rem; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.9rem 1.05rem;}
+  .spike .n{flex:0 0 1.85rem; height:1.85rem; border-radius:8px; background:var(--teal); color:#04201c; font-weight:800;
+    display:grid; place-items:center; font-size:.95rem;}
+  .spike .b{font-size:.88rem; line-height:1.4;}
+  .spike .b b{color:#fff;} .spike .b span{color:var(--dim); font-size:.82rem;}
+
+  /* 흐름(루프) 박스 */
+  .flow{display:flex; align-items:center; gap:.45rem; flex-wrap:wrap; margin-top:.9rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.5rem .8rem; font-size:.86rem; font-weight:700;}
+  .flow .step.hot{border-color:var(--teal); color:var(--teal); box-shadow:0 0 14px rgba(28,240,212,.15);}
+  .flow .step.bad{border-color:rgba(255,43,78,.4); color:var(--red);}
+  .flow .arr{color:var(--dim); font-weight:800;}
+  .flow.fail .step{font-size:.82rem;}
+
+  .note{margin-top:1rem; font-size:.85rem; color:var(--dim);}
+  .note code, .ct code{color:var(--teal2); background:rgba(28,240,212,.08); padding:.05em .4em; border-radius:4px; font-size:.92em;}
+  .warn{margin-top:1rem; font-size:.9rem; color:var(--orange); font-weight:700;}
+
+  /* 체크리스트 — 결론 마무리 (클릭 토글) */
+  .checklist{display:flex; flex-direction:column; gap:.45rem; margin-top:1rem; max-width:860px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.55rem .85rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.15rem; height:1.15rem; flex:0 0 auto;
+    margin-top:.04rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#04201c; font-size:.8rem; font-weight:900;}
+  .checklist .ct{font-size:.9rem; line-height:1.4; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- 1. 표지 -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>딱 맞춰 피하기 + <span class="teal">엘리트 위협 패턴</span></h1>
+      <p class="lead dim">PC에 '딱 맞춰 피하기(저스트 회피)'를 넣고, 엘리트가 액션처럼 위협하게 만들자 —<br>그런데 이게 뱀서의 '수백 마리 떼거리' 정체성을 깨지 않으려면 어떻게?</p>
+      <div class="title-meta">
+        <div>기반 버전 · <b>v0.4 (엘리트 = 현재 패턴 없음 · 스탯 벽)</b></div>
+        <div>날짜 · <b>2026-06-30</b></div>
+        <div>형식 · <b>토론 아젠다 → 세부 → 결론·체크리스트</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 아젠다 -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>액션 방어를 넣되, 뱀서다움을 어떻게 지키나?</h2>
+    <div class="quote">"<span class="teal">딱 맞춰 피하기</span> + <span class="teal">엘리트 패턴</span>을 넣으면 게임이 더 재밌어진다.<br>그런데 <span class="red">수백 마리 떼거리</span> 디자인이 죽지 않을까?"</div>
+    <p class="dim">지금 엘리트는 걸어와 닿으면 피해만 주는 <b>스탯 벽</b>(공격 패턴 0). 여기에 액션 듀얼을 얹는 큰 방향 결정이다.</p>
+    <div class="threads">
+      <div class="thread"><div class="t">갈래 ①</div><h3>딱 맞춰 피하기</h3><p>타이밍 회피를 넣을까. 넣는다면 떼거리 속에서 어떻게 성립시키나.</p></div>
+      <div class="thread"><div class="t">갈래 ②</div><h3>엘리트 위협 패턴</h3><p>돌진·도약·내려찍기… 어떤 패턴 어휘를, 어떤 순서로 넣나.</p></div>
+      <div class="thread"><div class="t">갈래 ③</div><h3>떼거리 정체성 충돌</h3><p>읽어야 하는 액션 ↔ 못 읽는 떼거리. 둘이 공존 가능한가.</p></div>
+    </div>
+  </section>
+
+  <!-- 3. 세부 ① 딱 맞춰 피하기 -->
+  <section class="slide" data-t="① 딱 맞춰 피하기">
+    <div class="kicker">02 · 세부 ① — 딱 맞춰 피하기, 넣자</div>
+    <h2>단, <span class="teal">2층 구조</span>로 — 기본 회피 ≠ 딱 맞춤 보상</h2>
+    <p class="lead dim" style="margin-bottom:.3rem;">회피를 한 덩어리로 보면 떼거리와 충돌한다. <b>두 층으로 쪼개면</b> 둘 다 산다.</p>
+    <div class="cols">
+      <div class="card blue"><h3 class="blue">기본 회피 = 잠깐 무적</h3><p>누구나 쓰는 생존기. <b>떼거리에도 유효</b> — 치고 빠지다 위기 탈출. 개별 적을 안 읽어도 됨.</p></div>
+      <div class="card teal"><h3 class="teal">딱 맞춤(저스트) = 큰 보상</h3><p><b>엘리트 예고 공격</b>에 타이밍 맞춰야 발동. 빈틈·약점·느린 화면 보상. 고수의 영역.</p></div>
+    </div>
+    <div class="quote2">방어에도 '능동 스킬 축'이 생긴다 — 공격(처형)에 이어 <span class="teal">방어(딱 맞춤 회피)</span>까지.<br>지금은 방어 수단이 '치고 빠지기' 하나뿐이라 단조롭다.</div>
+  </section>
+
+  <!-- 4. 세부 ② 엘리트 패턴 사전 -->
+  <section class="slide" data-t="② 엘리트 패턴">
+    <div class="kicker">03 · 세부 ② — 엘리트 위협 패턴 사전</div>
+    <h2>모든 패턴은 <span class="teal">예고 → 회피 → 보복</span> 한 묶음</h2>
+    <table>
+      <thead><tr><th>패턴</th><th>예고 동작</th><th>피하는 법</th><th>보복 찬스</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pillar">돌진</span></td><td>일직선 빛나는 선</td><td>옆으로 비키기</td><td>지나친 직후 빈틈</td></tr>
+        <tr class="hot"><td><span class="pillar">도약(점프)</span></td><td>발밑 그림자 원이 모임</td><td>착지 직전 피하기</td><td>착지 후 <b>탈진</b> (← 핵심 예시)</td></tr>
+        <tr><td><span class="pillar">내려찍기</span></td><td>머리 위 큰 원 차오름</td><td>원 밖으로</td><td>찍은 직후 경직</td></tr>
+        <tr><td><span class="pillar">휩쓸기</span></td><td>좌우로 크게 예비동작</td><td>적 쪽으로 파고들기</td><td>휘두른 뒤 빈틈</td></tr>
+        <tr><td><span class="pillar">소환·강화</span></td><td>직접 공격 X</td><td>빨리 처치 우선</td><td>위협을 떼거리와 연결</td></tr>
+        <tr><td><span class="pillar">원거리 견제</span></td><td>멀리서 탄 던짐</td><td>탄 피하며 접근</td><td>접근 타이밍 싸움</td></tr>
+      </tbody>
+    </table>
+    <p class="note"><b class="teal">구간별 순서</b> — 초반: 스탯 벽(피통만, 지금 그대로) → 중반: 패턴 1개짜리 1:1 상대(<b>도약</b>) → 후반: 여러 엘리트 + 패턴 섞임 + 떼거리 압박.</p>
+  </section>
+
+  <!-- 5. 세부 ③ 시스템화 -->
+  <section class="slide" data-t="③ 시스템화">
+    <div class="kicker">04 · 세부 ③ — "잘 피하면 처형이 쉬워진다"</div>
+    <h2>딱 맞춤 회피 → 빈틈 → <span class="teal">처형</span>으로 잇기</h2>
+    <div class="flow">
+      <span class="step">도약 예고</span><span class="arr">→</span>
+      <span class="step hot">딱 맞춰 피하기</span><span class="arr">→</span>
+      <span class="step">엘리트 탈진·스턴 연출</span><span class="arr">→</span>
+      <span class="step">빈틈·약점</span><span class="arr">→</span>
+      <span class="step hot">처형 찬스</span>
+    </div>
+    <div class="flow fail">
+      <span class="step bad">회피 실패 / 일반 회피</span><span class="arr">→</span>
+      <span class="step">안 지침, 1초 뒤 다시 추적</span><span class="arr">→</span>
+      <span class="step">도약 반복</span>
+    </div>
+    <ul class="clean" style="margin-top:1.1rem;">
+      <li>딱 맞춤 회피 보상 = ① 그 엘리트 <b>약점 노출(받는 피해↑)</b> + ② <b>비틀대기 게이지 확 충전</b> → 더 빨리 그로기 → 처형.</li>
+      <li>그로기로 가는 길이 <b>2개</b>가 됨 — ⒜ 자동 베기로 체력 깎기(수동) ⒝ <b>딱 맞춤 회피로 빈틈 만들기</b>(능동·고수).</li>
+      <li>→ <b class="teal">방어 → 공격 → 처형</b>이 한 줄로 연결. '회피 빌드'라는 새 갈래도 생긴다.</li>
+    </ul>
+  </section>
+
+  <!-- 6. 세부 ④ 떼거리 정체성 -->
+  <section class="slide" data-t="④ 떼거리 충돌">
+    <div class="kicker">05 · 세부 ④ — 떼거리 디자인이 죽나?</div>
+    <h2>아니다 — <span class="teal">2층으로 나누면</span> 오히려 강해진다</h2>
+    <div class="cols">
+      <div class="card blue"><h3 class="blue">1층 · 잡몹 떼 = 뱀서 그대로</h3><p>읽을 필요 없음. 닿으면 피해. 자동 베기로 쓸어담기. <b>수백 마리 OK</b> — '날씨'처럼 깔린다.</p></div>
+      <div class="card teal"><h3 class="teal">2층 · 엘리트 = 액션 듀얼</h3><p>예고 공격을 읽고 딱 맞춰 피한다. <b>1:1 듀얼</b> — '날씨 속에서 싸우는 보스'.</p></div>
+    </div>
+    <div class="quote2">떼거리는 오히려 듀얼을 <span class="teal">더 맵게</span> 만든다 — 가만히 서서 1:1 못 함. 떼를 피하며 엘리트와 싸워야 → 긴장 폭발.</div>
+    <p class="warn">⚠ 생명선: <b>예고 가독성.</b> 수백 마리 속에서 엘리트 도약이 안 보이면 불공정. → 엘리트 치명타 예고 때 화면 톤 살짝 죽이기 · 색 강조 · 소리 신호가 필수.</p>
+  </section>
+
+  <!-- 7. 결론 + 체크리스트 (마지막) -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">06 · 결론 — 결정 & 체크리스트</div>
+    <h2>딱 맞춤 회피 채택 + <span class="teal">2층 구조</span>로 뱀서 보존</h2>
+    <div class="quote gold" style="border-color:var(--gold);">딱 맞춰 피하기 넣자. 잡몹 떼는 <b>뱀서(1층)</b> 그대로, 엘리트는 <b>액션 듀얼(2층)</b>.<br>"잘 피하면 처형이 쉬워진다"로 <span class="teal">방어·공격·처형</span>을 한 줄로 잇는다.</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct">기본 회피 = 잠깐 무적 (떼거리에도 유효, 누구나 생존용)</span></label>
+      <label><input type="checkbox"><span class="ct">딱 맞춤(저스트) 보상 = 엘리트 예고 공격에만 발동</span></label>
+      <label><input type="checkbox"><span class="ct">딱 맞춤 회피 → 그 엘리트 약점 노출(받는 피해↑) + 비틀대기 게이지 충전</span></label>
+      <label><input type="checkbox"><span class="ct">패턴 우선순위: <b>도약</b>(중반)부터 프로토 → 돌진·내려찍기 확장</span></label>
+      <label><input type="checkbox"><span class="ct">구간 곡선: 초반 스탯 벽 → 중반 1패턴 듀얼 → 후반 혼합 + 떼거리 압박</span></label>
+      <label><input type="checkbox"><span class="ct">엘리트 치명타 예고 가독성(색·소리·화면 톤) — 떼 속에서도 보이게</span></label>
+      <label><input type="checkbox"><span class="ct">회피는 '선택적 고수 플레이'로 — 안 해도 생존 가능(처형처럼 당근)</span></label>
+      <label><input type="checkbox"><span class="ct">'회피 빌드' 축(쿨·타이밍 창·보상) 강화 카드에 추가 검토</span></label>
+      <label><input type="checkbox"><span class="ct">후반 '떼 피하며 엘리트 듀얼'이 과부하 아닌 쾌감인지 체감 테스트</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 07</div>
+<div class="foot">딱 맞춰 피하기 & 엘리트 패턴 토론 · v0.4 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 처형 연출을 더 화려하게 / 엘리트 색을 더 눈에 띄게..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
