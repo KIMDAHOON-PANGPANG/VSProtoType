@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>종합 제안: 게임 구조 & 콘텐츠 (09~13) · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a; --orange:#ff7a1a; --purple:#b061ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;}
+  #deck{position:fixed; inset:0;}
+  .slide{position:absolute; inset:0; display:none; flex-direction:column; justify-content:center;
+    padding:5.5vh 7vw; opacity:0; transition:opacity .35s ease;}
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.78rem; letter-spacing:.2em; color:var(--teal); text-transform:uppercase; margin-bottom:.9rem; font-weight:700;}
+  h1{font-size:clamp(1.7rem,4.2vw,3.1rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.3rem,2.8vw,2.05rem); line-height:1.18; font-weight:800; margin-bottom:1rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.4rem;}
+  p,li{font-size:clamp(.9rem,1.35vw,1.1rem); line-height:1.5; color:var(--ink);}
+  .dim{color:var(--dim);} b,strong{color:#fff;}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);} .orange{color:var(--orange);} .purple{color:var(--purple);}
+
+  .title-wrap{max-width:960px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.16em; color:var(--dim); margin-bottom:1.5rem;}
+  .title-meta{margin-top:1.8rem; display:flex; gap:2.2rem; flex-wrap:wrap; color:var(--dim); font-size:.88rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+  .lead{font-size:clamp(1rem,1.55vw,1.32rem); line-height:1.5; max-width:66ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.5rem 0 .5rem 1.15rem; margin:.9rem 0;
+    font-size:clamp(.98rem,1.6vw,1.3rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+
+  /* 칩 */
+  .chips{display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.55rem;}
+  .chip{display:inline-flex; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:999px;
+    padding:.32rem .8rem; font-weight:800; font-size:.83rem; color:var(--ink);}
+  .chip .i{color:var(--teal); margin-right:.35rem; font-weight:900;}
+  .chip.blue{border-color:rgba(58,160,255,.5); color:var(--blue);} .chip.blue .i{color:var(--blue);}
+  .chip.red{border-color:rgba(255,43,78,.5); color:var(--red);} .chip.red .i{color:var(--red);}
+  .chip.good{border-color:rgba(95,227,154,.5); color:var(--good);} .chip.good .i{color:var(--good);}
+  .chip.gold{border-color:rgba(255,210,63,.5); color:var(--gold);} .chip.gold .i{color:var(--gold);}
+  .chip.purple{border-color:rgba(176,97,255,.5); color:var(--purple);} .chip.purple .i{color:var(--purple);}
+
+  /* 카드 그리드 */
+  .cols{display:grid; grid-template-columns:repeat(3,1fr); gap:.9rem; align-items:stretch; margin-top:.6rem;}
+  .cols.two{grid-template-columns:1fr 1fr;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:1rem 1.15rem; display:flex; flex-direction:column;}
+  .card.good{border-color:rgba(95,227,154,.5);} .card.bad{border-color:rgba(255,43,78,.45);}
+  .card.a{border-color:rgba(58,160,255,.5);} .card.b{border-color:rgba(28,240,212,.5);} .card.c{border-color:rgba(255,210,63,.5);}
+  .card .role{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); font-weight:800;}
+  .card h3{font-size:1.02rem; font-weight:900; margin:.3rem 0 .45rem;}
+  .card p{font-size:.83rem; color:var(--dim); line-height:1.45;} .card p b{color:#fff;}
+
+  /* 빅넘버/요약 5칸 */
+  .stats{display:grid; grid-template-columns:repeat(5,1fr); gap:.7rem; margin-top:.8rem;}
+  .stat{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:.9rem .9rem; border-top:3px solid var(--ac,var(--teal));}
+  .stat .n{font-size:.7rem; letter-spacing:.1em; color:var(--faint); font-weight:800;}
+  .stat .big{font-size:1.02rem; font-weight:900; color:#fff; margin:.3rem 0 .25rem; line-height:1.2;}
+  .stat .lab{font-size:.78rem; color:var(--dim); line-height:1.35;}
+
+  /* 흐름 */
+  .flow{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:.9rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800; font-size:.9rem; text-align:center;}
+  .flow .step.hot{border-color:var(--teal); color:var(--teal);}
+  .flow .step small{display:block; color:var(--dim); font-weight:600; font-size:.68rem; margin-top:.12rem;}
+  .flow .arr{color:var(--dim); font-weight:900; font-size:1.1rem;}
+  .flow .loop{color:var(--teal); font-weight:900; font-size:1.1rem;}
+
+  /* 단계 아크 */
+  .arc{display:flex; align-items:center; gap:.45rem; flex-wrap:wrap; margin-top:.9rem;}
+  .arc .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .85rem; font-weight:800; font-size:.86rem;}
+  .arc .step.hot{border-color:var(--teal); color:var(--teal);}
+  .arc .arr{color:var(--dim); font-weight:900;}
+
+  /* 시스템 맵 (레이어 밴드) */
+  .map{display:flex; flex-direction:column; gap:.35rem; margin-top:.8rem;}
+  .map .band{display:flex; align-items:center; gap:1rem; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:.75rem 1.1rem;}
+  .map .band.hot{border-color:var(--teal); background:rgba(28,240,212,.05);}
+  .map .band .bl{flex:0 0 7rem; font-weight:900; color:var(--gold); font-size:.9rem;}
+  .map .band.hot .bl{color:var(--teal);}
+  .map .band .bc{color:var(--ink); font-size:.9rem; line-height:1.4;} .map .band .bc .dim{color:var(--dim);}
+  .map .down{text-align:center; color:var(--faint); font-weight:900; font-size:1rem; line-height:.6;}
+
+  /* VS */
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:stretch; margin-top:.8rem;}
+  .vs .side{background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:1rem 1.15rem;}
+  .vs .side.a{border-color:rgba(58,160,255,.45);} .vs .side.b{border-color:rgba(176,97,255,.5);}
+  .vs .side h3{font-size:1.1rem; font-weight:900; margin-bottom:.4rem;} .vs .side .kv{font-size:.86rem; color:var(--dim); line-height:1.55;} .vs .side .kv b{color:#fff;}
+  .vs .mid{display:grid; place-items:center; font-weight:900; color:var(--red);}
+
+  table{border-collapse:collapse; width:100%; margin-top:.3rem; font-size:.86rem;}
+  th,td{text-align:left; padding:.45rem .8rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; font-weight:700;}
+  td .pillar{font-weight:800; color:#fff;} td.ok{color:var(--good);} td.hot{color:var(--teal); font-weight:700;}
+  tr.ext td{color:var(--dim);} tr.ext td .pillar{color:var(--purple);}
+
+  .threads{display:flex; gap:.9rem; margin-top:1rem; flex-wrap:wrap;}
+  .thread{flex:1 1 150px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem;}
+  .thread .t{font-size:.7rem; letter-spacing:.14em; color:var(--gold); text-transform:uppercase; font-weight:800;}
+  .thread h3{font-size:.98rem; margin:.35rem 0 .3rem; font-weight:800;} .thread p{font-size:.8rem; color:var(--dim); line-height:1.4;}
+
+  .ask{display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin-top:.7rem;}
+  .ask .q{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--gold); border-radius:11px; padding:.85rem 1.05rem;}
+  .ask .q .qn{font-size:.72rem; letter-spacing:.1em; color:var(--gold); font-weight:800;}
+  .ask .q h3{font-size:1rem; font-weight:800; margin:.3rem 0 .3rem;} .ask .q p{font-size:.82rem; color:var(--dim); line-height:1.4;}
+
+  .note{margin-top:.9rem; font-size:.83rem; color:var(--dim);}
+  .note code, .ct code{color:var(--teal2); background:rgba(28,240,212,.08); padding:.05em .4em; border-radius:4px; font-size:.92em;}
+
+  .checklist{display:flex; flex-direction:column; gap:.38rem; margin-top:.8rem; max-width:940px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.48rem .85rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.1rem; height:1.1rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center; color:#04201c; font-size:.78rem; font-weight:900;}
+  .checklist .ct{font-size:.86rem; line-height:1.4; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:.4rem; align-items:center; z-index:30;}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:20px; border-radius:4px;}
+  #count{position:fixed; bottom:18px; right:24px; color:var(--dim); font-size:.78rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:18px; left:24px; color:var(--faint); font-size:.72rem; letter-spacing:.06em; z-index:30;}
+  .hint{position:fixed; top:16px; right:24px; color:var(--faint); font-size:.7rem; z-index:30;}
+  .arrow-btn{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line); font-size:2.1rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow-btn:hover{color:var(--teal);} #prev{left:6px;} #next{right:6px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- 1. 표지 -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · 종합 제안 (덱 09~13)</span>
+      <div class="kicker">기획자 → PD · Bottom-up 제안</div>
+      <h1>게임 구조 & 콘텐츠 <span class="teal">종합 제안</span></h1>
+      <p class="lead dim">덱 09~13에서 정리된 결론을 <b>하나로 엮어</b>, PD님이 결정하실 수 있게<br><b>제안 요소</b>로 정리했습니다. (조각 → 조립 → 통합 → 제안 → 결정 → 로드맵)</p>
+      <div class="title-meta">
+        <div>정리 대상 · <b>덱 09 ~ 13</b></div>
+        <div>날짜 · <b>2026-07-02</b></div>
+        <div>기반 · <b>v0.10</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 한눈에 -->
+  <section class="slide" data-t="한눈에">
+    <div class="kicker">00 · 한눈에 (Executive Summary)</div>
+    <h2>5개 결론이 이렇게 맞물린다</h2>
+    <div class="stats">
+      <div class="stat" style="--ac:var(--good)"><div class="n">09 · 판 구조</div><div class="big">라운드</div><div class="lab">20분 아크를 웨이브+상점 라운드로</div></div>
+      <div class="stat" style="--ac:var(--blue)"><div class="n">10·11 · 전투</div><div class="big">무기→제압→처형</div><div class="lab">무기는 처형 셋업을 먹임</div></div>
+      <div class="stat" style="--ac:var(--red)"><div class="n">13 · 처형</div><div class="big">결정타만</div><div class="lab">체인·블랙홀은 무기로</div></div>
+      <div class="stat" style="--ac:var(--purple)"><div class="n">12 · 콘텐츠</div><div class="big">키트+공용</div><div class="lab">전속 처형 + 공용 무기·장신구</div></div>
+      <div class="stat" style="--ac:var(--gold)"><div class="n">13 · 양산</div><div class="big">아키타입 그리드</div><div class="lab">3축 조합으로 캐릭터 찍기</div></div>
+    </div>
+    <div class="quote teal">라운드 안에서 <b>[무기로 제압 → 결정타 처형 → 오버드라이브]</b> 루프를 돌리고,<br>콘텐츠는 <b>아키타입 그리드</b>로 찍어낸다.</div>
+  </section>
+
+  <!-- 3. 바탕 -->
+  <section class="slide" data-t="바탕 · 5결론">
+    <div class="kicker">바탕 · 09~13 확정 결론 (bottom)</div>
+    <h2>지금까지 정리된 것</h2>
+    <table>
+      <thead><tr><th>덱</th><th>주제</th><th>결론</th></tr></thead>
+      <tbody>
+        <tr><td class="hot">09</td><td><span class="pillar">라운드 vs 20분</span></td><td class="ok">라운드 채택 (20분 아크 유지)</td></tr>
+        <tr><td class="hot">10</td><td><span class="pillar">무기 추가</span></td><td class="ok">자동 무기고 (처형에 먹임)</td></tr>
+        <tr><td class="hot">11</td><td><span class="pillar">롤 테마 무기</span></td><td class="ok">발사 어휘 차용 + 롤 플레이버</td></tr>
+        <tr><td class="hot">12</td><td><span class="pillar">클래스·무기·장신구</span></td><td class="ok">전속 처형 + 공용 풀 3+3</td></tr>
+        <tr><td class="hot">13</td><td><span class="pillar">처형 아키타입</span></td><td class="ok">결정타만 · 그리드로 양산</td></tr>
+      </tbody>
+    </table>
+    <p class="note">→ 이 5개를 '조립'하면 아래 통합 그림이 된다.</p>
+  </section>
+
+  <!-- 4. 조립 ① 판 구조 -->
+  <section class="slide" data-t="조립① 라운드">
+    <div class="kicker">조립 ① · 판의 뼈대 (09)</div>
+    <h2>20분을 '라운드'로 담는다</h2>
+    <div class="flow">
+      <span class="step hot">웨이브 생존<small>1라운드</small></span><span class="arr">→</span>
+      <span class="step">정산 · 상점<small>빌드 선택</small></span><span class="arr">→</span>
+      <span class="step hot">다음 라운드</span><span class="loop">↺</span>
+      <span class="arr">&nbsp;=&nbsp;</span><span class="step">20분 아크</span>
+    </div>
+    <p class="note">코어가 <b>'순간(처형)'</b>이라 라운드와 궁합이 좋다. 상점 = 빌드 갈래를 고르는 지점.</p>
+  </section>
+
+  <!-- 5. 조립 ② 전투 루프 -->
+  <section class="slide" data-t="조립② 전투 루프">
+    <div class="kicker">조립 ② · 전투 루프 (10·11·13)</div>
+    <h2>무기 → 제압 → 처형 → 오버드라이브</h2>
+    <div class="flow">
+      <span class="step">공용 무기<small>자동</small></span><span class="arr">→</span>
+      <span class="step">그로기 · 제압<small>게이지 누적</small></span><span class="arr">→</span>
+      <span class="step hot">처형<small>결정타</small></span><span class="arr">→</span>
+      <span class="step">오버드라이브<small>가속</small></span><span class="loop">↺</span>
+    </div>
+    <p class="note">무기는 '데미지'가 아니라 <b>'처형 셋업'(그로기·제압)</b>을 먹인다(10·11). 처형이 루프의 하이라이트.</p>
+  </section>
+
+  <!-- 6. 조립 ③ 처형 정의 -->
+  <section class="slide" data-t="조립③ 처형=결정타">
+    <div class="kicker">조립 ③ · 처형 정의 (13)</div>
+    <h2>결정타 = 처형 ✓ · 흩뿌림 = 무기 ✗</h2>
+    <div class="cols two">
+      <div class="card good"><div class="role">처형 O</div><h3>결정타(피니셔)</h3><div class="chips"><span class="chip good"><span class="i">➹</span>일섬</span><span class="chip good"><span class="i">☄</span>메테오</span></div><p style="margin-top:.55rem;">쓰러진 적에게 묵직한 한 방.</p></div>
+      <div class="card bad"><div class="role">처형 X → 무기</div><h3>광역 청소</h3><div class="chips"><span class="chip red"><span class="i">↯</span>체인 번개</span><span class="chip red"><span class="i">🌀</span>블랙홀</span></div><p style="margin-top:.55rem;">흩어진 자코 정리 → 무기 레이어로.</p></div>
+    </div>
+    <p class="note">판단: <b>결정타면 처형, 퍼지면 무기.</b></p>
+  </section>
+
+  <!-- 7. 조립 ④ 콘텐츠 3층 -->
+  <section class="slide" data-t="조립④ 콘텐츠 3층">
+    <div class="kicker">조립 ④ · 콘텐츠 구조 (12 · 05·06·07)</div>
+    <h2>전속 키트 + 공용 풀 + 특수 각인</h2>
+    <div class="cols">
+      <div class="card a"><div class="role">🔒 전속 (컨셉)</div><h3>클래스 키트</h3><p>기본 무기 + <b>처형 형태</b> + 시그니처 각인. = 캐릭터 정체성.</p></div>
+      <div class="card b"><div class="role">♻ 공용 (재활용)</div><h3>공용 풀</h3><p>무기 · 장신구 · 공용 각인. 아무 캐릭터나. = 빌드 자유.</p></div>
+      <div class="card c"><div class="role">⭐ 전직</div><h3>특수 각인</h3><p>시련(보스/보물) → 전직. 탈리스만 A/B/C. = 성장 스파이크.</p></div>
+    </div>
+    <p class="note">정체성=키트 / 빌드 자유=공용 풀 / 성장=전직. 셋이 분리돼 서로 안 섞인다.</p>
+  </section>
+
+  <!-- 8. 조립 ⑤ 양산 엔진 -->
+  <section class="slide" data-t="조립⑤ 그리드">
+    <div class="kicker">조립 ⑤ · 양산 엔진 (13)</div>
+    <h2>처형 = 3축의 조합 (시스템은 유한)</h2>
+    <table>
+      <thead><tr><th>축</th><th>값</th></tr></thead>
+      <tbody>
+        <tr><td class="hot">접근</td><td>이동형 · 원격형 · 설치형 · 소환형</td></tr>
+        <tr><td class="hot">범위</td><td>단일 강타 · 라인 · 광역</td></tr>
+        <tr><td class="hot">부수효과</td><td>자코 쓸기 · 버프 · 힐 · 디버프</td></tr>
+      </tbody>
+    </table>
+    <p class="note">새 캐릭터 = <b>축 조합 + 플레이버 + 수치.</b> 시스템 재사용 → 양산 지속 가능(무모 X).</p>
+  </section>
+
+  <!-- 9. 통합 시스템 맵 -->
+  <section class="slide" data-t="통합 맵">
+    <div class="kicker">통합 · 한 장에</div>
+    <h2>전체가 이렇게 맞물린다</h2>
+    <div class="map">
+      <div class="band"><span class="bl">판 구조</span><span class="bc">웨이브 생존 → 정산·상점 → 다음 라운드 <span class="dim">(20분 아크)</span></span></div>
+      <div class="down">↓</div>
+      <div class="band hot"><span class="bl">전투 루프</span><span class="bc"><b>공용 무기(자동)</b> → 그로기·제압 → <b>처형(결정타)</b> → 오버드라이브 ↺</span></div>
+      <div class="down">↓</div>
+      <div class="band"><span class="bl">성장</span><span class="bc">레벨업(공용 무기·장신구·각인) + <b>시련→전직</b>(특수 각인 A/B/C)</span></div>
+      <div class="down">↓</div>
+      <div class="band"><span class="bl">양산</span><span class="bc">아키타입 그리드 <span class="dim">(접근 × 범위 × 부수효과)</span> 조합으로 캐릭터·처형 찍기</span></div>
+    </div>
+    <p class="note">PD 관점 요약 — <b>이 한 장이 게임의 전부</b>다.</p>
+  </section>
+
+  <!-- 10. 제안 A 클래스 로스터 -->
+  <section class="slide" data-t="제안A 로스터">
+    <div class="kicker">제안 A · 클래스 로스터</div>
+    <h2>사무라이·마법사 + <span class="purple">그리드 확장 후보</span></h2>
+    <table>
+      <thead><tr><th>클래스</th><th>접근</th><th>범위</th><th>강 / 약</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pillar">사무라이</span></td><td>이동</td><td>라인</td><td>기동·청소 / 위험 커밋</td></tr>
+        <tr><td><span class="pillar">마법사</span></td><td>원격</td><td>광역 강타</td><td>안전·단일 폭딜 / 청소↓</td></tr>
+        <tr class="ext"><td><span class="pillar">사제 (후보)</span></td><td>원격</td><td>광역</td><td>힐·생존 / 딜↓</td></tr>
+        <tr class="ext"><td><span class="pillar">광전사 (후보)</span></td><td>이동</td><td>단일</td><td>폭딜·버프 / 광역 X</td></tr>
+        <tr class="ext"><td><span class="pillar">함정꾼 (후보)</span></td><td>설치</td><td>지대</td><td>지역 장악 / 즉발 X</td></tr>
+      </tbody>
+    </table>
+    <p class="note">로스터 확장 = <b>그리드의 빈 좌표를 채우는 방식.</b> 후보는 예시 — 몇 종을 목표로 할지는 PD 결정.</p>
+  </section>
+
+  <!-- 11. 제안 B 무기·장신구 -->
+  <section class="slide" data-t="제안B 공용풀">
+    <div class="kicker">제안 B · 공용 풀 (12)</div>
+    <h2>공용 무기 3 · 장신구 3</h2>
+    <div class="cols">
+      <div class="card a"><div class="role">무기 1</div><h3>➹ 관통 표창</h3><div class="chips"><span class="chip blue"><span class="i">→</span>직선</span></div><p style="margin-top:.5rem;">→ 맞은 적 제압↑</p></div>
+      <div class="card b"><div class="role">무기 2</div><h3>◉ 회전 도</h3><div class="chips"><span class="chip"><span class="i">↻</span>궤도</span></div><p style="margin-top:.5rem;">→ 닿는 적 지속 제압</p></div>
+      <div class="card c"><div class="role">무기 3</div><h3>💥 충격파</h3><div class="chips"><span class="chip gold"><span class="i">◎</span>광역</span></div><p style="margin-top:.5rem;">→ 감속 + 그로기 누적</p></div>
+    </div>
+    <div class="chips" style="margin-top:1rem;">
+      <span class="chip red"><span class="i">🗡</span>처형자의 인장 · 처형</span>
+      <span class="chip"><span class="i">◈</span>제압의 부적 · 그로기 가속</span>
+      <span class="chip gold"><span class="i">»</span>가속 엔진 · 템포</span>
+    </div>
+    <p class="note">무기 = 처형 셋업(제압) / 장신구 = 빌드 기둥(처형·제압·템포) 강화.</p>
+  </section>
+
+  <!-- 12. PD 결정 요청 -->
+  <section class="slide" data-t="★ PD 결정 요청">
+    <div class="kicker">결정 요청 · PD님이 정해주실 것</div>
+    <h2>제안 요소 — 열린 결정 5</h2>
+    <div class="ask">
+      <div class="q"><div class="qn">결정 ①</div><h3>라운드 수·시간</h3><p>예: 5라운드 × 4분? / 웨이브 밀도·상점 간격.</p></div>
+      <div class="q"><div class="qn">결정 ②</div><h3>아키타입 3축 확정</h3><p>접근·범위·부수효과 이대로? 축 추가/수정?</p></div>
+      <div class="q"><div class="qn">결정 ③</div><h3>클래스 로스터 목표 수</h3><p>2종부터? 최종 몇 종? 확장 속도.</p></div>
+      <div class="q"><div class="qn">결정 ④</div><h3>전직 트리거</h3><p>시련(보스/보물)로 확정? vs 레벨업 병행?</p></div>
+      <div class="q" style="grid-column:1 / -1"><div class="qn">결정 ⑤</div><h3>프로토 1순위</h3><p>무엇부터 만드나 — 기획자 추천은 다음 장(로드맵).</p></div>
+    </div>
+  </section>
+
+  <!-- 13. 추천 로드맵 -->
+  <section class="slide" data-t="로드맵">
+    <div class="kicker">로드맵 · 기획자 추천 순서</div>
+    <h2>무엇부터 만드나</h2>
+    <div class="arc">
+      <span class="step hot">① 아키타입 그리드 확정</span><span class="arr">→</span>
+      <span class="step">② 사·마 2축 프로토 (index_14)</span><span class="arr">→</span>
+      <span class="step">③ 공용 무기 3종</span><span class="arr">→</span>
+      <span class="step">④ 라운드 뼈대</span><span class="arr">→</span>
+      <span class="step">⑤ 로스터 확장</span>
+    </div>
+    <p class="note">핵심 이유 — <b>그리드부터 확정</b>해야 양산 리스크가 사라진다(13). 그 뒤엔 조합만 찍으면 됨.</p>
+    <div class="chips" style="margin-top:.9rem;">
+      <span class="chip good"><span class="i">✓</span>그리드 = 양산 안전판</span>
+      <span class="chip"><span class="i">▶</span>사·마 2축 = 손맛 검증</span>
+      <span class="chip"><span class="i">▶</span>무기 3종 = 전투 루프 완성</span>
+    </div>
+  </section>
+
+  <!-- 14. 결론 + 체크리스트 -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">결론 · 종합 & PD 체크리스트</div>
+    <h2>라운드 × 처형 루프 × <span class="teal">그리드 양산</span></h2>
+    <div class="quote" style="border-color:var(--gold);">라운드 안에서 <b>무기→제압→처형(결정타)→오버드라이브</b> 루프. 콘텐츠는 <b>키트(전속)+공용 풀</b>,<br>양산은 <b>아키타입 그리드</b>. → 캐릭터 늘리기 전에 <span class="teal">그리드부터 확정</span>.</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct">판 구조 = <b>라운드(20분 아크)</b> 승인</span></label>
+      <label><input type="checkbox"><span class="ct">전투 루프 = <b>무기 → 제압 → 처형 → 오버드라이브</b> 승인</span></label>
+      <label><input type="checkbox"><span class="ct">처형 = <b>결정타만</b> (체인/블랙홀은 무기) 승인</span></label>
+      <label><input type="checkbox"><span class="ct">콘텐츠 3층 = 키트(전속) / 공용 풀 / 전직(특수 각인) 승인</span></label>
+      <label><input type="checkbox"><span class="ct"><b>[결정 ②]</b> 아키타입 3축(접근·범위·부수효과) 확정</span></label>
+      <label><input type="checkbox"><span class="ct"><b>[결정 ③]</b> 클래스 로스터 목표 수 결정</span></label>
+      <label><input type="checkbox"><span class="ct"><b>[결정 ④]</b> 전직 트리거 = 시련 확정</span></label>
+      <label><input type="checkbox"><span class="ct"><b>[결정 ①]</b> 라운드 수·시간 결정</span></label>
+      <label><input type="checkbox"><span class="ct"><b>[결정 ⑤]</b> 프로토 1순위 = 그리드 확정 → 사·마 2축(index_14)</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow-btn" id="prev">‹</button>
+<button class="arrow-btn" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 14</div>
+<div class="foot">종합 제안 (09~13) · 기획자 → PD · v0.10 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 아키타입 그리드 표로 캐릭터 8종 채워줘 / 사·마 2축부터 index_14 구현..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
