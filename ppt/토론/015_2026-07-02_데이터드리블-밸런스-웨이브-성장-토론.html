@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>데이터로 굴리는 밸런스 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 8vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1.1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.6vw,3.4rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.4rem,3.2vw,2.3rem); line-height:1.18; font-weight:800; margin-bottom:1.4rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.95rem,1.45vw,1.18rem); line-height:1.6; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  em{font-style:normal; color:var(--gold);}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);}
+
+  .title-wrap{max-width:920px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.8rem;}
+  .title-meta{margin-top:2rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.05rem,1.8vw,1.45rem); line-height:1.55; max-width:60ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.4rem 0;
+    font-size:clamp(1.05rem,1.9vw,1.5rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote.red{border-color:var(--red);}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.8rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+  .threads{display:flex; gap:1rem; margin-top:1.8rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.08rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem 2.6rem; align-items:start; margin-top:.6rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.2rem 1.3rem;}
+  .card.bad{border-color:rgba(255,43,78,.35);}
+  .card.good{border-color:rgba(95,227,154,.35);}
+  .card h3{font-size:1rem; font-weight:800; margin-bottom:.5rem; display:flex; align-items:center; gap:.5rem;}
+  .card p{font-size:.92rem; color:var(--dim); line-height:1.5;}
+  .tag{display:inline-block; font-size:.7rem; letter-spacing:.1em; padding:.15em .55em; border-radius:5px; font-weight:700;}
+  .tag.x{background:rgba(255,43,78,.14); color:var(--red);}
+  .tag.o{background:rgba(95,227,154,.14); color:var(--good);}
+
+  .curve{margin-top:1.2rem; width:100%; max-width:720px;}
+
+  table{border-collapse:collapse; width:100%; margin-top:.4rem; font-size:.92rem;}
+  th,td{text-align:left; padding:.7rem .9rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700;}
+  td .pillar{font-weight:800; color:#fff;}
+  td .ko{color:var(--dim); font-size:.82rem;}
+
+  .code{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:.9rem 1.1rem;
+    font-family:"Cascadia Code",Consolas,monospace; font-size:.82rem; color:var(--teal2); line-height:1.55;
+    overflow:auto; margin-top:1rem; white-space:pre;}
+  .code .k{color:var(--gold);} .code .c{color:var(--faint);} .code .n{color:var(--good);}
+
+  .evo{margin-top:1.2rem; display:flex; gap:1rem; flex-wrap:wrap;}
+  .evo .e{flex:1 1 240px; background:linear-gradient(135deg,rgba(28,240,212,.08),rgba(255,210,63,.05));
+    border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .evo .e b{color:var(--teal2);} .evo .e p{font-size:.84rem; color:var(--dim); margin-top:.3rem;}
+
+  .spikes{display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:1.4rem;}
+  .spike{display:flex; gap:.9rem; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem;}
+  .spike .n{flex:0 0 2rem; height:2rem; border-radius:8px; background:var(--teal); color:#04201c; font-weight:800;
+    display:grid; place-items:center; font-size:1rem;}
+  .spike .b{font-size:.92rem; line-height:1.45;}
+  .spike .b b{color:#fff;} .spike .b span{color:var(--dim); font-size:.84rem;}
+
+  .open{display:flex; gap:1.4rem; margin-top:1rem; flex-wrap:wrap;}
+  .open .q{flex:1 1 300px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.4rem 1.5rem;}
+  .open .q .lab{font-size:.78rem; letter-spacing:.14em; color:var(--gold); font-weight:800;}
+  .open .q h3{font-size:1.15rem; margin:.55rem 0 .6rem; font-weight:800; line-height:1.3;}
+  .open .q p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+
+  /* ===== 인포그래픽 컴포넌트 ===== */
+  .flow{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:1rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800; font-size:.9rem; text-align:center;}
+  .flow .step.hot{border-color:var(--teal); color:var(--teal); box-shadow:0 0 14px rgba(28,240,212,.15);}
+  .flow .step.bad{border-color:rgba(255,43,78,.4); color:var(--red);}
+  .flow .step small{display:block; color:var(--dim); font-weight:600; font-size:.7rem; margin-top:.15rem;}
+  .flow .arr{color:var(--dim); font-weight:900; font-size:1.1rem;}
+  .arc{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:.9rem;}
+  .arc .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800;}
+  .arc .step small{display:block; color:var(--faint); font-weight:600; font-size:.68rem; margin-top:.1rem;}
+  .arc .arr{color:var(--dim); font-weight:900;}
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:stretch; margin-top:.9rem;}
+  .vs .side{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .vs .side.a{border-color:rgba(58,160,255,.4);} .vs .side.b{border-color:rgba(28,240,212,.45);}
+  .vs .side h3{font-size:1rem; font-weight:800; margin-bottom:.4rem;}
+  .vs .side p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+  .vs .side .big{font-size:1.2rem; color:var(--teal2); font-weight:800; margin-top:.5rem; font-family:Consolas,monospace;}
+  .vs .mid{display:grid; place-items:center; font-weight:900; color:var(--red); font-size:1.1rem;}
+  .matrix{display:grid; grid-template-columns:1fr 1fr; gap:.7rem; margin-top:.9rem;}
+  .matrix .cell{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.9rem 1rem;}
+  .matrix .cell b{color:#fff; font-size:.95rem;} .matrix .cell p{font-size:.82rem; color:var(--dim); margin-top:.25rem; line-height:1.4;}
+  .matrix .cell.good{border-color:rgba(95,227,154,.4);} .matrix .cell.bad{border-color:rgba(255,43,78,.4);}
+  .stats{display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;}
+  .stat{flex:1 1 150px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .stat .big{font-size:2.2rem; font-weight:900; color:var(--teal); line-height:1;}
+  .stat .lab{font-size:.82rem; color:var(--dim); margin-top:.35rem; line-height:1.4;}
+  .chips{display:flex; gap:.55rem; flex-wrap:wrap; margin-top:.9rem;}
+  .chip{background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:.42rem .95rem; font-weight:700; font-size:.88rem;}
+  .chip .i{color:var(--teal); margin-right:.35rem;}
+
+  .checklist{display:flex; flex-direction:column; gap:.55rem; margin-top:1.2rem; max-width:820px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.7rem .9rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.2rem; height:1.2rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#04201c; font-size:.85rem; font-weight:900;}
+  .checklist .ct{font-size:.95rem; line-height:1.45; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- ===== 1. 표지 ===== -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>데이터로 굴리는 밸런스 —<br>웨이브 · 성장 · 등장 타이밍</h1>
+      <p class="lead dim">손감으로 찍던 숫자를 <b class="teal">공식 한 줄 + 게이트 한 개</b>로 바꿔 전부 JSON에서 굴리는 법. 몬스터 수량·HP 스케일·스탯·빌드 성장·장신구/상자 등장까지 하나의 규칙으로.</p>
+      <div class="title-meta">
+        <div>기반 빌드 · <b>v0.11.0 (index_15)</b></div>
+        <div>날짜 · <b>2026-07-02</b></div>
+        <div>형식 · <b>가이드 토론 → 세부 → 결론</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 2. 아젠다 ===== -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>감이 아니라 <span class="teal">규칙</span>으로 굴릴 수 있나?</h2>
+    <div class="quote">"성장·등장 숫자를 전부 <b class="gold">공식(커브)</b>과 <b class="gold">게이트(잠금)</b>로 바꿔 JSON 한 곳에서 드리블할까?"</div>
+    <p class="dim">이미 라운드 방식(웨이브+상점)은 정했다(덱 09·14). 이번엔 그 안을 <b>무엇을 어떤 모양의 데이터로 뺄지</b>를 못 박는다. 지금은 <code>spawner.phase1/2/3</code> 시간표가 코드에 반쯤 박혀 있어 손대기 번거롭다.</p>
+    <div class="threads">
+      <div class="thread"><div class="t">Thread ①</div><h3>웨이브 밀도 · HP 스케일</h3><p>몇 마리 나오고, 웨이브마다 얼마나 단단해지나 — 예산·커브로.</p></div>
+      <div class="thread"><div class="t">Thread ②</div><h3>스탯 · 빌드 성장</h3><p>회피·HP·이속·아머는 왜? 액티브/패시브는 레벨 몇에 얼마씩?</p></div>
+      <div class="thread"><div class="t">Thread ③</div><h3>등장 타이밍</h3><p>장신구는 언제부터, 상자→상점은 몇 초에 — 게이트 숫자로.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 3. 세부① 웨이브 수량 = 라운드 테이블 + 예산 ===== -->
+  <section class="slide" data-t="웨이브 수량">
+    <div class="kicker">02 · 세부 — 몬스터 수량 밸런스</div>
+    <h2><span class="num">①</span>웨이브 = 표 한 줄, 밀도는 <span class="teal">예산 ÷ 길이</span></h2>
+    <p class="dim">핵심: <code>interval</code>(스폰 간격)을 감으로 만지지 말고, <b>"이 웨이브에 총 몇 마리(예산)"</b>를 먼저 정한 뒤 간격을 역산한다. 브로테이토처럼 웨이브가 <b>표의 한 행</b>이 된다.</p>
+    <div class="code"><span class="c">// gameBalance.json — spawner.phase* 를 waves[] 배열로 승격</span>
+<span class="k">"waves"</span>: [
+  { id:<span class="n">1</span>, duration:<span class="n">45</span>, budget:<span class="n">55</span>,  mix:{fodder:<span class="n">1.0</span>},            elite:<span class="n">0</span> },
+  { id:<span class="n">2</span>, duration:<span class="n">50</span>, budget:<span class="n">80</span>,  mix:{fodder:<span class="n">.85</span>, runner:<span class="n">.15</span>}, elite:<span class="n">1</span> },
+  { id:<span class="n">5</span>, duration:<span class="n">60</span>, budget:<span class="n">120</span>, mix:{fodder:<span class="n">.7</span>, runner:<span class="n">.3</span>},  <span class="k">boss</span>:<span class="n">"knight_captain"</span> }
+]</div>
+    <div class="stats">
+      <div class="stat"><div class="big">55</div><div class="lab">웨이브1 예산 ÷ 45초<br>= 초당 <b class="teal">1.2마리</b> (역산된 간격 0.82s)</div></div>
+      <div class="stat"><div class="big">12~15</div><div class="lab">한 판 웨이브 수 (덱 09 결론)<br>웨이브 45~75초</div></div>
+      <div class="stat"><div class="big">boss</div><div class="lab">5웨이브마다 지정 = 처형 클라이맥스<br>표에서 한 칸이면 끝</div></div>
+    </div>
+    <p class="dim" style="margin-top:1rem;">현재값(참고): <code>phase1 interval 0.62·cap 120</code>, <code>phase3 interval 0.26·cap 340·elite 최대 3</code> → 이걸 waves 표의 1행씩으로 옮기면 코드 수정 없이 숫자만 드리블.</p>
+  </section>
+
+  <!-- ===== 4. 세부② HP 스케일 = 공식 한 줄 ===== -->
+  <section class="slide" data-t="HP 스케일">
+    <div class="kicker">03 · 세부 — 웨이브별 HP 스케일링</div>
+    <h2><span class="num">②</span>HP는 <span class="teal">곱셈 커브</span> 한 줄로 자란다</h2>
+    <div class="vs">
+      <div class="side a">
+        <h3 class="blue">선형(더하기)</h3>
+        <p>웨이브마다 같은 양 +. 후반에 무기 화력(곱셈)에 뒤처져 <b>너무 물러진다.</b></p>
+        <div class="big">hp = base × (1 + k·(w−1))</div>
+      </div>
+      <div class="mid">추천 →</div>
+      <div class="side b">
+        <h3 class="teal">지수(곱하기)</h3>
+        <p>무기도 레벨로 곱셈 성장 → 적 HP도 곱셈이라야 <b>추격</b>이 된다. 단 <b>mult 작게(1.10~1.15)</b>.</p>
+        <div class="big">hp = base × mult^(w−1)</div>
+      </div>
+    </div>
+    <svg class="curve" viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg">
+      <line x1="55" y1="215" x2="670" y2="215" stroke="#1f2738" stroke-width="1.5"/>
+      <line x1="55" y1="25" x2="55" y2="215" stroke="#1f2738" stroke-width="1.5"/>
+      <polyline points="55,205 670,150" fill="none" stroke="#3aa0ff" stroke-width="3"/>
+      <path d="M55,205 C 220,196 360,168 470,132 C 560,100 630,60 670,30" fill="none" stroke="#1cf0d4" stroke-width="3"/>
+      <line x1="470" y1="132" x2="470" y2="215" stroke="#ff2b4e" stroke-width="1.5" stroke-dasharray="4 4"/>
+      <circle cx="470" cy="132" r="4" fill="#ff2b4e"/>
+      <text x="478" y="120" fill="#ff2b4e" font-size="13" font-weight="700">보스 웨이브 = 하드 점프</text>
+      <text x="600" y="145" fill="#3aa0ff" font-size="13" font-weight="700">선형</text>
+      <text x="600" y="48" fill="#1cf0d4" font-size="13" font-weight="700">지수</text>
+      <text x="55" y="235" fill="#8b97ad" font-size="12">웨이브 1</text>
+      <text x="620" y="235" fill="#8b97ad" font-size="12">웨이브 15</text>
+    </svg>
+    <p class="dim" style="margin-top:.6rem;">데이터: 적별 <code>hpMult</code> 하나 + 보스 웨이브만 <code>bossMult</code>로 계단 점프. 예) fodder base 10·mult 1.12 → 웨이브10 ≈ <b class="teal">27</b>, 웨이브15 ≈ <b class="teal">48</b>. elite base 50 → 웨이브10 ≈ <b class="gold">138</b>. 커브는 단순하게, 놀람은 보스에서.</p>
+  </section>
+
+  <!-- ===== 5. 세부③ 스탯 4종 왜 만드나 ===== -->
+  <section class="slide" data-t="스탯 4종">
+    <div class="kicker">04 · 세부 — 회피·HP·이속·아머, 왜?</div>
+    <h2><span class="num">③</span>스탯은 <span class="teal">'다른 커브'</span>일 때만 넣는다</h2>
+    <p class="dim">스탯 자체가 목적이 아니다 — 스탯은 <b>장신구 빌드의 재료</b>다. 없으면 장신구가 전부 '공격력 +'만 되어 빌드가 단조로워진다. 판정 기준: <b class="gold">"이미 있는 커브와 겹치면 뺀다."</b></p>
+    <table>
+      <thead><tr><th>스탯</th><th>여는 축</th><th>우리에 필요?</th><th>판정 · 이유</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pillar">HP</span></td><td>실수 버퍼(맞아도 버팀)</td><td><span class="tag o">유지</span></td><td>코어 생존치. 최대HP·전체회복 카드 이미 존재.</td></tr>
+        <tr><td><span class="pillar teal">회피(대시)</span></td><td>능동 회피 · 저스트</td><td><span class="tag o">유지</span></td><td>우리 정체성(2층 방어). 쿨·무적시간 카드 축.</td></tr>
+        <tr><td><span class="pillar">이동속도</span></td><td>치고 빠지기(카이팅)</td><td><span class="tag o" style="background:rgba(255,210,63,.14);color:var(--gold)">소량</span></td><td>떼거리 도는 재미. 단 과하면 위협 무력화 → 조금만.</td></tr>
+        <tr><td><span class="pillar red">아머</span></td><td>받는 피해 감소</td><td><span class="tag x">조건부</span></td><td>HP와 커브가 겹침. <b>'받는 피해 −%'</b>로 달라질 때만 도입, 아니면 보류.</td></tr>
+      </tbody>
+    </table>
+    <div class="quote teal" style="margin-top:1.1rem;">아머를 넣을 거면 HP와 <b>다른 모양</b>(비율 감소 vs 고정 버퍼)이어야 존재 이유가 생긴다.</div>
+  </section>
+
+  <!-- ===== 6. 세부④ 빌드 성장 = 액티브 게이트 vs 패시브 선형 ===== -->
+  <section class="slide" data-t="빌드 성장">
+    <div class="kicker">05 · 세부 — 무기·장신구·처형 빌드 성장</div>
+    <h2><span class="num">④</span>패시브는 <span class="teal">매 레벨</span>, 액티브는 <span class="gold">레벨 게이트</span></h2>
+    <div class="vs">
+      <div class="side b">
+        <h3 class="teal">패시브 (수치)</h3>
+        <p>공격력·틱 데미지·개수 — <b>매 레벨 선형</b>으로 부드럽게. 이미 weapons.json이 이 방식.</p>
+        <div class="big">실효 = base + (Lv−1) × perX</div>
+      </div>
+      <div class="mid">+</div>
+      <div class="side a">
+        <h3 class="gold">액티브 (새 효과)</h3>
+        <p>새 무기 습득·진화·특수효과 — <b>드문 '와우 순간'</b>. 정해진 레벨에서만 연다.</p>
+        <div class="big">Lv 5 / 10 / 15 게이트</div>
+      </div>
+    </div>
+    <div class="arc">
+      <div class="step hot">Lv1<small>무기 습득</small></div><span class="arr">→</span>
+      <div class="step">Lv2~4<small>패시브만 성장</small></div><span class="arr">→</span>
+      <div class="step hot">Lv5<small>액티브 1 개방</small></div><span class="arr">→</span>
+      <div class="step">Lv6~9<small>패시브</small></div><span class="arr">→</span>
+      <div class="step hot">Lv10<small>진화 / 액티브 2</small></div>
+    </div>
+    <p class="dim" style="margin-top:1rem;">현행 <code>perX</code>(참고): homing <b>+4</b>/레벨, star <b>+5</b>, bolt <b>+6</b>, 처형 파문 shock <b>+16</b>. → 패시브는 이대로 두고, 각 무기 JSON에 <code>evolveAt:5</code> 같은 <b>액티브 게이트 필드</b>만 추가하면 두 축이 분리된다.</p>
+  </section>
+
+  <!-- ===== 7. 세부⑤ 장신구 등장 타이밍 ===== -->
+  <section class="slide" data-t="장신구 등장">
+    <div class="kicker">06 · 세부 — 장신구는 언제부터?</div>
+    <h2><span class="num">⑤</span>등장도 <span class="teal">게이트 숫자</span> 하나로</h2>
+    <p class="dim">VS도 초반엔 무기만, 장신구는 나중에 합류한다. 이유는 <b>초반에 '무기 정체성'부터 세우게</b> 하려는 것. 이걸 감이 아니라 아이템마다 <code>unlockWave</code> 숫자로 박는다.</p>
+    <div class="flow">
+      <div class="step hot">웨이브 1~2<small>무기만 (정체성)</small></div><span class="arr">→</span>
+      <div class="step">웨이브 3+<small>장신구 합류</small></div><span class="arr">→</span>
+      <div class="step">웨이브 5+<small>전직·특수 각인</small></div>
+    </div>
+    <div class="code" style="margin-top:1.2rem;"><span class="c">// 각 아이템에 게이트 필드 → 카드 뽑기 때 필터</span>
+<span class="k">"talisman_haste"</span>: { stat:<span class="n">"moveSpeed"</span>, unlockWave:<span class="n">3</span> }
+<span class="c">// 뽑기: pool.filter(it =&gt; wave &gt;= (it.unlockWave || 1))</span></div>
+    <div class="quote teal">밸런스 드리블 가능? <b class="good">그렇다.</b> 숫자 하나(<code>unlockWave</code>)만 바꾸면 등장 타이밍이 통째로 움직인다 — 코드 수정 0.</div>
+    <p class="dim">accessories.json(공용 스탯 15종)은 이미 대기(KIP) 중 → 각 항목에 <code>unlockWave</code>만 붙이면 끝.</p>
+  </section>
+
+  <!-- ===== 8. 세부⑥ 상자→상점 이동 타이밍 ===== -->
+  <section class="slide" data-t="상자·상점">
+    <div class="kicker">07 · 세부 — 매직서바이버식 상자→상점</div>
+    <h2><span class="num">⑥</span>초를 찍지 말고 <span class="teal">웨이브 경계</span>에 붙인다</h2>
+    <p class="dim">"몇 초가 적당?"의 답은 <b>감으로 초를 찍는 게 아니라</b>, 이미 있는 <b class="gold">웨이브 경계(긴장의 골짜기)</b>에 붙이는 것. 그러면 웨이브 길이(45~75초)가 <b>자동으로 간격</b>이 된다.</p>
+    <svg class="curve" viewBox="0 0 700 210" xmlns="http://www.w3.org/2000/svg">
+      <polyline points="55,175 165,55 190,150 300,50 325,150 435,45 460,150 570,42 595,150 665,60"
+        fill="none" stroke="#ff7a1a" stroke-width="2.5"/>
+      <g fill="#1cf0d4">
+        <circle cx="190" cy="150" r="6"/><circle cx="325" cy="150" r="6"/><circle cx="460" cy="150" r="6"/><circle cx="595" cy="150" r="6"/>
+      </g>
+      <g fill="#9ffff2" font-size="12" font-weight="700" text-anchor="middle">
+        <text x="190" y="172">상점</text><text x="325" y="172">상점</text><text x="460" y="172">상점</text><text x="595" y="172">상점</text>
+      </g>
+      <text x="95" y="45" fill="#ff7a1a" font-size="12" font-weight="700">긴장 ↑</text>
+      <text x="360" y="200" fill="#5a6478" font-size="12">웨이브 사이 = 자연 휴식점(치우고 → 고르고 → 다음)</text>
+    </svg>
+    <div class="chips">
+      <span class="chip"><span class="i">◆</span>기본: <code>shopEvery:1</code> (매 웨이브 클리어 직후)</span>
+      <span class="chip"><span class="i">◆</span>중간 상자 원하면: <code>midChest:{atFraction:0.6}</code> (웨이브 60% 지점)</span>
+      <span class="chip"><span class="i">◆</span>재화 = 골드 젬(덱 09) 승격</span>
+    </div>
+  </section>
+
+  <!-- ===== 9. 미해결 쟁점 ===== -->
+  <section class="slide" data-t="미해결 쟁점">
+    <div class="kicker">08 · 토론 계속 — 미해결 쟁점</div>
+    <h2>다음 갈림길</h2>
+    <div class="open">
+      <div class="q"><div class="lab">쟁점 A</div><h3>아머, 넣을까 뺄까</h3><p>HP와 커브가 겹친다. <b>'받는 피해 −%'</b>로 확실히 다르면 O, 애매하면 초반엔 X(보류).</p></div>
+      <div class="q"><div class="lab">쟁점 B</div><h3>HP 커브 상한</h3><p>지수는 좋지만 엔드리스(20분 연속) 모드에선 폭주 위험. <b>웨이브 N 이후 상한(캡)</b>을 둘까?</p></div>
+      <div class="q"><div class="lab">쟁점 C</div><h3>웨이브 중간 상자</h3><p>경계 상점만으로 충분한가, 아니면 매직서바이버처럼 <b>웨이브 도중 상자</b>도 실험할까?</p></div>
+    </div>
+    <p class="dim" style="margin-top:1.6rem;">⮕ A·B·C를 정하면 waves 테이블의 컬럼(아머·hpCap·midChest)이 확정된다.</p>
+  </section>
+
+  <!-- ===== 10. 결론 + 체크리스트 ===== -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">09 · 결론</div>
+    <h2>감을 규칙으로 — <span class="teal">공식 한 줄 · 게이트 한 개</span></h2>
+    <div class="quote gold" style="border-color:var(--gold);">"모든 성장·등장 숫자를 <b>커브(공식)</b>와 <b>게이트(잠금)</b>로 바꿔 gameBalance.json 한 곳에서 굴린다. 공식은 단순하게, 예외는 보스·브레이크포인트로."</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct">gameBalance.json에 <code>waves[]</code> 라운드 테이블 추가 — 웨이브별 길이·예산(budget)·적 비율·엘리트/보스</span></label>
+      <label><input type="checkbox"><span class="ct">밀도 = <b>예산 ÷ 길이</b> 규칙으로 스폰 간격 역산 (interval을 감으로 직접 만지지 않기)</span></label>
+      <label><input type="checkbox"><span class="ct">적 HP = <code>base × mult^(웨이브−1)</code> 지수 커브(mult 1.10~1.15) + 보스 웨이브 하드 점프</span></label>
+      <label><input type="checkbox"><span class="ct">스탯 정리: HP·회피 유지 / 이속 소량 / 아머는 '받는 피해 −%'로 차별화될 때만 도입</span></label>
+      <label><input type="checkbox"><span class="ct">성장 규칙 확정: 패시브 = <code>base+(Lv−1)×perX</code>(현행 유지), 액티브·진화 = Lv 게이트(5/10/15)</span></label>
+      <label><input type="checkbox"><span class="ct">아이템에 <code>unlockWave</code>/<code>unlockLevel</code> 게이트 필드 → 장신구는 웨이브 3~4부터 카드 풀 편입</span></label>
+      <label><input type="checkbox"><span class="ct">상점/상자 = 웨이브 경계(<code>shopEvery:1</code>)에 배치, 웨이브 중간 상자는 실험값으로 데이터화 후 보류</span></label>
+      <label><input type="checkbox"><span class="ct">(프로토) index_15 spawner(phase1/2/3)를 <code>waves[]</code> 데이터드리븐 루프로 1차 이관</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 00</div>
+<div class="foot">데이터로 굴리는 밸런스 · v0.11.0 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: waves 표를 12웨이브로 초안 잡아줘 / 아머는 일단 빼줘..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>

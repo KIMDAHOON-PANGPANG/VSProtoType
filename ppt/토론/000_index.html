@@ -27,6 +27,7 @@
   .flow{margin-top:1.3rem; padding:.7rem 1rem; background:var(--panel); border:1px solid var(--line); border-radius:10px;
     color:var(--faint); font-size:.82rem; line-height:1.6; word-break:keep-all;}
   .flow b{color:var(--dim); font-weight:700;}
+  .flow b.teal{color:var(--teal);} .flow b.orange{color:var(--orange);}
 
   .grid{margin-top:2.2rem; display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:1.1rem;}
   .card{
@@ -47,7 +48,7 @@
 
   .c1{--ac:var(--teal);} .c2{--ac:var(--orange);} .c3{--ac:var(--blue);} .c4{--ac:var(--gold);}
   .c5{--ac:var(--purple);} .c6{--ac:var(--good);} .c7{--ac:var(--red);} .c8{--ac:var(--teal2);}
-  .c9{--ac:var(--gold);} .c10{--ac:var(--blue);} .c11{--ac:var(--teal);} .c12{--ac:var(--purple);} .c13{--ac:var(--good);} .c14{--ac:var(--gold);}
+  .c9{--ac:var(--gold);} .c10{--ac:var(--blue);} .c11{--ac:var(--teal);} .c12{--ac:var(--purple);} .c13{--ac:var(--good);} .c14{--ac:var(--gold);} .c15{--ac:var(--teal);} .c16{--ac:var(--orange);}
 
   footer{margin-top:2.6rem; color:var(--faint); font-size:.78rem; line-height:1.6;}
   footer code{color:var(--teal2); background:rgba(28,240,212,.08); padding:.05em .4em; border-radius:4px;}
@@ -58,8 +59,8 @@
   <header>
     <div class="brand">EXECUTE // SURVIVORS · EXECUTION CORE</div>
     <h1><span class="ex">처형 코어</span> 뱀서라이크 — 기획 토론 목차</h1>
-    <p class="sub">설계 토론 슬라이드덱 모음 · <b>14개</b> · v0.10 기반 · 2026-06-30 ~ 07-02</p>
-    <div class="flow"><b>설계 흐름</b> &nbsp;처형 빌드화 → 그로기 만료 → 저스트 회피·엘리트 패턴 → 메타 스텟·스킬 → 캐릭터 키트·각인 → 특수 각인 시련 전직 → 탈리스만식 강화 → 처형 강제 연타 해결 → 게임 구조: 라운드 vs 20분 버티기 → 무기 추가 아이데이션 → 롤 테마 무기 → 클래스·무기·장신구 3안 → 처형 아키타입·양산 → <b>★ 종합 제안 (09~13)</b></div>
+    <p class="sub">설계 토론 슬라이드덱 모음 · <b>16개</b> · v0.10~0.11 기반 · 2026-06-30 ~ 07-02</p>
+    <div class="flow"><b>설계 흐름</b> &nbsp;처형 빌드화 → 그로기 만료 → 저스트 회피·엘리트 패턴 → 메타 스텟·스킬 → 캐릭터 키트·각인 → 특수 각인 시련 전직 → 탈리스만식 강화 → 처형 강제 연타 해결 → 게임 구조: 라운드 vs 20분 버티기 → 무기 추가 아이데이션 → 롤 테마 무기 → 클래스·무기·장신구 3안 → 처형 아키타입·양산 → <b>★ 종합 제안 (09~13)</b> → <b class="teal">데이터로 굴리는 밸런스 (15)</b> → <b class="orange">레벨 스케일 vs 등급제 (16)</b></div>
   </header>
 
   <div class="grid">
@@ -160,6 +161,20 @@
       <h2>게임 구조 & 콘텐츠 종합 제안</h2>
       <p>덱 09~13을 하나로 — 라운드 × [무기(데미지)→그로기→처형] 루프 × 아키타입 그리드 양산. 기획자→PD 바텀업 + PD 결정 요청 6.</p>
       <div class="foot"><span class="concl">결론 · 통합 그림 + PD 결정 요청</span><span class="open">열기 →</span></div>
+    </a>
+
+    <a class="card c15" href="015_2026-07-02_데이터드리블-밸런스-웨이브-성장-토론.html">
+      <div class="num">15 · 밸런스</div>
+      <h2>데이터로 굴리는 밸런스</h2>
+      <p>손감 숫자를 공식 한 줄 + 게이트 한 개로 JSON에 뺀다. 웨이브 수량(예산÷길이)·HP 지수 커브·스탯 4종·빌드 성장(패시브 선형/액티브 게이트)·장신구/상자 등장 타이밍 가이드.</p>
+      <div class="foot"><span class="concl">결론 · 커브 + 게이트로 데이터화</span><span class="open">열기 →</span></div>
+    </a>
+
+    <a class="card c16" href="016_2026-07-02_레벨스케일-vs-등급제-성장모델-토론.html">
+      <div class="num">16 · 성장 모델</div>
+      <h2>레벨 스케일 vs 등급제</h2>
+      <p>VS식 결정적 레벨 스케일 빌드 vs 메가봉크식 스킬 등급(희귀도) — 장단점 비교. 처형=실력 게임이라 코어는 VS(뼈대), 등급은 장신구·상점에만 얹어 뽑기 재미를 곁들이는 하이브리드.</p>
+      <div class="foot"><span class="concl">결론 · 뼈대 VS + 양념 등급(상점)</span><span class="open">열기 →</span></div>
     </a>
 
   </div>
