@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>롤 테마 무기 아이데이션 토론 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a; --orange:#ff7a1a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;}
+  #deck{position:fixed; inset:0;}
+  .slide{position:absolute; inset:0; display:none; flex-direction:column; justify-content:center;
+    padding:6vh 7.5vw; opacity:0; transition:opacity .35s ease;}
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1rem; font-weight:700;}
+  h1{font-size:clamp(1.7rem,4.2vw,3.2rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.35rem,3vw,2.2rem); line-height:1.18; font-weight:800; margin-bottom:1.2rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.92rem,1.4vw,1.15rem); line-height:1.58; color:var(--ink);}
+  .dim{color:var(--dim);} b,strong{color:#fff;}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);} .orange{color:var(--orange);}
+
+  .title-wrap{max-width:960px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.6rem;}
+  .title-meta{margin-top:1.9rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.02rem,1.7vw,1.4rem); line-height:1.55; max-width:66ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.2rem 0;
+    font-size:clamp(1.02rem,1.8vw,1.45rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote2{margin-top:1.1rem; border-left:3px solid var(--teal); padding-left:1.1rem; font-size:1.02rem; font-weight:700; line-height:1.4;}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.7rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+
+  .threads{display:flex; gap:1rem; margin-top:1.5rem; flex-wrap:wrap;}
+  .thread{flex:1 1 220px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.05rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.05rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.85rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.3rem 2.2rem; align-items:start; margin-top:.5rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.25rem;}
+  .card.good{border-color:rgba(95,227,154,.45);} .card.red{border-color:rgba(255,43,78,.4);}
+  .card h3{font-size:1.02rem; font-weight:800; margin-bottom:.4rem;}
+  .card p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+
+  table{border-collapse:collapse; width:100%; margin-top:.2rem; font-size:.9rem;}
+  th,td{text-align:left; padding:.5rem .8rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; font-weight:700;}
+  td .pillar{font-weight:800; color:#fff;} td.hit{color:var(--teal); font-weight:700;}
+
+  .note{margin-top:.9rem; font-size:.85rem; color:var(--dim);}
+  .note code, .ct code{color:var(--teal2); background:rgba(28,240,212,.08); padding:.05em .4em; border-radius:4px; font-size:.92em;}
+
+  .checklist{display:flex; flex-direction:column; gap:.42rem; margin-top:1rem; max-width:920px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.52rem .85rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.15rem; height:1.15rem; flex:0 0 auto;
+    margin-top:.04rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center; color:#04201c; font-size:.8rem; font-weight:900;}
+  .checklist .ct{font-size:.89rem; line-height:1.4; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line); font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);} #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- 1. 표지 -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · Design Debate · 10번 덱 후속</div>
+      <h1>발사 모양은 어디서 오나 — <span class="teal">롤 테마 무기 이데이션</span></h1>
+      <p class="lead dim">무기 '발사 모양'을 VS·매직서바이벌에서 <b>그대로 카피</b>해도 되나?<br>이 모양 아이디어는 <b>원래 어디서</b> 왔나? 그리고 <b>롤</b>을 소스로 삼으면?</p>
+      <div class="title-meta">
+        <div>기반 버전 · <b>v0.10 (무기 1개 · 전부 패시브)</b></div>
+        <div>날짜 · <b>2026-07-02</b></div>
+        <div>형식 · <b>토론 아젠다 → 세부 → 결론·체크리스트</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 아젠다 -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>카피할까 · 어디서 왔나 · 롤로 확장?</h2>
+    <div class="quote">"VS·매직서바이벌 <span class="teal">발사 모양 그대로 카피</span>? / 이 모양 아이디어는 <span class="teal">어디서 시작</span>? / <span class="gold">롤</span>을 테마로 확장하면?"</div>
+    <p class="dim">10번 덱(무기 추가)의 후속 — 이번엔 <b>발사 모양의 출처</b>를 짚고, <b>롤을 플레이버 소스</b>로 확장한다.</p>
+    <div class="threads">
+      <div class="thread"><div class="t">질문 ①</div><h3>출처</h3><p>발사 모양은 누구 것인가. 어디서 시작됐나.</p></div>
+      <div class="thread"><div class="t">질문 ②</div><h3>카피 vs 파생</h3><p>어디까지 베끼고, 어디부터 우리 것으로 바꾸나.</p></div>
+      <div class="thread"><div class="t">질문 ③</div><h3>롤 테마</h3><p>왜 롤이 좋은 소스인가.</p></div>
+    </div>
+  </section>
+
+  <!-- 3. 세부 ① 뿌리 -->
+  <section class="slide" data-t="① 발사 모양 뿌리">
+    <div class="kicker">02 · 세부 ① — 발사 모양의 뿌리</div>
+    <h2>발사 모양은 '보편 어휘' — 누구 소유도 아니다</h2>
+    <ul class="clean">
+      <li><b>VS(2021)</b>는 <b>매직 서바이벌(2019, 국산)</b>에서 큰 영향을 받은 걸로 알려짐. 매직서바이벌이 '자동 발사 무기 모음' 공식의 원류에 가깝다.</li>
+      <li>하지만 발사 모양 자체(직선·관통·유도·부메랑·궤도·장판·오라·설치)는 훨씬 오래됐다 — <b>슛뎀업·탄막, 트윈스틱 슈터, 액션RPG 스펠</b>에서 수십 년 축적된 어휘.</li>
+      <li>즉 "직선으로 날아가는 투사체" 같은 건 <b>장르 공통 어휘</b>지, 특정 게임의 소유물이 아니다.</li>
+    </ul>
+    <div class="quote2">발사 모양 = <b>방향</b>(직선/유도/확산/궤도) × <b>전달</b>(투사체/근접호/장판/오라/소환) × <b>타이밍</b>(자동/조건)의 조합 팔레트.</div>
+  </section>
+
+  <!-- 4. 세부 ② 카피 vs 파생 -->
+  <section class="slide" data-t="② 카피 vs 파생">
+    <div class="kicker">03 · 세부 ② — 어디까지 베끼나</div>
+    <h2>어휘는 카피 OK, 특정 무기 클론은 X</h2>
+    <div class="cols">
+      <div class="card good"><h3 class="good">✓ 어휘는 카피 (장르 관습)</h3><p>직선·관통·궤도·오라·장판·유도 등 <b>모양 어휘</b>는 그대로 써도 된다. 누구나 쓰는 표준.</p></div>
+      <div class="card red"><h3 class="red">✗ 특정 무기 1:1 클론</h3><p>킹 바이블·마늘 같은 <b>VS 특정 무기를 그대로 베끼면</b> 파생물 + 정체성 상실.</p></div>
+    </div>
+    <div class="quote2">핵심 — 모양 어휘는 가져오되, <b>각 모양을 우리 코어(그로기·처형·제압)에 먹이도록 파생.</b><br>무기는 '데미지'가 아니라 <span class="teal">'처형 셋업'</span>을 해야 한다 (10번 덱 결론).</div>
+  </section>
+
+  <!-- 5. 세부 ③ 왜 롤 -->
+  <section class="slide" data-t="③ 왜 롤">
+    <div class="kicker">04 · 세부 ③ — 왜 롤이 좋은 소스</div>
+    <h2>롤 = 정리된 '스펠 모양' 창고 + <span class="teal">처형 테마 궁합</span></h2>
+    <p class="lead dim" style="margin-bottom:.4rem;">롤 스킬은 스킬샷/타겟/장판/대시/설치/오라로 <b>분류가 명확</b> → 발사 어휘와 딱 매핑. 게다가 롤엔 이미 <b>'처형 궁'</b>(다리우스·파이크·우르곳·가렌)이 있어 우리 처형 코어와 테마가 맞는다.</p>
+    <table>
+      <thead><tr><th>롤 스킬 (모양)</th><th>우리 무기</th><th>처형/그로기 연결</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pillar">이즈리얼 Q</span> · 직선 관통</td><td>자동 관통 화살</td><td class="hit">맞은 적 제압 게이지↑</td></tr>
+        <tr><td><span class="pillar">럭스 R</span> · 화면 횡단 레이저</td><td>주기적 가로 레이저</td><td class="hit">관통 정예 즉시 그로기</td></tr>
+        <tr><td><span class="pillar">말자하 R</span> · 단일 속박</td><td>정예 하나 속박</td><td class="hit">처형 셋업(고정)</td></tr>
+        <tr><td><span class="pillar">애니비아 벽</span> · 설치 장판</td><td>지대 장판 설치</td><td class="hit">밟은 적 감속+그로기 누적</td></tr>
+        <tr><td><span class="pillar">다리우스·파이크 R</span> · 처형 궁</td><td>'처형 표식' 무기</td><td class="hit">저체력·그로기 적 처형 강화</td></tr>
+      </tbody>
+    </table>
+    <p class="note">롤 챔프를 그대로 베끼는 게 아니라, 스킬의 <b>'모양 + 역할'만 빌려</b> 우리 처형 루프에 연결. 플레이버는 익숙, 기능은 우리 것.</p>
+  </section>
+
+  <!-- 6. 결론 + 체크리스트 -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">05 · 결론 — 결정 & 체크리스트</div>
+    <h2>모양 어휘는 빌리고 · 롤로 입히고 · <span class="teal">처형에 먹인다</span></h2>
+    <div class="quote gold" style="border-color:var(--gold);">발사 모양은 <b>보편 어휘(카피 OK)</b>, 특정 무기 클론은 X.<br>롤은 <b>정리된 스펠 모양 + 처형 테마 궁합</b>이라 좋은 소스 — 모양·역할만 빌려 <span class="teal">우리 그로기·처형에 먹인다.</span></div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct">발사 모양 <b>'어휘'</b>(직선/관통/유도/궤도/장판/오라/설치)를 표준으로 채택</span></label>
+      <label><input type="checkbox"><span class="ct">VS·매직서바이벌 <b>특정 무기 1:1 클론 금지</b> — 파생만</span></label>
+      <label><input type="checkbox"><span class="ct">모든 무기는 데미지가 아니라 <b>그로기·제압·처형 셋업</b>을 먹이도록 설계(10번 덱)</span></label>
+      <label><input type="checkbox"><span class="ct">롤 스킬을 <b>'모양+역할' 소스</b>로 사용 (챔프 그대로 카피 X)</span></label>
+      <label><input type="checkbox"><span class="ct">롤 '처형 궁'(다리우스/파이크/우르곳) 테마를 처형 코어와 연결</span></label>
+      <label><input type="checkbox"><span class="ct">시작 무기 3~4개부터: 직선 관통 / 궤도 / 장판 / 처형 표식</span></label>
+      <label><input type="checkbox"><span class="ct">각 무기가 어떤 처형 경로를 먹이는지 1줄로 정의(제압↑ / 즉시 그로기 / 처형 강화)</span></label>
+      <label><input type="checkbox"><span class="ct">(검증) 무기 1개만으로도 '처형까지 이어지는지' 체감 테스트</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 06</div>
+<div class="foot">롤 테마 무기 아이데이션 토론 · v0.10 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 롤 챔프 5명 골라 무기 스펙 구체화 / 시작 무기 3종부터 index_14로..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
