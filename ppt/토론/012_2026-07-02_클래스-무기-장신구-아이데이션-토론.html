@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>클래스·무기·장신구 아이데이션 토론 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a; --orange:#ff7a1a; --purple:#b061ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;}
+  #deck{position:fixed; inset:0;}
+  .slide{position:absolute; inset:0; display:none; flex-direction:column; justify-content:center;
+    padding:6vh 7.5vw; opacity:0; transition:opacity .35s ease;}
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1rem; font-weight:700;}
+  h1{font-size:clamp(1.7rem,4.2vw,3.2rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.35rem,3vw,2.2rem); line-height:1.18; font-weight:800; margin-bottom:1.1rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.92rem,1.4vw,1.15rem); line-height:1.5; color:var(--ink);}
+  .dim{color:var(--dim);} b,strong{color:#fff;}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);} .orange{color:var(--orange);} .purple{color:var(--purple);}
+
+  .title-wrap{max-width:960px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.6rem;}
+  .title-meta{margin-top:1.9rem; display:flex; gap:2.2rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+  .lead{font-size:clamp(1rem,1.6vw,1.35rem); line-height:1.5; max-width:64ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.5rem 0 .5rem 1.2rem; margin:1rem 0;
+    font-size:clamp(1rem,1.7vw,1.35rem); font-weight:700; line-height:1.4;}
+
+  /* 칩 (아이콘 명사) */
+  .chips{display:flex; gap:.55rem; flex-wrap:wrap; margin-top:.5rem;}
+  .chip{display:inline-flex; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:999px;
+    padding:.36rem .85rem; font-weight:800; font-size:.86rem; color:var(--ink);}
+  .chip .i{color:var(--teal); margin-right:.4rem; font-weight:900;}
+  .chip.blue{border-color:rgba(58,160,255,.5); color:var(--blue);} .chip.blue .i{color:var(--blue);}
+  .chip.gold{border-color:rgba(255,210,63,.5); color:var(--gold);} .chip.gold .i{color:var(--gold);}
+  .chip.red{border-color:rgba(255,43,78,.5); color:var(--red);} .chip.red .i{color:var(--red);}
+
+  /* 좌우 대립 VS */
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:1.1rem; align-items:stretch; margin-top:1rem;}
+  .vs .side{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:1.2rem 1.35rem;}
+  .vs .side.a{border-color:rgba(58,160,255,.45);} .vs .side.b{border-color:rgba(176,97,255,.5);}
+  .vs .side .role{font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); font-weight:800;}
+  .vs .side h3{font-size:1.5rem; font-weight:900; margin:.3rem 0 .7rem;}
+  .vs .side .kv{font-size:.92rem; color:var(--dim); line-height:1.7;} .vs .side .kv b{color:#fff;}
+  .vs .mid{display:grid; place-items:center; font-weight:900; color:var(--red); font-size:1.2rem;}
+
+  /* 3단 아이디어 카드 */
+  .cols{display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; align-items:stretch; margin-top:.7rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:1.1rem 1.2rem; display:flex; flex-direction:column;}
+  .card.a{border-color:rgba(58,160,255,.5);} .card.b{border-color:rgba(28,240,212,.5);} .card.c{border-color:rgba(255,210,63,.5);}
+  .card .ic{font-size:1.7rem; line-height:1;}
+  .card h3{font-size:1.12rem; font-weight:900; margin:.45rem 0 .5rem;}
+  .card .arrow{margin-top:.6rem; font-size:.9rem; color:var(--ink); font-weight:700; line-height:1.4;}
+  .card .arrow .to{color:var(--teal);}
+  .card p{font-size:.85rem; color:var(--dim); line-height:1.45; margin-top:.35rem;}
+
+  .threads{display:flex; gap:1rem; margin-top:1.3rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem 1.15rem;}
+  .thread .t{font-size:.72rem; letter-spacing:.14em; color:var(--gold); text-transform:uppercase; font-weight:800;}
+  .thread h3{font-size:1.02rem; margin:.4rem 0 .3rem; font-weight:800;}
+  .thread p{font-size:.83rem; color:var(--dim); line-height:1.4;}
+
+  /* 흐름 */
+  .flow{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:1rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800; font-size:.9rem;}
+  .flow .step.hot{border-color:var(--teal); color:var(--teal);}
+  .flow .arr{color:var(--dim); font-weight:900; font-size:1.1rem;}
+
+  .note{margin-top:.95rem; font-size:.84rem; color:var(--dim);}
+  .note code, .ct code{color:var(--teal2); background:rgba(28,240,212,.08); padding:.05em .4em; border-radius:4px; font-size:.92em;}
+
+  .checklist{display:flex; flex-direction:column; gap:.4rem; margin-top:.9rem; max-width:920px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.5rem .85rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.15rem; height:1.15rem; flex:0 0 auto;
+    margin-top:.04rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center; color:#04201c; font-size:.8rem; font-weight:900;}
+  .checklist .ct{font-size:.88rem; line-height:1.4; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow-btn{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line); font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow-btn:hover{color:var(--teal);} #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- 1. 표지 -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE · 011 후속</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>클래스 · 무기 · 장신구 <span class="teal">아이데이션 3안</span></h1>
+      <p class="lead dim">사무라이·마법사 <b>처형(캐릭터 전속)</b> + <b>공용 무기 3</b> + <b>공용 장신구 3</b>.<br>구조는 앞 덱(005 키트 · 006 전직 · 007 탈리스만 · 011 롤테마) 그대로.</p>
+      <div class="title-meta">
+        <div>기반 버전 · <b>v0.10</b></div>
+        <div>날짜 · <b>2026-07-02</b></div>
+        <div>형식 · <b>인포그래픽 · 아젠다 → 세부 → 결론</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 아젠다 -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>무엇을 뽑나 — 전속 처형 + 공용 풀</h2>
+    <div class="flow">
+      <span class="step hot">처형 = 캐릭터 전속</span><span class="arr">+</span>
+      <span class="step">전직으로 성장</span>
+      <span class="arr">&nbsp;|&nbsp;</span>
+      <span class="step hot">무기 · 장신구 = 공용</span><span class="arr">+</span>
+      <span class="step">아무 캐릭터나</span>
+    </div>
+    <div class="threads">
+      <div class="thread"><div class="t">A · 클래스</div><h3>사무라이 · 마법사</h3><p>기본 무기 + 처형 형태(전속). 마법사 처형은 3안.</p></div>
+      <div class="thread"><div class="t">B · 공용 무기</div><h3>3안</h3><p>발사 모양 어휘 × 그로기·제압을 먹임(011).</p></div>
+      <div class="thread"><div class="t">C · 공용 장신구</div><h3>3안</h3><p>빌드 기둥(처형·제압·템포)을 지원.</p></div>
+    </div>
+  </section>
+
+  <!-- 3. 클래스 (VS) -->
+  <section class="slide" data-t="클래스 (사·마)">
+    <div class="kicker">02 · 세부 A — 클래스 (처형은 전속)</div>
+    <h2>사무라이 <span class="dim">vs</span> 마법사</h2>
+    <div class="vs">
+      <div class="side a">
+        <div class="role">근접</div><h3>⚔ 사무라이</h3>
+        <div class="kv"><b>기본 무기</b> · 근접 베기<br><b>처형</b> · 직선 일섬</div>
+        <div class="chips"><span class="chip blue"><span class="i">➹</span>직선 관통</span><span class="chip"><span class="i">☠</span>경로 자코 즉사</span></div>
+      </div>
+      <div class="mid">VS</div>
+      <div class="side b">
+        <div class="role">원거리</div><h3>✦ 마법사</h3>
+        <div class="kv"><b>기본 무기</b> · 발사체 자동<br><b>처형</b> · 3안 중 택 (다음 장)</div>
+        <div class="chips"><span class="chip purple" style="border-color:rgba(176,97,255,.5);color:var(--purple)"><span class="i" style="color:var(--purple)">✦</span>원거리 시전</span></div>
+      </div>
+    </div>
+    <p class="note">처형 '형태'는 <b>캐릭터 컨셉</b> — 사무라이(직선) ≠ 마법사(광역/연쇄). 전직 레벨로 성장(006·007).</p>
+  </section>
+
+  <!-- 4. 마법사 처형 3안 -->
+  <section class="slide" data-t="마법사 처형 3안">
+    <div class="kicker">03 · 세부 A' — 마법사 처형 (내 제안)</div>
+    <h2>마법사 처형 — <span class="teal">3안</span> (탈리스만 A/B/C)</h2>
+    <div class="cols">
+      <div class="card a"><div class="ic">☄</div><h3>A · 메테오</h3><span class="chip blue"><span class="i">◎</span>점 광역</span><div class="arrow">머리 위 낙하 <span class="to">→ 착지 폭발</span></div><p>대상 + 주변 자코 정리. '한 점 강타'.</p></div>
+      <div class="card b"><div class="ic">⚡</div><h3>B · 연쇄 번개</h3><span class="chip"><span class="i">↯</span>튕김 연쇄</span><div class="arrow">대상 <span class="to">→ 근처로 튐</span></div><p>자코들 감전 연쇄사. '넓게 퍼짐'.</p></div>
+      <div class="card c"><div class="ic">🌀</div><h3>C · 블랙홀</h3><span class="chip gold"><span class="i">⊙</span>흡입→폭발</span><div class="arrow">주변 흡입 <span class="to">→ 한 점 폭발</span></div><p>흩어진 자코를 모아 한 방. '정리형'.</p></div>
+    </div>
+    <p class="note">셋 다 사무라이 <b>'직선'</b>과 대비되는 다른 모양 → 캐릭터 개성. <b class="teal">전직 분기(탈리스만 A/B/C)</b>로 골라 찍게(007).</p>
+  </section>
+
+  <!-- 5. 공용 무기 3안 -->
+  <section class="slide" data-t="공용 무기 3안">
+    <div class="kicker">04 · 세부 B — 공용 무기 (아무 캐릭터나)</div>
+    <h2>공용 무기 3안 — 모양 × <span class="teal">처형에 먹임</span></h2>
+    <div class="cols">
+      <div class="card a"><div class="ic">➹</div><h3>1 · 관통 표창</h3><span class="chip blue"><span class="i">→</span>직선 관통</span><div class="arrow">일직선 자동 발사 <span class="to">→ 제압↑</span></div></div>
+      <div class="card b"><div class="ic">◉</div><h3>2 · 회전 도</h3><span class="chip"><span class="i">↻</span>궤도</span><div class="arrow">주위를 돎 <span class="to">→ 닿는 적 지속 제압</span></div></div>
+      <div class="card c"><div class="ic">💥</div><h3>3 · 충격파</h3><span class="chip gold"><span class="i">◎</span>광역 원</span><div class="arrow">발밑 파동 <span class="to">→ 감속 + 그로기 누적</span></div></div>
+    </div>
+    <p class="note">전부 '데미지'가 아니라 <b>그로기·제압을 먹여 처형 셋업</b>(011 원칙). 모양 어휘는 장르 공통, 역할은 우리 것.</p>
+  </section>
+
+  <!-- 6. 공용 장신구 3안 -->
+  <section class="slide" data-t="공용 장신구 3안">
+    <div class="kicker">05 · 세부 C — 공용 장신구 (패시브)</div>
+    <h2>공용 장신구 3안 — <span class="teal">빌드 기둥</span> 지원</h2>
+    <div class="cols">
+      <div class="card a"><div class="ic">🗡</div><h3>처형자의 인장</h3><span class="chip red"><span class="i">◆</span>처형 빌드</span><div class="arrow">처형 반경↑ <span class="to">+ 처형 시 광역 피해</span></div></div>
+      <div class="card b"><div class="ic">◈</div><h3>제압의 부적</h3><span class="chip"><span class="i">▲</span>그로기 가속</span><div class="arrow">제압 누적↑ <span class="to">→ 처형 더 자주</span></div></div>
+      <div class="card c"><div class="ic">»</div><h3>가속 엔진</h3><span class="chip gold"><span class="i">⚡</span>템포</span><div class="arrow">오버드라이브 지속·스택↑ <span class="to">+ 처형 시 이속</span></div></div>
+    </div>
+    <p class="note">장신구 1개 = 빌드 기둥 1개(<b class="red">처형</b> / <b>제압</b> / <b class="gold">템포</b>) 강화 → 어떤 장신구를 모으냐로 빌드 갈래.</p>
+  </section>
+
+  <!-- 7. 결론 + 체크리스트 -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">06 · 결론 — 결정 & 체크리스트</div>
+    <h2>전속 처형(사·마) + 공용 무기 3 · 장신구 3</h2>
+    <div class="quote" style="border-color:var(--gold);">처형 형태 = <b>캐릭터 전속</b>(전직 성장) · 무기·장신구 = <b>공용 풀</b>.<br>마법사 처형 = <span class="teal">메테오 / 연쇄번개 / 블랙홀</span> 중 택(탈리스만 A/B/C).</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct">사무라이 처형 = <b>직선 일섬</b>(관통, 경로 자코 즉사) 확정</span></label>
+      <label><input type="checkbox"><span class="ct">마법사 처형 3안: <b>메테오(점 광역) / 연쇄 번개(튕김) / 블랙홀(흡입→폭발)</b></span></label>
+      <label><input type="checkbox"><span class="ct">마법사 3안은 <b>전직 분기(탈리스만 A/B/C)</b>로 택 — 007 참고</span></label>
+      <label><input type="checkbox"><span class="ct">처형 형태는 캐릭터 전속(전직 레벨로 성장 — 005/006 참고)</span></label>
+      <label><input type="checkbox"><span class="ct">공용 무기 3안: 관통 표창(직선) / 회전 도(궤도) / 충격파(광역)</span></label>
+      <label><input type="checkbox"><span class="ct">무기는 데미지가 아니라 <b>그로기·제압을 먹임</b>(처형 셋업)</span></label>
+      <label><input type="checkbox"><span class="ct">공용 장신구 3안: 처형자의 인장 / 제압의 부적 / 가속 엔진 (처형·제압·템포)</span></label>
+      <label><input type="checkbox"><span class="ct">(프로토) 사무라이 + 무기 1 + 장신구 1로 '무기 → 제압 → 처형' 루프 체감</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow-btn" id="prev">‹</button>
+<button class="arrow-btn" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 07</div>
+<div class="foot">클래스·무기·장신구 아이데이션 토론 · v0.10 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 사무라이+메테오 마법사부터 index_14로 구현 / 무기 3종 수치까지..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
