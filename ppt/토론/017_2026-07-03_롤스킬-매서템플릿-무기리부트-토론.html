@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>무기 리부트 — 매서 몸통 × 롤 한 스푼 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 8vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1.1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.6vw,3.4rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.4rem,3.2vw,2.3rem); line-height:1.18; font-weight:800; margin-bottom:1.4rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.95rem,1.45vw,1.18rem); line-height:1.6; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  em{font-style:normal; color:var(--gold);}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);}
+
+  .title-wrap{max-width:920px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.8rem;}
+  .title-meta{margin-top:2rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.05rem,1.8vw,1.45rem); line-height:1.55; max-width:60ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.4rem 0;
+    font-size:clamp(1.05rem,1.9vw,1.5rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote.red{border-color:var(--red);}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.8rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+  .threads{display:flex; gap:1rem; margin-top:1.8rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.08rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem 2.6rem; align-items:start; margin-top:.6rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.2rem 1.3rem;}
+  .card.bad{border-color:rgba(255,43,78,.35);}
+  .card.good{border-color:rgba(95,227,154,.35);}
+  .card h3{font-size:1rem; font-weight:800; margin-bottom:.5rem; display:flex; align-items:center; gap:.5rem;}
+  .card p{font-size:.92rem; color:var(--dim); line-height:1.5;}
+  .tag{display:inline-block; font-size:.7rem; letter-spacing:.1em; padding:.15em .55em; border-radius:5px; font-weight:700;}
+  .tag.x{background:rgba(255,43,78,.14); color:var(--red);}
+  .tag.o{background:rgba(95,227,154,.14); color:var(--good);}
+
+  table{border-collapse:collapse; width:100%; margin-top:.4rem; font-size:.92rem;}
+  th,td{text-align:left; padding:.7rem .9rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700;}
+
+  .spikes{display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:1.4rem;}
+  .spike{display:flex; gap:.9rem; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem;}
+  .spike .n{flex:0 0 2rem; height:2rem; border-radius:8px; background:var(--teal); color:#04201c; font-weight:800;
+    display:grid; place-items:center; font-size:1rem;}
+  .spike .b{font-size:.92rem; line-height:1.45;}
+  .spike .b b{color:#fff;} .spike .b span{color:var(--dim); font-size:.84rem;}
+
+  .open{display:flex; gap:1.4rem; margin-top:1rem; flex-wrap:wrap;}
+  .open .q{flex:1 1 320px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.4rem 1.5rem;}
+  .open .q .lab{font-size:.78rem; letter-spacing:.14em; color:var(--gold); font-weight:800;}
+  .open .q h3{font-size:1.15rem; margin:.55rem 0 .6rem; font-weight:800; line-height:1.3;}
+  .open .q p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+
+  .flow{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:1rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800; font-size:.9rem; text-align:center;}
+  .flow .step.hot{border-color:var(--teal); color:var(--teal); box-shadow:0 0 14px rgba(28,240,212,.15);}
+  .flow .step.bad{border-color:rgba(255,43,78,.4); color:var(--red);}
+  .flow .step small{display:block; color:var(--dim); font-weight:600; font-size:.7rem; margin-top:.15rem;}
+  .flow .arr{color:var(--dim); font-weight:900; font-size:1.1rem;}
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:stretch; margin-top:.9rem;}
+  .vs .side{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .vs .side.a{border-color:rgba(58,160,255,.4);} .vs .side.b{border-color:rgba(28,240,212,.45);}
+  .vs .side h3{font-size:1rem; font-weight:800; margin-bottom:.4rem;}
+  .vs .side p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+  .vs .mid{display:grid; place-items:center; font-weight:900; color:var(--red); font-size:1.1rem;}
+  .stats{display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;}
+  .stat{flex:1 1 150px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .stat .big{font-size:2.2rem; font-weight:900; color:var(--teal); line-height:1;}
+  .stat .lab{font-size:.82rem; color:var(--dim); margin-top:.35rem; line-height:1.4;}
+  .chips{display:flex; gap:.55rem; flex-wrap:wrap; margin-top:.9rem;}
+  .chip{background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:.42rem .95rem; font-weight:700; font-size:.88rem;}
+  .chip .i{color:var(--teal); margin-right:.35rem;}
+
+  /* 무기 미니 카드 그리드 (이 덱 전용 조합 — 골격 컴포넌트 변형 아님) */
+  .wgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:.7rem; margin-top:.9rem;}
+  .wcard{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.75rem .9rem;}
+  .wcard .wname{font-weight:800; font-size:.98rem; display:flex; align-items:baseline; gap:.5rem; flex-wrap:wrap;}
+  .wcard .wsrc{font-size:.72rem; color:var(--faint); font-weight:600;}
+  .wcard .wdesc{font-size:.8rem; color:var(--dim); line-height:1.45; margin-top:.3rem;}
+  .wcard .wtag{display:inline-block; font-size:.66rem; font-weight:800; letter-spacing:.06em; padding:.12em .5em; border-radius:5px;
+    background:rgba(28,240,212,.1); color:var(--teal);}
+  .wcard .wtag.u{background:rgba(255,43,78,.12); color:var(--red);}
+  .wcard.pick{border-color:rgba(255,210,63,.5);}
+
+  .checklist{display:flex; flex-direction:column; gap:.55rem; margin-top:1.2rem; max-width:780px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.7rem .9rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.2rem; height:1.2rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#04201c; font-size:.85rem; font-weight:900;}
+  .checklist .ct{font-size:.95rem; line-height:1.45; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- ===== 1. 표지 ===== -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>무기 리부트 — <span class="teal">매직서바이벌 몸통</span> × <span class="gold">롤 한 스푼</span></h1>
+      <p class="lead dim">VS(뱀파이어 서바이버) 무기 어휘를 전부 버린다. 디아블로풍 다크판타지 클래스 위에, 매직서바이벌 마법 틀을 몸통으로 깔고 롤(LoL) 스킬 펑션을 한 스푼씩 얹어 무기 14종을 다시 찍는다.</p>
+      <div class="title-meta">
+        <div>기반 빌드 · <b>v0.12.0 (index_16)</b></div>
+        <div>날짜 · <b>2026-07-03</b></div>
+        <div>형식 · <b>토론 아젠다 → 세부 → 결론</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 2. 아젠다 ===== -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>무기 양산 공식을 확정할 것인가</h2>
+    <div class="quote">"[매서 틀 = 몸통] + [롤 스킬 = 한 스푼] + [다크판타지 이름 = 껍질] — 이 공식으로 주력 무기 <b class="gold">14종</b>(매직서바이벌 주력 마법과 같은 개수)을 확정하고 다음 인덱스에 구현할 것인가?"</div>
+    <p class="dim">Yes면 → 기존 VS 무기 7종(유도화살·표창·궤도검·낙뢰·오라·처형파문·낙인)은 카드 풀에서 완전히 은퇴하고, 새 14종이 1군이 된다. 기능 코드는 보존.</p>
+    <div class="threads">
+      <div class="thread"><div class="t">Thread ①</div><h3>기획자 리스팅 8종 검토</h3><p>아키타입 좌표(조준×모양)로 겹침·공백 진단. 망가진 것은 솔직하게 수정 권장.</p></div>
+      <div class="thread"><div class="t">Thread ②</div><h3>공백 6좌표 채우기</h3><p>후보 28건 → 겹침 탈락 15건 → 선별 13종. 그중 6종을 뽑아 8+6=14 완성.</p></div>
+      <div class="thread"><div class="t">Thread ③</div><h3>다크판타지 클래스 묶음</h3><p>디아블로풍 클래스 3안에 시그니처 무기 세트를 배정 — 캐릭터 정체성의 씨앗.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 3. 세부① 공식 ===== -->
+  <section class="slide" data-t="양산 공식">
+    <div class="kicker">02 · 세부 — 양산 공식</div>
+    <h2><span class="num">①</span>몸통은 매서, 맛은 롤, 껍질은 다크판타지</h2>
+    <div class="flow">
+      <div class="step">매직서바이벌 틀<small>몸통 · 발사 구조 14종</small></div>
+      <div class="arr">＋</div>
+      <div class="step gold" style="border-color:rgba(255,210,63,.5);color:var(--gold);">롤 스킬 펑션<small>한 스푼 · 고유 훅 1개</small></div>
+      <div class="arr">＋</div>
+      <div class="step">다크판타지 이름<small>껍질 · 디아블로 톤</small></div>
+      <div class="arr">→</div>
+      <div class="step hot">무기 1종 완성<small>처형 연동 필터 통과 시</small></div>
+    </div>
+    <div class="cols" style="margin-top:1.6rem;">
+      <div class="card bad"><h3><span class="tag x">버림</span> VS 어휘 그대로</h3><p>유도화살·표창·궤도검·오라… 이미 한 번 썼고(v0.11), 어느 뱀서에나 있는 익명 어휘. 우리 게임 얼굴이 안 된다.</p></div>
+      <div class="card good"><h3><span class="tag o">채택</span> 매서 틀 + 롤 훅</h3><p>매서 틀은 검증된 발사 구조(안 망가짐), 롤 훅은 "주우면 쿨 초기화" 같은 <b>기억에 남는 한 가지</b>. 둘을 합치면 안전하면서 고유하다.</p></div>
+    </div>
+    <p class="dim" style="margin-top:1rem;">채택 필터는 하나 — <b class="red">"이 무기가 처형을 더 자주/더 크게 만드는가?"</b> (덱 010·014 원칙 유지)</p>
+  </section>
+
+  <!-- ===== 4. 세부② 유저 8종 검토 ===== -->
+  <section class="slide" data-t="8종 검토">
+    <div class="kicker">03 · 세부 — 기획자 리스팅 8종 검토</div>
+    <h2><span class="num">②</span>좋음 4 · 겹침 주의 2 · 수정 권장 2</h2>
+    <table>
+      <tr><th>#</th><th>스킬 (롤 원본)</th><th>좌표 (조준×모양)</th><th>판정</th><th>한 줄 처방</th></tr>
+      <tr><td>1</td><td><b>혼령 구슬</b> <span class="dim">진 Q</span></td><td>자동타겟 × 튕김 4연쇄</td><td class="good">좋음</td><td class="dim">연쇄 우선순위를 저체력 엘리트로 → 처형 가속기</td></tr>
+      <tr><td>2</td><td><b>어둠 파동</b> <span class="dim">제라스 Q</span></td><td>방향성 × 관통 (모으기)</td><td class="gold">겹침 주의</td><td class="dim">#4와 직선 중복 — 발사 직전 밀집 방향 자동 조준 + 모을수록 폭 성장</td></tr>
+      <tr><td>3</td><td><b>울부짖는 회오리</b> <span class="dim">잔나 Q</span></td><td>랜덤 × 커지는 광역</td><td class="red">수정 권장</td><td class="dim">매서 돌개바람 복제 + 랜덤 방향 = 신뢰도 최하 — '머금기→방출' 복원</td></tr>
+      <tr><td>4</td><td><b>되찾는 도끼</b> <span class="dim">올라프 Q</span></td><td>방향성 × 관통 + 줍기</td><td class="good">좋음</td><td class="dim">"주우면 쿨 초기화" = 8종 최고의 훅. 도끼 밭이 동선이 된다</td></tr>
+      <tr><td>5</td><td><b>불사조 화염</b> <span class="dim">우디르 R</span></td><td>방향성 × 부채꼴 광역</td><td class="gold">겹침 주의</td><td class="dim">방향성 3/8 포화 — 전진하는 불꽃 파도로 투사체화 권장</td></tr>
+      <tr><td>6</td><td><b>독안개 자취</b> <span class="dim">신지드 Q</span></td><td>자기중심 × 이동 궤적 장판</td><td class="good">좋음</td><td class="dim">'이동이 곧 공격' — 매서에도 없는 고유 좌표. 간판 후보</td></tr>
+      <tr><td>7</td><td><b>죽음의 박동</b> <span class="dim">카서스 E</span></td><td>자기중심 × 지속 오라</td><td class="red">수정 권장</td><td class="dim">버리기로 한 '오라(마늘)'로 회귀 — 주기 박동(팽창 링)으로 재설계</td></tr>
+      <tr><td>8</td><td><b>무덤 거미</b> <span class="dim">엘리스 W</span></td><td>소환 × 끌어모아 폭발</td><td class="good">좋음</td><td class="dim">유일한 '몹 흐름 제어'. 도발은 잡몹 한정(엘리트 면역)으로</td></tr>
+    </table>
+  </section>
+
+  <!-- ===== 5. 세부③ 고칠 것 ===== -->
+  <section class="slide" data-t="수정 2건">
+    <div class="kicker">04 · 세부 — 수정 권장 2건</div>
+    <h2><span class="num">③</span>망가진 건 두 개다 — 회오리와 오라</h2>
+    <div class="vs">
+      <div class="side a">
+        <h3>③ 울부짖는 회오리 <span class="dim">— 지금</span></h3>
+        <p>생성 방향 <b class="red">랜덤</b> + 매서 돌개바람과 <b class="red">1:1 동일</b>. 롤 스푼이 0방울이고, 화력이 빗나가는 판이 절반.</p>
+      </div>
+      <div class="mid">→</div>
+      <div class="side b">
+        <h3>수정안 <span class="teal">머금기 → 방출</span></h3>
+        <p>전방에서 <b>제자리 성장(머금기)</b> → 최대 크기에서 <b class="teal">가장 붐비는 방향으로 가속 방출 1회</b>. 잔나 고유 펑션 복원 + 랜덤 제거.</p>
+      </div>
+    </div>
+    <div class="vs">
+      <div class="side a">
+        <h3>⑦ 죽음의 박동 <span class="dim">— 지금</span></h3>
+        <p>"N초마다 N 피해" 상시 오라 = 버리기로 한 <b class="red">VS 마늘</b> 그 자체. #6 독안개와 자기중심 지속 중복.</p>
+      </div>
+      <div class="mid">→</div>
+      <div class="side b">
+        <h3>수정안 <span class="teal">박동 노바</span></h3>
+        <p>N초마다 <b>한 번 크게 팽창하는 링</b>(순간 광역). 그리고 <b class="gold">처형 성공 시 즉시 추가 박동 1회</b> — 처형 루프에 접속.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 6. 세부④ 공백 지도 ===== -->
+  <section class="slide" data-t="공백 지도">
+    <div class="kicker">05 · 세부 — 8종이 못 덮는 좌표</div>
+    <h2><span class="num">④</span>공백 6좌표 — 여기가 추가 아이데이션의 과녁</h2>
+    <p class="dim">8종은 전부 지상 평면 무기다. 하늘·바닥·궤도·화면 전체가 비어 있다.</p>
+    <div class="chips" style="margin-top:1.2rem;">
+      <span class="chip"><span class="i">☄</span>랜덤×낙하 <span class="dim">— 하늘에서 떨어지는 것 전무</span></span>
+      <span class="chip"><span class="i">◎</span>자기중심×궤도 <span class="dim">— 회전 방어막 전무</span></span>
+      <span class="chip"><span class="i">▦</span>설치×장판 <span class="dim">— 위치 지정 지속 지대 전무</span></span>
+      <span class="chip"><span class="i">〰</span>화면 횡단 한 방 <span class="dim">— 해일식 쓸기 전무</span></span>
+      <span class="chip"><span class="i">❄</span>빙결·감속 <span class="dim">— 무리 통제가 도발 1종뿐</span></span>
+      <span class="chip"><span class="i">👤</span>상주 소환 <span class="dim">— 따라다니며 쏘는 동료 전무</span></span>
+    </div>
+    <div class="stats" style="margin-top:1.6rem;">
+      <div class="stat"><div class="big">28</div><div class="lab">계열별 아이데이션 후보 (낙하·설치·소환·파도·궤도 5계열)</div></div>
+      <div class="stat"><div class="big red">−15</div><div class="lab">겹침·역할 중복 탈락 (예: 트레일 중복, 포탑 2중복, 궤도 2중복)</div></div>
+      <div class="stat"><div class="big gold">13</div><div class="lab">선별 통과 — 다음 두 장에서 전부 공개</div></div>
+    </div>
+  </section>
+
+  <!-- ===== 7. 세부⑤ 신규 후보 A ===== -->
+  <section class="slide" data-t="신규 후보 A">
+    <div class="kicker">06 · 세부 — 신규 후보 13종 (1/2) · 낙하·설치·소환</div>
+    <h2><span class="num">⑤</span>하늘과 바닥을 채우는 7종</h2>
+    <div class="wgrid">
+      <div class="wcard pick"><div class="wname">☄ 불타는 해골 비 <span class="wtag">운석 낙하</span><span class="wsrc">갱플랭크 R</span></div><div class="wdesc">랜덤 지대에 해골 파편 연속 낙하 → 마지막 대형 1발이 크게. 지대 하나에 그로기가 뭉친다. <b class="gold">★ 1군</b></div></div>
+      <div class="wcard"><div class="wname">⚡ 검은 낙인 벼락 <span class="wtag">낙뢰</span><span class="wsrc">브랜드 패시브</span></div><div class="wdesc">가까운 적에 벼락+낙인, 낙인 위에 또 맞으면 폭발·전염. 엘리트 그로기 가속 압축기.</div></div>
+      <div class="wcard pick"><div class="wname">❄ 얼어붙은 창 소나기 <span class="wtag">눈보라</span><span class="wsrc">제라스 R</span></div><div class="wdesc">얼음 창 순차 낙하 — 절반은 최고 체력 적(엘리트) 조준, 적중 시 잠깐 얼림. <b class="gold">★ 1군</b></div></div>
+      <div class="wcard"><div class="wname">▦ 묻힌 지옥 불씨 <span class="wtag">용암지대</span><span class="wsrc">티모 R</span></div><div class="wdesc">땅속에 숨은 불씨, 밟으면 터지고 용암 장판이 남는다. 처형하면 1개 즉시 재폭발.</div></div>
+      <div class="wcard"><div class="wname">🧊 얼어붙은 관 <span class="wtag">서릿발</span><span class="wsrc">럭스 E</span></div><div class="wdesc">발밑 얼음 결정 — 감속시키다 폭발+빙결. N마리 이상 모이면 조기 폭발.</div></div>
+      <div class="wcard pick"><div class="wname">🗼 해골 감시탑 <span class="wtag">낙뢰(포탑)</span><span class="wsrc">하이머딩거 Q</span></div><div class="wdesc">지나는 자리에 해골 탑 설치(최대 N개) — 각 탑이 알아서 벼락. 처형하러 달려가는 동안 화력 공백 0. <b class="gold">★ 1군</b></div></div>
+      <div class="wcard"><div class="wname">🐺 굶주린 늑대 혼 <span class="wtag">정령(사냥터)</span><span class="wsrc">킨드레드 W</span></div><div class="wdesc">발밑에 사냥터가 새겨지고 늑대 혼이 그 안의 적만 물어뜯는다. 처형 순간을 지켜주는 경호원.</div></div>
+    </div>
+  </section>
+
+  <!-- ===== 8. 세부⑥ 신규 후보 B ===== -->
+  <section class="slide" data-t="신규 후보 B">
+    <div class="kicker">07 · 세부 — 신규 후보 13종 (2/2) · 파도·궤도·소환</div>
+    <h2><span class="num">⑥</span>화면을 가로지르고, 몸을 지키는 6종</h2>
+    <div class="wgrid">
+      <div class="wcard"><div class="wname">👁 죽은 신의 눈길 <span class="wtag">비전 광선</span><span class="wsrc">벨코즈 R</span></div><div class="wdesc">가장 붐비는 방향으로 관통 광선을 켜고 부채꼴로 천천히 쓸어내리는 스윕. 그로기가 한 줄로 남는다.</div></div>
+      <div class="wcard pick"><div class="wname">〰 핏빛 썰물 <span class="wtag">해일</span><span class="wsrc">시비르 Q</span></div><div class="wdesc">이동 방향으로 화면 횡단 파도 → 끝에서 되돌아와 재타격(복귀 파도 강화). 왕복 시간차 = 그로기 예고. <b class="gold">★ 1군</b></div></div>
+      <div class="wcard pick"><div class="wname">🌀 핏빛 낫 바퀴 <span class="wtag">위성</span><span class="wsrc">다리우스 Q</span></div><div class="wdesc">궤도 회전 낫 — 바깥 날 끝에 스치면 강타(N배), 몸에 붙으면 절반. 거리 조절이 딜이 된다. <b class="gold">★ 1군</b></div></div>
+      <div class="wcard"><div class="wname">🗡 죽음의 칼춤 <span class="wtag">전기충격</span><span class="wsrc">카타리나 R</span></div><div class="wdesc">평소엔 침묵 → N초마다 짧은 폭발 창 동안 근접 다수 연속 타격. 그로기 직전 엘리트 우선.</div></div>
+      <div class="wcard"><div class="wname">🌪 굶주린 회오리 <span class="wtag">돌개바람</span><span class="wsrc">아무무 W</span></div><div class="wdesc">최고 체력 적에게 들러붙어 최대 체력 비례로 갉아먹는 회오리. 탱커 엘리트도 시간표대로 그로기.</div></div>
+      <div class="wcard pick"><div class="wname">👻 사슬 묶인 망령 <span class="wtag u">정령 · 처형 연동</span><span class="wsrc">모데카이저 R</span></div><div class="wdesc">엘리트를 <b class="red">처형하면</b> 그 혼이 망령으로 일어나 따라다니며 사격(중첩). 처형→화력→그로기 플라이휠. <b class="gold">★ 1군 · 유니크</b></div></div>
+    </div>
+  </section>
+
+  <!-- ===== 9. 세부⑦ 최종 14종 ===== -->
+  <section class="slide" data-t="1군 14종">
+    <div class="kicker">08 · 세부 — 최종 1군 로스터</div>
+    <h2><span class="num">⑦</span>주력 14종 — 매직서바이벌과 개수를 맞춘다</h2>
+    <p class="dim">기획자 리스팅 8종(전원 채택, 수정안 반영) + 공백을 채우는 신규 6종(★). 매서 주력 마법 14종과 같은 예산.</p>
+    <div class="wgrid" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); margin-top:1rem;">
+      <div class="wcard"><div class="wname">1 혼령 구슬</div><div class="wdesc">자동타겟 · 튕김 4연쇄 <span class="wsrc">진 Q</span></div></div>
+      <div class="wcard"><div class="wname">2 어둠 파동</div><div class="wdesc">모으기 → 밀집 방향 관통파 <span class="wsrc">제라스 Q</span></div></div>
+      <div class="wcard"><div class="wname">3 울부짖는 회오리</div><div class="wdesc">머금기 → 커져서 전진 <span class="wsrc">잔나 Q</span></div></div>
+      <div class="wcard"><div class="wname">4 되찾는 도끼</div><div class="wdesc">관통 투척 · 주우면 쿨 초기화 <span class="wsrc">올라프 Q</span></div></div>
+      <div class="wcard"><div class="wname">5 불사조 화염</div><div class="wdesc">전방 부채꼴 불꽃 파동 <span class="wsrc">우디르 R</span></div></div>
+      <div class="wcard"><div class="wname">6 독안개 자취</div><div class="wdesc">이동 궤적 독 장판 · 중독 <span class="wsrc">신지드 Q</span></div></div>
+      <div class="wcard"><div class="wname">7 죽음의 박동</div><div class="wdesc">주기 팽창 링 · 처형 시 +1회 <span class="wsrc">카서스 E</span></div></div>
+      <div class="wcard"><div class="wname">8 무덤 거미</div><div class="wdesc">잡몹 끌어모아 폭발하는 미끼 <span class="wsrc">엘리스 W</span></div></div>
+      <div class="wcard pick"><div class="wname">9 불타는 해골 비 ★</div><div class="wdesc">랜덤 지대 연속 낙하 포격 <span class="wsrc">갱플랭크 R</span></div></div>
+      <div class="wcard pick"><div class="wname">10 얼어붙은 창 소나기 ★</div><div class="wdesc">낙하 · 엘리트 조준 · 빙결 <span class="wsrc">제라스 R</span></div></div>
+      <div class="wcard pick"><div class="wname">11 해골 감시탑 ★</div><div class="wdesc">설치 포탑 · 화력 공백 0 <span class="wsrc">하이머딩거 Q</span></div></div>
+      <div class="wcard pick"><div class="wname">12 핏빛 낫 바퀴 ★</div><div class="wdesc">궤도 회전 · 날 끝 강타 <span class="wsrc">다리우스 Q</span></div></div>
+      <div class="wcard pick"><div class="wname">13 핏빛 썰물 ★</div><div class="wdesc">화면 횡단 왕복 파도 <span class="wsrc">시비르 Q</span></div></div>
+      <div class="wcard pick"><div class="wname">14 사슬 묶인 망령 ★</div><div class="wdesc"><b class="red">유니크</b> · 처형 → 망령 소환 <span class="wsrc">모데카이저 R</span></div></div>
+    </div>
+  </section>
+
+  <!-- ===== 10. 세부⑧ 클래스 묶음 ===== -->
+  <section class="slide" data-t="클래스 묶음">
+    <div class="kicker">09 · 세부 — 다크판타지 클래스 씨앗</div>
+    <h2><span class="num">⑧</span>클래스 3안 — 시그니처 세트 배정</h2>
+    <p class="dim">디아블로풍 클래스에 무기 세트를 시그니처로 묶으면, 나중에 '시작 무기 + 전용 처형'의 캐릭터 키트(덱 005)가 된다.</p>
+    <div class="threads" style="margin-top:1.2rem;">
+      <div class="thread"><div class="t">클래스 A</div><h3>💀 무덤 부르는 자 (강령술사)</h3><p><b>사슬 묶인 망령 · 해골 감시탑 · 무덤 거미 · 불타는 해골 비</b><br>소환·설치로 전장을 채우고, 처형이 곧 군대 충원.</p></div>
+      <div class="thread"><div class="t">클래스 B</div><h3>❄ 폭풍을 삼킨 자 (원소 술사)</h3><p><b>얼어붙은 창 소나기 · 울부짖는 회오리 · 어둠 파동 · 혼령 구슬</b><br>하늘과 바람으로 멀리서 얼리고 꿰뚫는 포격형.</p></div>
+      <div class="thread"><div class="t">클래스 C</div><h3>🩸 핏빛 순례자 (전투 사제)</h3><p><b>핏빛 낫 바퀴 · 핏빛 썰물 · 죽음의 박동 · 되찾는 도끼 · 독안개 자취 · 불사조 화염</b><br>몸으로 파고들며 궤도·파동으로 휩쓰는 근접형.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 11. 미해결 쟁점 ===== -->
+  <section class="slide" data-t="미해결 쟁점">
+    <div class="kicker">10 · 토론 계속 — 미해결 쟁점</div>
+    <h2>다음 갈림길</h2>
+    <div class="open">
+      <div class="q"><div class="lab">쟁점 A</div><h3>동시 소지 슬롯 예산</h3><p>14종 풀에서 한 판에 몇 개까지 들 수 있나? 매서는 사실상 4~6개. 슬롯 6이면 빌드 정체성이 생기고, 12면 백화점이 된다. <b>권고: 6.</b></p></div>
+      <div class="q"><div class="lab">쟁점 B</div><h3>회오리 랜덤, 살릴까</h3><p>기획자 원안은 '생성 방향 랜덤'. 검토 결과는 신뢰도 최하 경고. 원안대로 먼저 구현해 손맛을 보고, 답답하면 '머금기→방출'로 교체하는 2단계 권고.</p></div>
+      <div class="q"><div class="lab">쟁점 C</div><h3>낙오 7종의 자리</h3><p>선별 탈락 7종(검은 낙인 벼락·묻힌 지옥 불씨·얼어붙은 관·늑대 혼·죽은 신의 눈길·죽음의 칼춤·굶주린 회오리)은 2군 — 등급제 상점(덱 016)이나 전직 보상 후보.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 12. 결론 ===== -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">11 · 결론</div>
+    <h2>공식 채택 — 8 + 6 = 주력 14종 확정</h2>
+    <div class="quote gold" style="border-color:var(--gold);">"매서 몸통 × 롤 한 스푼 × 다크판타지 껍질. 기획자 8종 전원 채택(수정안 2건 반영) + 신규 6종으로 매직서바이벌과 같은 14종 — 이대로 index_17에 구현한다."</div>
+    <div class="checklist">
+      <label><input type="checkbox" checked><span class="ct">주력 14종(위 로스터)을 index_17에 전부 구현한다 — 기존 VS 무기 7종은 카드 풀에서 은퇴(코드 보존)</span></label>
+      <label><input type="checkbox"><span class="ct">회오리(#3)는 원안(랜덤 방향)으로 먼저 구현 → 플레이 후 '머금기→방출' 교체 여부 결정</span></label>
+      <label><input type="checkbox"><span class="ct">동시 소지 슬롯 예산 결정 (권고: 6) — 레벨업 카드 노출 규칙도 함께</span></label>
+      <label><input type="checkbox"><span class="ct">낙오 7종(2군)의 획득처 결정 — 등급제 상점(덱 016) vs 전직 보상</span></label>
+      <label><input type="checkbox"><span class="ct">클래스 3안(무덤 부르는 자 · 폭풍을 삼킨 자 · 핏빛 순례자) 중 2번째 캐릭터 후보 선정</span></label>
+      <label><input type="checkbox"><span class="ct">14종 수치를 gameBalance.json weapons 섹션으로 — 레벨 파생(base + perX) 규칙 유지</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 00</div>
+<div class="foot">무기 리부트 · 매서 몸통 × 롤 한 스푼 · v0.12.0 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 처형 연출을 더 화려하게 / 엘리트 색을 더 눈에 띄게..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
