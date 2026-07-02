@@ -165,12 +165,12 @@
     <h2>5개 결론이 이렇게 맞물린다</h2>
     <div class="stats">
       <div class="stat" style="--ac:var(--good)"><div class="n">09 · 판 구조</div><div class="big">라운드</div><div class="lab">20분 아크를 웨이브+상점 라운드로</div></div>
-      <div class="stat" style="--ac:var(--blue)"><div class="n">10·11 · 전투</div><div class="big">무기→제압→처형</div><div class="lab">무기는 처형 셋업을 먹임</div></div>
+      <div class="stat" style="--ac:var(--blue)"><div class="n">10·11 · 전투</div><div class="big">무기·데미지 → 그로기</div><div class="lab">HP 0 → 일반 사망 / 엘리트·보스 그로기 → 처형</div></div>
       <div class="stat" style="--ac:var(--red)"><div class="n">13 · 처형</div><div class="big">결정타만</div><div class="lab">체인·블랙홀은 무기로</div></div>
       <div class="stat" style="--ac:var(--purple)"><div class="n">12 · 콘텐츠</div><div class="big">키트+공용</div><div class="lab">전속 처형 + 공용 무기·장신구</div></div>
       <div class="stat" style="--ac:var(--gold)"><div class="n">13 · 양산</div><div class="big">아키타입 그리드</div><div class="lab">3축 조합으로 캐릭터 찍기</div></div>
     </div>
-    <div class="quote teal">라운드 안에서 <b>[무기로 제압 → 결정타 처형 → 오버드라이브]</b> 루프를 돌리고,<br>콘텐츠는 <b>아키타입 그리드</b>로 찍어낸다.</div>
+    <div class="quote teal">라운드 안에서 <b>[무기 데미지 → HP 0 → 엘리트·보스 그로기 → 처형(결정타)]</b> 루프를 돌리고,<br>콘텐츠는 <b>아키타입 그리드</b>로 찍어낸다.</div>
   </section>
 
   <!-- 3. 바탕 -->
@@ -181,7 +181,7 @@
       <thead><tr><th>덱</th><th>주제</th><th>결론</th></tr></thead>
       <tbody>
         <tr><td class="hot">09</td><td><span class="pillar">라운드 vs 20분</span></td><td class="ok">라운드 채택 (20분 아크 유지)</td></tr>
-        <tr><td class="hot">10</td><td><span class="pillar">무기 추가</span></td><td class="ok">자동 무기고 (처형에 먹임)</td></tr>
+        <tr><td class="hot">10</td><td><span class="pillar">무기 추가</span></td><td class="ok">자동 무기고 (데미지 → 엘리트/보스 그로기)</td></tr>
         <tr><td class="hot">11</td><td><span class="pillar">롤 테마 무기</span></td><td class="ok">발사 어휘 차용 + 롤 플레이버</td></tr>
         <tr><td class="hot">12</td><td><span class="pillar">클래스·무기·장신구</span></td><td class="ok">전속 처형 + 공용 풀 3+3</td></tr>
         <tr><td class="hot">13</td><td><span class="pillar">처형 아키타입</span></td><td class="ok">결정타만 · 그리드로 양산</td></tr>
@@ -206,14 +206,15 @@
   <!-- 5. 조립 ② 전투 루프 -->
   <section class="slide" data-t="조립② 전투 루프">
     <div class="kicker">조립 ② · 전투 루프 (10·11·13)</div>
-    <h2>무기 → 제압 → 처형 → 오버드라이브</h2>
+    <h2>무기(데미지) → 그로기 → 처형</h2>
     <div class="flow">
-      <span class="step">공용 무기<small>자동</small></span><span class="arr">→</span>
-      <span class="step">그로기 · 제압<small>게이지 누적</small></span><span class="arr">→</span>
-      <span class="step hot">처형<small>결정타</small></span><span class="arr">→</span>
-      <span class="step">오버드라이브<small>가속</small></span><span class="loop">↺</span>
+      <span class="step">공용 무기<small>데미지·HP 깎기</small></span><span class="arr">→</span>
+      <span class="step">HP 0<small>일반 = 사망</small></span><span class="arr">→</span>
+      <span class="step hot">그로기<small>엘리트·보스 n초 회복 대기</small></span><span class="arr">→</span>
+      <span class="step hot">처형<small>결정타로 마무리</small></span><span class="loop">↺</span>
     </div>
-    <p class="note">무기는 '데미지'가 아니라 <b>'처형 셋업'(그로기·제압)</b>을 먹인다(10·11). 처형이 루프의 하이라이트.</p>
+    <p class="note">무기는 그냥 <b>데미지(HP 깎기)</b>. HP 0이 되면 — <b>일반은 사망</b>, <b>엘리트·보스는 안 죽고 n초 회복 대기(=그로기)</b>. 그로기 중에 처형(결정타). <span class="red">별도 제압/그로기 게이지 없음.</span></p>
+    <p class="note" style="margin-top:.5rem;">※ <b>오버드라이브</b>는 상시 X → <b class="teal">특수 웨이브·보스</b>에서 전용 처형 스킬로만 지급(뒤 제안 C).</p>
   </section>
 
   <!-- 6. 조립 ③ 처형 정의 -->
@@ -261,9 +262,9 @@
     <div class="map">
       <div class="band"><span class="bl">판 구조</span><span class="bc">웨이브 생존 → 정산·상점 → 다음 라운드 <span class="dim">(20분 아크)</span></span></div>
       <div class="down">↓</div>
-      <div class="band hot"><span class="bl">전투 루프</span><span class="bc"><b>공용 무기(자동)</b> → 그로기·제압 → <b>처형(결정타)</b> → 오버드라이브 ↺</span></div>
+      <div class="band hot"><span class="bl">전투 루프</span><span class="bc"><b>공용 무기(데미지)</b> → HP 0 → 엘리트·보스 <b>그로기</b> → <b>처형(결정타)</b> ↺</span></div>
       <div class="down">↓</div>
-      <div class="band"><span class="bl">성장</span><span class="bc">레벨업(공용 무기·장신구·각인) + <b>시련→전직</b>(특수 각인 A/B/C)</span></div>
+      <div class="band"><span class="bl">성장</span><span class="bc">레벨업(공용) + <b>시련→전직</b>(특수 각인·처형 횟수) + <b>특수/보스 → 오버드라이브</b></span></div>
       <div class="down">↓</div>
       <div class="band"><span class="bl">양산</span><span class="bc">아키타입 그리드 <span class="dim">(접근 × 범위 × 부수효과)</span> 조합으로 캐릭터·처형 찍기</span></div>
     </div>
@@ -292,28 +293,42 @@
     <div class="kicker">제안 B · 공용 풀 (12)</div>
     <h2>공용 무기 3 · 장신구 3</h2>
     <div class="cols">
-      <div class="card a"><div class="role">무기 1</div><h3>➹ 관통 표창</h3><div class="chips"><span class="chip blue"><span class="i">→</span>직선</span></div><p style="margin-top:.5rem;">→ 맞은 적 제압↑</p></div>
-      <div class="card b"><div class="role">무기 2</div><h3>◉ 회전 도</h3><div class="chips"><span class="chip"><span class="i">↻</span>궤도</span></div><p style="margin-top:.5rem;">→ 닿는 적 지속 제압</p></div>
-      <div class="card c"><div class="role">무기 3</div><h3>💥 충격파</h3><div class="chips"><span class="chip gold"><span class="i">◎</span>광역</span></div><p style="margin-top:.5rem;">→ 감속 + 그로기 누적</p></div>
+      <div class="card a"><div class="role">무기 1</div><h3>➹ 관통 표창</h3><div class="chips"><span class="chip blue"><span class="i">→</span>직선</span></div><p style="margin-top:.5rem;">→ 맞은 적 데미지↑</p></div>
+      <div class="card b"><div class="role">무기 2</div><h3>◉ 회전 도</h3><div class="chips"><span class="chip"><span class="i">↻</span>궤도</span></div><p style="margin-top:.5rem;">→ 닿는 적 지속 데미지</p></div>
+      <div class="card c"><div class="role">무기 3</div><h3>💥 충격파</h3><div class="chips"><span class="chip gold"><span class="i">◎</span>광역</span></div><p style="margin-top:.5rem;">→ 감속 + 광역 데미지</p></div>
     </div>
     <div class="chips" style="margin-top:1rem;">
       <span class="chip red"><span class="i">🗡</span>처형자의 인장 · 처형</span>
-      <span class="chip"><span class="i">◈</span>제압의 부적 · 그로기 가속</span>
+      <span class="chip"><span class="i">◈</span>특효 부적 · 엘리트/보스 추가뎀</span>
       <span class="chip gold"><span class="i">»</span>가속 엔진 · 템포</span>
     </div>
-    <p class="note">무기 = 처형 셋업(제압) / 장신구 = 빌드 기둥(처형·제압·템포) 강화.</p>
+    <p class="note">무기 = <b>데미지(HP 깎기)</b> / 장신구 = 빌드 기둥(처형·딜·템포) 강화. <span class="red">별도 제압 게이지 없음.</span></p>
+  </section>
+
+  <!-- 11b. 제안 C · 처형 스킬 빌드 (신규 — 피드백 반영) -->
+  <section class="slide" data-t="제안C 처형 빌드">
+    <div class="kicker">제안 C · 처형 스킬 빌드 (신규 검토)</div>
+    <h2>처형 성장 — <span class="teal">공용 + 전용</span> 2트랙</h2>
+    <div class="vs">
+      <div class="side a"><h3>공용 처형 빌드</h3><div class="kv"><b>누구나</b> · 처형 범위 · 데미지 · 쿨<br>공용 각인 풀에서 획득</div><div class="chips"><span class="chip blue"><span class="i">♻</span>재사용 1트리</span></div></div>
+      <div class="mid">+</div>
+      <div class="side b"><h3>전용 처형 빌드 (전직)</h3><div class="kv"><b>클래스</b> · <b class="teal">처형 횟수 ↑</b> · 형태 강화<br>전직 완료 보상</div><div class="chips"><span class="chip purple"><span class="i">🔒</span>클래스 전속</span></div></div>
+    </div>
+    <p class="note"><b class="teal">처형 횟수 증가 = 전용(전직) 완료 보상 추천</b> — 클래스 정체성 + 성장 마일스톤(사무라이 처형 1 → N). 오버드라이브도 여기(특수·보스 전용).</p>
+    <p class="note" style="margin-top:.45rem;">★ 양산: 공용 트리 = <b>1개 재사용</b>, 전용 트리 = <b>노드 유형 템플릿</b>(처형 횟수 +1 · 범위↑ …)을 형태만 리스킨 → <b class="teal">둘 다 찍어낼 수 있다.</b></p>
   </section>
 
   <!-- 12. PD 결정 요청 -->
   <section class="slide" data-t="★ PD 결정 요청">
     <div class="kicker">결정 요청 · PD님이 정해주실 것</div>
-    <h2>제안 요소 — 열린 결정 5</h2>
+    <h2>제안 요소 — 열린 결정 6</h2>
     <div class="ask">
       <div class="q"><div class="qn">결정 ①</div><h3>라운드 수·시간</h3><p>예: 5라운드 × 4분? / 웨이브 밀도·상점 간격.</p></div>
       <div class="q"><div class="qn">결정 ②</div><h3>아키타입 3축 확정</h3><p>접근·범위·부수효과 이대로? 축 추가/수정?</p></div>
       <div class="q"><div class="qn">결정 ③</div><h3>클래스 로스터 목표 수</h3><p>2종부터? 최종 몇 종? 확장 속도.</p></div>
       <div class="q"><div class="qn">결정 ④</div><h3>전직 트리거</h3><p>시련(보스/보물)로 확정? vs 레벨업 병행?</p></div>
-      <div class="q" style="grid-column:1 / -1"><div class="qn">결정 ⑤</div><h3>프로토 1순위</h3><p>무엇부터 만드나 — 기획자 추천은 다음 장(로드맵).</p></div>
+      <div class="q" style="grid-column:1 / -1"><div class="qn">결정 ⑤ · ★ 신규</div><h3>처형 횟수 증가 = 공용 vs 전용?</h3><p>처형 1 → N을 어디서 주나 — 공용 처형 빌드 vs 전직 완료 보상. <b>기획자 추천: 전용(전직).</b></p></div>
+      <div class="q" style="grid-column:1 / -1"><div class="qn">결정 ⑥</div><h3>프로토 1순위</h3><p>무엇부터 만드나 — 기획자 추천은 다음 장(로드맵).</p></div>
     </div>
   </section>
 
@@ -340,17 +355,20 @@
   <section class="slide" data-t="결론">
     <div class="kicker">결론 · 종합 & PD 체크리스트</div>
     <h2>라운드 × 처형 루프 × <span class="teal">그리드 양산</span></h2>
-    <div class="quote" style="border-color:var(--gold);">라운드 안에서 <b>무기→제압→처형(결정타)→오버드라이브</b> 루프. 콘텐츠는 <b>키트(전속)+공용 풀</b>,<br>양산은 <b>아키타입 그리드</b>. → 캐릭터 늘리기 전에 <span class="teal">그리드부터 확정</span>.</div>
+    <div class="quote" style="border-color:var(--gold);">라운드 안에서 <b>무기(데미지)→그로기→처형(결정타)</b> 루프. 콘텐츠는 <b>키트(전속)+공용 풀</b>,<br>양산은 <b>아키타입 그리드</b>. → 캐릭터 늘리기 전에 <span class="teal">그리드부터 확정</span>.</div>
     <div class="checklist">
       <label><input type="checkbox"><span class="ct">판 구조 = <b>라운드(20분 아크)</b> 승인</span></label>
-      <label><input type="checkbox"><span class="ct">전투 루프 = <b>무기 → 제압 → 처형 → 오버드라이브</b> 승인</span></label>
+      <label><input type="checkbox"><span class="ct">전투 루프 = <b>무기(데미지) → HP0 → 엘리트/보스 그로기 → 처형</b> 승인 (별도 제압 게이지 X)</span></label>
       <label><input type="checkbox"><span class="ct">처형 = <b>결정타만</b> (체인/블랙홀은 무기) 승인</span></label>
+      <label><input type="checkbox"><span class="ct"><b>오버드라이브 = 특수 웨이브·보스 전용</b> 처형 스킬로만 지급 (상시 X)</span></label>
       <label><input type="checkbox"><span class="ct">콘텐츠 3층 = 키트(전속) / 공용 풀 / 전직(특수 각인) 승인</span></label>
+      <label><input type="checkbox"><span class="ct">처형 스킬 빌드 = <b>공용(범위·딜·쿨) + 전용(횟수·형태) 2트랙</b>, 둘 다 양산</span></label>
       <label><input type="checkbox"><span class="ct"><b>[결정 ②]</b> 아키타입 3축(접근·범위·부수효과) 확정</span></label>
       <label><input type="checkbox"><span class="ct"><b>[결정 ③]</b> 클래스 로스터 목표 수 결정</span></label>
       <label><input type="checkbox"><span class="ct"><b>[결정 ④]</b> 전직 트리거 = 시련 확정</span></label>
+      <label><input type="checkbox"><span class="ct"><b>[결정 ⑤]</b> 처형 횟수 증가 = 전용(전직) 완료 보상 (추천)</span></label>
       <label><input type="checkbox"><span class="ct"><b>[결정 ①]</b> 라운드 수·시간 결정</span></label>
-      <label><input type="checkbox"><span class="ct"><b>[결정 ⑤]</b> 프로토 1순위 = 그리드 확정 → 사·마 2축(index_14)</span></label>
+      <label><input type="checkbox"><span class="ct"><b>[결정 ⑥]</b> 프로토 1순위 = 그리드 확정 → 사·마 2축(index_14)</span></label>
     </div>
   </section>
 
@@ -359,7 +377,7 @@
 <button class="arrow-btn" id="prev">‹</button>
 <button class="arrow-btn" id="next">›</button>
 <div id="nav"></div>
-<div id="count"><b>01</b> / 14</div>
+<div id="count"><b>01</b> / 15</div>
 <div class="foot">종합 제안 (09~13) · 기획자 → PD · v0.10 기반</div>
 
 <script>
