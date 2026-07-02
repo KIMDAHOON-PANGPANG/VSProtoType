@@ -1,6 +1,6 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.10.3",
+  "_version": "0.11.0",
 
   "player": {
     "radius": 16,
@@ -157,5 +157,22 @@
     "eliteDamage": 7,
     "knockback": 36,
     "_comment": "뱀서식 접촉 피해: 접촉 중 interval(초)마다 fodder/eliteDamage 만큼 소량 피해(적별 독립 틱이라 둘러싸이면 누적). knockback=접촉 시 밀려나는 힘. 회피 무적 중엔 피해 없음(통과)."
+  },
+
+  "levelup": {
+    "rerolls": 4,
+    "skips": 4,
+    "_comment": "레벨업 화면 리롤/스킵 잔여 횟수(런 시작 시 지급 · 판 전체에서 소모). 0이면 버튼 비활성. 데이터로 조절 가능."
+  },
+
+  "weapons": {
+    "_comment": "v0.11 무기 슬롯(VS식 자동 무기고). 무기는 '순수 데미지'만 넣는다 → HP 0이면 잡몹 즉사/엘리트 그로기→처형(기존 damageEnemy 경유). 레벨 파생: 실효값 = base + (level-1)*perX. interval=발사 간격(초), tick=지속형 피해 간격(초), count=발사/날 개수, pierce=관통 횟수, range=낙뢰 사거리, radius=오라/궤도 반경 또는 파문 반경, bonus=낙인 피해 증가율(0.5=+50%). 유니크: shock=처형 성공 시 광역, brand=엘리트 취약. 시작 무기는 homing 1레벨(makePlayer).",
+    "homing": { "interval": 1.0, "damage": 9, "count": 1, "speed": 380, "turn": 5.5, "life": 1.7, "r": 6, "perDamage": 4, "perCount": 0.5, "perInterval": -0.05 },
+    "star":   { "interval": 0.85, "damage": 11, "count": 1, "speed": 560, "pierce": 2, "life": 1.0, "r": 5, "perDamage": 5, "perCount": 0.34, "perPierce": 0.5 },
+    "orbit":  { "tick": 0.30, "damage": 7, "count": 2, "radius": 74, "spin": 2.2, "perDamage": 3, "perCount": 0.5, "perRadius": 6 },
+    "bolt":   { "interval": 1.5, "damage": 15, "count": 1, "range": 320, "perDamage": 6, "perCount": 0.5, "perInterval": -0.07 },
+    "aura":   { "tick": 0.45, "damage": 4, "radius": 80, "perDamage": 3, "perRadius": 12 },
+    "shock":  { "damage": 38, "radius": 150, "perDamage": 16, "perRadius": 26 },
+    "brand":  { "interval": 2.4, "bonus": 0.5, "perBonus": 0.2, "perInterval": -0.15 }
   }
 }

@@ -10,8 +10,8 @@
 
 | 항목 | 값 |
 |---|---|
-| 최신 버전 | **v0.10.3** |
-| 최신 플레이 파일 | **`build/index_14.html`** |
+| 최신 버전 | **v0.11.0** |
+| 최신 플레이 파일 | **`build/index_15.html`** |
 | 밸런스 단일 소스 | **`build/gameBalance.json`** |
 | 패치 내역 | **`build log/PATCH_LOG.txt`** (내림차순) |
 | GitHub 리포 | **`KIMDAHOON-PANGPANG/VSProtoType`** (`origin/main`) |
@@ -201,8 +201,9 @@ spawner(phase1·2·3) / xp / contactDamageScale
 | `build/index_11.html` | v0.10.0 — 리프어택 중 무적 + PRE 저스트 회피 윈도우 |
 | `build/index_12.html` | v0.10.1 — 부활 1회 제한 복귀(maxRevives 1) |
 | `build/index_13.html` | v0.10.2 — 처형 1회당 1명(execution.maxTargets 1) |
-| `build/index_14.html` | v0.10.3 — 자동 베기 조준 버그 수정 + 흡혈각인(처형 시 HP 회복) 제거 (**현재 최신**) |
-| `build/gameBalance.json` | 모든 PC·몬스터 밸런스 수치 (단일 소스) |
+| `build/index_14.html` | v0.10.3 — 자동 베기 조준 버그 수정 + 흡혈각인(처형 시 HP 회복) 제거 |
+| `build/index_15.html` | v0.11.0 — 무기 슬롯(VS식 자동 무기고): 기반 5종 + 유니크 2종(처형 파문·낙인) + 무기 레벨업 카드 (**현재 최신**) |
+| `build/gameBalance.json` | 모든 PC·몬스터·**무기(weapons)** 밸런스 수치 (단일 소스) |
 | `build log/PATCH_LOG.txt` | 패치 내역 (내림차순) |
 | `WORKFLOW.md` | 이 문서 — 작업 규칙 (루트) |
 | `.claude/launch.json` | 로컬 미리보기 서버(`vslike`) 설정 |
