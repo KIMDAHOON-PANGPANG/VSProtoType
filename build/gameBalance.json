@@ -1,6 +1,6 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.11.0",
+  "_version": "0.12.0",
 
   "player": {
     "radius": 16,
@@ -61,13 +61,14 @@
     "endHold": 0.03,
     "burstDelay": 0.04,
     "invulnPadding": 0.4,
+    "postInvuln": 1.0,
     "shakeStartBase": 6,
     "shakeStartPerKill": 1.5,
     "shakePerCut": 9,
     "burstShake": 7,
     "finalShakeBase": 9,
     "finalShakePerKill": 2.5,
-    "_comment": "maxTargets=처형 1회(LMB 1번)당 처형할 최대 대상 수(1=가장 가까운 1명만, N=반경 내 최대 N명 체인). 처형 연출: 누르면 bulletTime(초)동안 bulletScale 배율로 불릿타임 → bulletRamp(초)에 걸쳐 fastScale로 가속 → 고속 체인. baseDuration+perTargetDuration*N = 대시 길이(scaled초). burstDelay=베고 적이 터질 때까지(scaled초). windup/perCut/finalFreeze=스냅 정지(실시간초). endHold=종료 전 정착(초)."
+    "_comment": "maxTargets=처형 1회(RMB 1번)당 처형할 최대 대상 수(1=가장 가까운 1명만, N=반경 내 최대 N명 체인). postInvuln=처형 종료 후 버퍼(초): 무적 + 적 몸 통과(v0.12). 처형 연출: 누르면 bulletTime(초)동안 bulletScale 배율로 불릿타임 → bulletRamp(초)에 걸쳐 fastScale로 가속 → 고속 체인. baseDuration+perTargetDuration*N = 대시 길이(scaled초). burstDelay=베고 적이 터질 때까지(scaled초). windup/perCut/finalFreeze=스냅 정지(실시간초). endHold=종료 전 정착(초)."
   },
 
   "groggy": {
@@ -156,7 +157,15 @@
     "fodderDamage": 2,
     "eliteDamage": 7,
     "knockback": 36,
-    "_comment": "뱀서식 접촉 피해: 접촉 중 interval(초)마다 fodder/eliteDamage 만큼 소량 피해(적별 독립 틱이라 둘러싸이면 누적). knockback=접촉 시 밀려나는 힘. 회피 무적 중엔 피해 없음(통과)."
+    "_comment": "뱀서식 접촉 피해: 접촉(몸이 붙은) 중 interval(초)마다 fodder/eliteDamage 만큼 소량 피해(적별 독립 틱이라 둘러싸이면 누적). knockback=접촉 시 밀려나는 힘. 회피 무적 중엔 피해 없음(몸 충돌은 유지, v0.12)."
+  },
+
+  "collision": {
+    "playerPushFactor": 0.35,
+    "enemyBodyScale": 0.9,
+    "playerBodyScale": 1.0,
+    "contactPad": 2,
+    "_comment": "v0.12 몸 충돌(겹침 금지). 플레이어-적: 겹치면 플레이어 playerPushFactor 비율 / 적 (1-비율)로 밀어내며, 붙어있는 동안 contact 틱 피해 → '뚫고 지나가면 피해'. 예외 = 처형 시퀀스 중 + 처형 종료 후 execution.postInvuln 초(무적·통과). 적끼리: 공간 해시로 전 밀도 분리, enemyBodyScale=몸 판정 배율(0.9=살짝 겹침 허용 → 최소범위로 붙어있는 밀집 연출, 1=딱 붙음). playerBodyScale=플레이어-적 판정 배율, contactPad=경계 접촉 틱 여유(px)."
   },
 
   "levelup": {
