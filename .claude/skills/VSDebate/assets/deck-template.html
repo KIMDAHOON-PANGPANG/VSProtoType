@@ -10,24 +10,35 @@
    3) data-t="..." 는 하단 네비 점의 툴팁(슬라이드 이름) — 짧게.
    4) 슬라이드 개수가 바뀌어도 JS/네비/카운터는 자동 계산되므로 손댈 필요 없음.
    5) CSS/JS(=골격)는 건드리지 말 것. 아래 "컴포넌트 라이브러리"만 조합해 본문 구성.
+   6) ★ 인포그래픽 우선: 문장보다 도형+명사. 각 '세부' 슬라이드는 아래 [비주얼] 컴포넌트로
+       그림 1개(흐름/대립/2x2/막대/아크/빅넘버/칩)를 중심에 두고, 텍스트는 짧은 라벨로.
 
   컴포넌트 라이브러리 (본문에서 골라 조합):
+   [텍스트]
    • .kicker            슬라이드 상단 라벨 (예: "01 · 토론 아젠다")
    • h2 > .num          섹션 번호 강조
-   • .quote(.teal/.red/.gold)   핵심 명제·인용 강조 박스
-   • .lead              큰 리드 문단
-   • ul.clean > li      ▸ 불릿 리스트
-   • .cols + .card(.good/.bad)  2단 비교 카드 (찬/반, 성공/실패)
-   • .threads > .thread 3분할 아젠다 카드
-   • table              기둥/비교 표 (tr.exec/.reap/.over 색상)
-   • .evo > .e          진화/시너지 강조 박스
-   • .spikes > .spike   번호 매긴 실행 항목(검증 스파이크 등)
-   • .open > .q         미해결 쟁점 카드
+   • .quote(.teal/.red/.gold)   핵심 명제·인용 강조 박스 (슬라이드당 최대 1개)
+   • .lead              큰 리드 문단 (짧게)
+   • ul.clean > li      ▸ 불릿 (문장 나열보다 아래 [비주얼]을 우선)
    • .checklist         체크 가능한 마무리 목록 — 결론 슬라이드는 반드시 이걸로 닫는다
-   • [공통] .mk-btn + #promptModal  덱 맨 끝 고정 블록. 체크한 항목만 모아 Claude 요청 프롬프트 생성·복사
-                          (</body> 직전 공통 블록 — 새 덱에도 그대로 포함, 건드리지 말 것)
-   • <svg class="curve"> 개념 곡선 그래프 (필요 시 좌표만 수정)
-   • 색 유틸: .teal .blue .red .gold .good .dim,  <b>/<em>
+   [비주얼 · 인포그래픽 — 세부 슬라이드는 되도록 이 중 하나를 중심에]
+   • .flow > .step/.arr 순서·루프 (박스 → 화살표).  .step.hot 강조, .step small 캡션
+   • .arc  > .step/.arr 단계 아크 (기본→전직1→전직2 등)
+   • .vs   > .side.a/.b + .mid  좌우 대립(A vs B)
+   • .matrix > .cell(.good/.bad) 2×2 트레이드오프/포지셔닝
+   • .bars > .bar > .fill  크기·비율 막대 비교
+   • .stats > .stat(.big/.lab)  핵심 빅넘버/한 방 강조
+   • .chips > .chip(.i)  아이콘 명사 칩 — 불릿 문장 대신 키워드 나열
+   • .cols + .card(.good/.bad/.teal/.blue/.gold)  2~3단 비교 카드
+   • .threads > .thread 3분할 아젠다 카드
+   • .spikes > .spike   번호 매긴 실행 항목
+   • .evo > .e          진화/시너지 강조 박스
+   • .open > .q         미해결 쟁점 카드
+   • table              매핑/비교 표 (문장 대신 A→B 라벨. 도형으로 대체 가능하면 도형 우선)
+   • <svg class="curve"> 개념 곡선 그래프
+   [공통/색]
+   • .mk-btn + #promptModal  덱 맨 끝 고정 블록(체크 항목 → 프롬프트). 건드리지 말 것
+   • 색 유틸: .teal .blue .red .gold .good .orange .dim,  <b>/<em>
   ============================================================================
 -->
 <html lang="ko">
@@ -123,6 +134,45 @@
   .open .q .lab{font-size:.78rem; letter-spacing:.14em; color:var(--gold); font-weight:800;}
   .open .q h3{font-size:1.15rem; margin:.55rem 0 .6rem; font-weight:800; line-height:1.3;}
   .open .q p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+
+  /* ===== 인포그래픽 컴포넌트 (문장 대신 도형+명사) ===== */
+  /* 흐름/루프: 박스 → 화살표 */
+  .flow{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:1rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800; font-size:.9rem; text-align:center;}
+  .flow .step.hot{border-color:var(--teal); color:var(--teal); box-shadow:0 0 14px rgba(28,240,212,.15);}
+  .flow .step.bad{border-color:rgba(255,43,78,.4); color:var(--red);}
+  .flow .step small{display:block; color:var(--dim); font-weight:600; font-size:.7rem; margin-top:.15rem;}
+  .flow .arr{color:var(--dim); font-weight:900; font-size:1.1rem;}
+  /* 단계 아크 (기본→전직1→전직2 등) */
+  .arc{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:.9rem;}
+  .arc .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800;}
+  .arc .step small{display:block; color:var(--faint); font-weight:600; font-size:.68rem; margin-top:.1rem;}
+  .arc .arr{color:var(--dim); font-weight:900;}
+  /* 대립: 좌우 VS */
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:stretch; margin-top:.9rem;}
+  .vs .side{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .vs .side.a{border-color:rgba(58,160,255,.4);} .vs .side.b{border-color:rgba(28,240,212,.45);}
+  .vs .side h3{font-size:1rem; font-weight:800; margin-bottom:.4rem;}
+  .vs .side p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+  .vs .mid{display:grid; place-items:center; font-weight:900; color:var(--red); font-size:1.1rem;}
+  /* 트레이드오프: 2×2 */
+  .matrix{display:grid; grid-template-columns:1fr 1fr; gap:.7rem; margin-top:.9rem;}
+  .matrix .cell{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.9rem 1rem;}
+  .matrix .cell b{color:#fff; font-size:.95rem;} .matrix .cell p{font-size:.82rem; color:var(--dim); margin-top:.25rem; line-height:1.4;}
+  .matrix .cell.good{border-color:rgba(95,227,154,.4);} .matrix .cell.bad{border-color:rgba(255,43,78,.4);}
+  /* 막대 비교 */
+  .bars{display:flex; flex-direction:column; gap:.6rem; margin-top:.9rem; max-width:660px;}
+  .bars .bar{display:grid; grid-template-columns:8rem 1fr; gap:.7rem; align-items:center; font-size:.85rem; color:var(--dim);}
+  .bars .bar .fill{height:1.5rem; border-radius:6px; background:linear-gradient(90deg,var(--blue),var(--teal)); display:flex; align-items:center; padding:0 .55rem; color:#04201c; font-weight:800; font-size:.76rem; white-space:nowrap;}
+  /* 빅넘버 */
+  .stats{display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;}
+  .stat{flex:1 1 150px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .stat .big{font-size:2.2rem; font-weight:900; color:var(--teal); line-height:1;}
+  .stat .lab{font-size:.82rem; color:var(--dim); margin-top:.35rem; line-height:1.4;}
+  /* 키워드 칩(아이콘 명사) — 불릿 문장 대신 */
+  .chips{display:flex; gap:.55rem; flex-wrap:wrap; margin-top:.9rem;}
+  .chip{background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:.42rem .95rem; font-weight:700; font-size:.88rem;}
+  .chip .i{color:var(--teal); margin-right:.35rem;}
 
   /* 체크리스트 — 결론 슬라이드 마무리용. 클릭하면 체크/취소 */
   .checklist{display:flex; flex-direction:column; gap:.55rem; margin-top:1.2rem; max-width:780px;}
