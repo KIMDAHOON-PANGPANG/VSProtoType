@@ -10,8 +10,8 @@
 
 | 항목 | 값 |
 |---|---|
-| 최신 버전 | **v0.15.0** |
-| 최신 플레이 파일 | **`build/index_20.html`** |
+| 최신 버전 | **v0.16.0** |
+| 최신 플레이 파일 | **`build/index_21.html`** |
 | 밸런스 단일 소스 | **`build/gameBalance.json`** |
 | 패치 내역 | **`build log/PATCH_LOG.txt`** (내림차순) |
 | GitHub 리포 | **`KIMDAHOON-PANGPANG/VSProtoType`** (`origin/main`) |
@@ -207,7 +207,8 @@ spawner(phase1·2·3) / xp / contactDamageScale
 | `build/index_17.html` | v0.13.0 — 무기 1군 14종(덱 017/018 · 매서 몸통×롤 한 스푼) + 연출 3종 세트(차지 링·범위 표시·틱 컬러) + 상태이상(빙결·중독·도발) + 슬롯 예산 6 · 기존 5종 카드 은퇴 |
 | `build/index_18.html` | v0.13.1 — 전설 천장(legendPity): 슬롯 만석+낮은 전설 가중치가 겹쳐 전설 3종을 영구히 못 보던 버그 수정 |
 | `build/index_19.html` | v0.14.0 — 등급제(rar) 완전 폐지 → VS식 레벨+진화: 무기 1군 14종 균등 확률 카드 + maxLevel(8) 도달 시 evolveWeapon(무기별 고유 훅 14종 + 공통 발사간격 35%↓) |
-| `build/index_20.html` | v0.15.0 — 레벨업 카드 테두리 공용 teal 통일(진화 임박만 골드) · 무덤 거미 스폰을 고정 배치→PC 앞 성장 연출+랜덤 방향 크롤로 개편 · 부채꼴 베기가 정식 무기(slash Lv1~8+진화)로 편입 · 마우스 에임 폐지 → WASD 이동 방향 360도 회전 (**현재 최신**) |
+| `build/index_20.html` | v0.15.0 — 레벨업 카드 테두리 공용 teal 통일(진화 임박만 골드) · 무덤 거미 스폰을 고정 배치→PC 앞 성장 연출+랜덤 방향 크롤로 개편 · 부채꼴 베기가 정식 무기(slash Lv1~8+진화)로 편입 · 마우스 에임 폐지 → WASD 이동 방향 360도 회전 |
+| `build/index_21.html` | v0.16.0 — 무덤 거미 직선 이동 재설계(travelDist/travelTime 데이터 드리븐 · 방향 화살표 예고 · '멈춤' 버그 해소) · 팩션 가시성(생존 적=붉은 외곽 링/글로우, 플레이어=teal 링 → 스킬 색과 겹쳐도 적·아군 즉시 구분) (**현재 최신**) |
 | `build/gameBalance.json` | 모든 PC·몬스터·**무기(weapons)** 밸런스 수치 (단일 소스) |
 | `build log/PATCH_LOG.txt` | 패치 내역 (내림차순) |
 | `WORKFLOW.md` | 이 문서 — 작업 규칙 (루트) |

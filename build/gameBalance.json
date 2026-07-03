@@ -1,6 +1,6 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.15.0",
+  "_version": "0.16.0",
 
   "player": {
     "radius": 16,
@@ -197,8 +197,8 @@
       "_comment": "6 독안개 자취(신지드 Q · #58e845): 상시 — 이동하면 dropInterval마다 발밑에 독 장판(zoneR·zoneLife). 장판 틱 피해 + 밟은 적 중독(dotDps×dotTime 도트). '이동이 곧 공격'. MAX 진화 '역병의 창시자': 장판이 영구 잔존(생성 캡 90개까지 누적 트레일)." },
     "pulse": { "windup": 0.50, "interval": 3.6, "damage": 26, "r1": 200, "band": 26, "expandTime": 0.5, "maxLevel": 8, "perDamage": 9, "perR1": 22, "perInterval": -0.15,
       "_comment": "7 죽음의 박동(카서스 E · #ff46e3): interval마다 크게 팽창하는 링 1회(순간 광역) — 링 파면(band 두께)이 스치는 적 1회 타격. ※ '처형 시 +1회'는 제외 확정(무기에 처형 연동 금지). MAX 진화 '영원한 고동': 파면 두께(band) 1.8배." },
-    "spider": { "windup": 0.40, "interval": 6.5, "damage": 34, "tauntR": 240, "fuse": 2.2, "blastR": 120, "spawnOffset": 34, "crawlSpeed": 46, "growDur": 0.35, "maxLevel": 8, "perDamage": 12, "perBlastR": 10, "perInterval": -0.3,
-      "_comment": "8 무덤 거미(엘리스 W · #c9a06b): PC 전방 spawnOffset 위치에서 growDur초에 걸쳐 서서히 태어난 뒤(완전 스폰 전엔 유인 불가), 스폰 시 정해진 랜덤 방향으로 crawlSpeed로 서서히 기어간다 → tauntR 내 잡몹이 유인됨(도발 · 기본은 엘리트 면역) → fuse초 후 blastR 폭발(폭발 피해는 전체 적용). v0.15: 고정 오프셋 즉시 배치·최근접 잡몹 조준 방식 폐지 → PC 앞 스폰+랜덤 방향 크롤로 교체. MAX 진화 '무덤의 여왕': 엘리트도 도발됨(면역 해제)." },
+    "spider": { "windup": 0.40, "interval": 6.5, "damage": 34, "tauntR": 240, "blastR": 120, "spawnOffset": 34, "travelDist": 220, "travelTime": 2.0, "arrowDur": 0.7, "maxLevel": 8, "perDamage": 12, "perBlastR": 10, "perInterval": -0.3,
+      "_comment": "8 무덤 거미(엘리스 W · #c9a06b): PC 전방 spawnOffset 위치에 소환 → 스폰 시 결정된 랜덤 방향으로 travelTime초 동안 travelDist(px)만큼 등속 직선 이동(적 유무와 무관 · 이동 중 tauntR 내 잡몹 흡인/도발, 기본은 엘리트 면역) → 이동 종료(=자폭) 시 blastR 폭발(폭발 피해는 전체 적용). 스폰 직후 arrowDur초 동안 이동 방향 화살표 예고 표시. v0.16: crawlSpeed/growDur/fuse 방식 폐지 → travelDist(직선 이동 거리) + travelTime(직선 이동 시간, =자폭 타이머) 데이터 드리븐으로 교체. MAX 진화 '무덤의 여왕': 엘리트도 도발됨(면역 해제)." },
     "skullrain": { "windup": 0.50, "interval": 6.0, "count": 8, "damage": 16, "impactR": 52, "zoneR": 140, "dropLead": 0.45, "dropGap": 0.16, "bigDamage": 44, "bigR": 95, "offMin": 110, "offMax": 330, "maxLevel": 8, "perDamage": 5, "perBigDamage": 14, "perCount": 0.75, "perInterval": -0.25,
       "_comment": "9 불타는 해골 비(갱플랭크 R · #ff4433): 플레이어 주변 랜덤 지대(offMin~offMax 오프셋 · zoneR 산포)에 해골 count발 연속 낙하(예고 데칼 dropLead+i*dropGap) → 마지막 중앙 대형 1발(bigDamage·bigR). 지대에 그로기가 뭉친다. MAX 진화 '대재앙': 낙하 수 1.6배 + 대형탄 2발(산포)." },
     "frostspear": { "windup": 0.45, "interval": 4.8, "count": 6, "damage": 19, "impactR": 44, "freeze": 1.2, "dropLead": 0.4, "dropGap": 0.12, "range": 360, "maxLevel": 8, "perDamage": 7, "perCount": 0.75, "perFreeze": 0.1, "perInterval": -0.2,
