@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<!-- VSDebate 슬라이드덱 · 2026-07-03 · 테스트 가능 컨텐츠 리스트 (#9~#14) · 리뷰용(구현 X) -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>테스트 가능 컨텐츠 리스트 #9~#28 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a; --orange:#ff7a1a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 8vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1.1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.6vw,3.4rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.4rem,3.2vw,2.3rem); line-height:1.18; font-weight:800; margin-bottom:1.4rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.95rem,1.45vw,1.18rem); line-height:1.6; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  em{font-style:normal; color:var(--gold);}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);} .orange{color:var(--orange);}
+
+  .title-wrap{max-width:920px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.8rem;}
+  .title-meta{margin-top:2rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.05rem,1.8vw,1.45rem); line-height:1.55; max-width:62ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.2rem 0;
+    font-size:clamp(1.05rem,1.9vw,1.5rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote.red{border-color:var(--red);}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.6rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem; font-size:.98rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+
+  table{border-collapse:collapse; width:100%; margin-top:.6rem; font-size:.92rem;}
+  th,td{text-align:left; padding:.6rem .8rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700;}
+  td .pillar{font-weight:800; color:#fff;}
+  td .n{color:var(--gold); font-weight:900; font-variant-numeric:tabular-nums;}
+
+  /* 인포그래픽 컴포넌트 */
+  .flow{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:1rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800; font-size:.9rem; text-align:center;}
+  .flow .step.hot{border-color:var(--teal); color:var(--teal); box-shadow:0 0 14px rgba(28,240,212,.15);}
+  .flow .step.bad{border-color:rgba(255,43,78,.4); color:var(--red);}
+  .flow .step.spike{border-color:var(--orange); color:var(--orange); box-shadow:0 0 16px rgba(255,122,26,.25);}
+  .flow .step small{display:block; color:var(--dim); font-weight:600; font-size:.7rem; margin-top:.15rem;}
+  .flow .arr{color:var(--dim); font-weight:900; font-size:1.1rem;}
+  .arc{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:.9rem;}
+  .arc .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800;}
+  .arc .step.hot{border-color:var(--teal); color:var(--teal);}
+  .arc .step small{display:block; color:var(--faint); font-weight:600; font-size:.68rem; margin-top:.1rem;}
+  .arc .arr{color:var(--dim); font-weight:900;}
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:stretch; margin-top:.9rem;}
+  .vs .side{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .vs .side.a{border-color:rgba(58,160,255,.4);} .vs .side.b{border-color:rgba(255,43,78,.45);}
+  .vs .side h3{font-size:1rem; font-weight:800; margin-bottom:.4rem;}
+  .vs .side p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+  .vs .mid{display:grid; place-items:center; font-weight:900; color:var(--red); font-size:1.1rem;}
+  .matrix{display:grid; grid-template-columns:1fr 1fr; gap:.7rem; margin-top:.9rem;}
+  .matrix .cell{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.9rem 1rem;}
+  .matrix .cell b{color:#fff; font-size:.95rem;} .matrix .cell p{font-size:.82rem; color:var(--dim); margin-top:.25rem; line-height:1.4;}
+  .matrix .cell.good{border-color:rgba(95,227,154,.4);} .matrix .cell.bad{border-color:rgba(255,43,78,.4);}
+  .stats{display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;}
+  .stat{flex:1 1 150px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .stat .big{font-size:2.1rem; font-weight:900; color:var(--teal); line-height:1;}
+  .stat .lab{font-size:.82rem; color:var(--dim); margin-top:.35rem; line-height:1.4;}
+  .chips{display:flex; gap:.55rem; flex-wrap:wrap; margin-top:.9rem;}
+  .chip{background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:.42rem .95rem; font-weight:700; font-size:.88rem;}
+  .chip .i{color:var(--teal); margin-right:.35rem;}
+  .chip.gold{border-color:rgba(255,210,63,.4);} .chip.red{border-color:rgba(255,43,78,.4);} .chip.blue{border-color:rgba(58,160,255,.4);}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1rem 1.4rem; align-items:start; margin-top:.6rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .card h3{font-size:1rem; font-weight:800; margin-bottom:.4rem;}
+  .card p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+  .card.good{border-color:rgba(95,227,154,.35);} .card.blue{border-color:rgba(58,160,255,.35);}
+
+  /* 세부 슬라이드용: 테스트 확인 박스 + 하단 메타 */
+  .testbox{margin-top:1rem; background:rgba(28,240,212,.05); border:1px solid rgba(28,240,212,.25); border-radius:10px; padding:.8rem 1rem;}
+  .testbox .tl{font-size:.72rem; letter-spacing:.14em; color:var(--teal); font-weight:800; text-transform:uppercase; margin-bottom:.4rem;}
+  .testbox li{font-size:.9rem;}
+  .meta-row{display:flex; gap:1.4rem; flex-wrap:wrap; margin-top:1rem; font-size:.82rem; color:var(--faint);}
+  .meta-row b{color:var(--dim); font-weight:700;}
+  .meta-row .ref{color:var(--gold);}
+
+  .curve{margin-top:1.2rem; width:100%; max-width:720px;}
+  .bars{display:flex; flex-direction:column; gap:.55rem; margin-top:.9rem; max-width:660px;}
+  .bars .bar{display:grid; grid-template-columns:5.4rem 1fr; gap:.7rem; align-items:center; font-size:.85rem; color:var(--dim);}
+  .bars .bar .fill{height:1.4rem; border-radius:6px; background:linear-gradient(90deg,var(--blue),var(--teal)); display:flex; align-items:center; padding:0 .55rem; color:#04201c; font-weight:800; font-size:.76rem; white-space:nowrap;}
+
+  .checklist{display:flex; flex-direction:column; gap:.5rem; margin-top:1.1rem; max-width:820px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.65rem .9rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.2rem; height:1.2rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#04201c; font-size:.85rem; font-weight:900;}
+  .checklist .ct{font-size:.93rem; line-height:1.45; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- 1. 표지 -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · 테스트 가능 컨텐츠 리스트</span>
+      <div class="kicker">리뷰용 · 구현 X · 번호별 step 진행 예정</div>
+      <h1>테스트 가능 컨텐츠 리스트<br><span class="teal">#9 ~ #28</span></h1>
+      <p class="lead dim">항목 총 <b>20개</b> · <b>2파트</b> 구성 — 파트1(#9~14) 테스트 가능 컨텐츠 + 파트2(#15~28) 밸런스·데이터 설계. <b>지금은 구현하지 않고</b>, 검토 후 <b>번호별로 하나씩</b> 구현을 요청하세요.</p>
+      <div class="title-meta">
+        <div>기반 빌드 · <b>v0.16 (index_22)</b></div>
+        <div>날짜 · <b>2026-07-03</b></div>
+        <div>형식 · <b>개요 → 파트1 → 파트2 → 순서 → 미해결 쟁점 → 체크리스트</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 개요 -->
+  <section class="slide" data-t="개요">
+    <div class="kicker">00 · 한눈에 (총 20개 항목 · 2파트)</div>
+    <h2>파트 1 — 테스트 가능 컨텐츠 (#9~14)</h2>
+    <table>
+      <thead><tr><th>#</th><th>컨텐츠</th><th>한 줄</th><th>레퍼런스</th></tr></thead>
+      <tbody>
+        <tr><td class="n">9</td><td><span class="pillar">스킬 방향 고정</span></td><td>발사 순간 방향으로 고정 → 치고 빠지기</td><td class="gold">뱀서</td></tr>
+        <tr><td class="n">10</td><td><span class="pillar">엘리트 = 성장 방해</span></td><td>무지성 무빙만으론 죽는 압박</td><td class="gold">서바이버 정예</td></tr>
+        <tr><td class="n">11</td><td><span class="pillar">강화 웨이브</span></td><td>발동 시 일반 몹 스폰 예산 급상승</td><td class="gold">매직 서바이벌</td></tr>
+        <tr><td class="n">12</td><td><span class="pillar">오픈 맵 전제</span></td><td>절차맵·방 함정 폐기 → 프랍 없이 웨이브만 검증</td><td class="gold">뱀서 / 매직 서바이벌</td></tr>
+        <tr><td class="n">13</td><td><span class="pillar">이벤트 웨이브 4종</span></td><td>가두리 벽·보석 엘리트화·해파리 링·저지선</td><td class="gold">데스 머스트 다이 / VS</td></tr>
+        <tr><td class="n">14</td><td><span class="pillar">보스전(황소+투우사)</span></td><td>기둥 4개 스폰만 1차 스코프(맵 좁아짐 제외) · 처형 3회 클리어</td><td class="gold">신규 · v0.1.0 보스 전례</td></tr>
+      </tbody>
+    </table>
+    <h2 style="margin-top:1.3rem;">파트 2 — 밸런스 & 데이터 설계 (#15~28)</h2>
+    <table>
+      <thead><tr><th>#</th><th>컨텐츠</th><th>한 줄</th></tr></thead>
+      <tbody>
+        <tr><td class="n">15</td><td><span class="pillar">총 게임 길이</span></td><td>15분 확정 · 보스=15분 시점</td></tr>
+        <tr><td class="n">16~17</td><td><span class="pillar">웨이브 버짓·HP 스케일링</span></td><td>0~15분 스폰 버짓 커브 + 몬스터 HP 배율 공식(초벌)</td></tr>
+        <tr><td class="n">18~19</td><td><span class="pillar">웨이브 스케줄 · 엘리트 다양화</span></td><td>분·타입 스케줄 표 + 웨이브당 엘리트 1종·물결형·버짓 15~20%</td></tr>
+        <tr><td class="n">20</td><td><span class="pillar">웨이브 데이터 스키마</span></td><td>atMin/kind/type/eliteType/params 초안</td></tr>
+        <tr><td class="n">21~22</td><td><span class="pillar">무기 레벨업 재구성</span></td><td>VS식 '매 레벨 한 축만' 원칙 + 8레벨 로테이션 초안</td></tr>
+        <tr><td class="n">23~24</td><td><span class="pillar">템포 페이싱</span></td><td>0~3분 느긋 → 5~7분 클라이맥스 → 8~15분 컨트롤 구간</td></tr>
+        <tr><td class="n">25~26</td><td><span class="pillar">웨이브 보상 · 처형 A/B/C</span></td><td>시간정지→클리어→보상 흐름 + 사무라이 처형 3안</td></tr>
+        <tr><td class="n">27~28</td><td><span class="pillar">확인 필요 · 기타 데이터</span></td><td>기존 A/B/C와의 관계 플래그 + 추가 데이터 노브</td></tr>
+      </tbody>
+    </table>
+    <div class="chips">
+      <span class="chip"><span class="i">▶</span>이 덱은 리뷰용 (구현 X)</span>
+      <span class="chip"><span class="i">▶</span>번호별 step-by-step 요청</span>
+      <span class="chip gold"><span class="i">◆</span>9·10·11 = 바로 얹기 / 13 = 그 위(이벤트 웨이브)</span>
+      <span class="chip red"><span class="i">✕</span>구 12·13(절차맵·함정) 폐기됨</span>
+      <span class="chip gold"><span class="i">◆</span>14 = 맵 좁아짐 제외, 기둥 스폰부터</span>
+    </div>
+  </section>
+
+  <!-- 3. #9 -->
+  <section class="slide" data-t="#9 방향 고정">
+    <div class="kicker">항목 · 전투 조작</div>
+    <h2><span class="num">9</span>스킬 방향 = 발사 순간 고정 (치고 빠지기)</h2>
+    <div class="flow">
+      <span class="step hot">발사 순간<small>그때의 방향 캡처</small></span><span class="arr">→</span>
+      <span class="step">스킬은 그 방향으로<small>고정 발사</small></span><span class="arr">＋</span>
+      <span class="step">캐릭터는 반대로<small>자유 이동</small></span><span class="arr">＝</span>
+      <span class="step hot">치고 빠지기 성립</span>
+    </div>
+    <div class="testbox">
+      <div class="tl">테스트 확인</div>
+      <ul class="clean">
+        <li>차지형 무기(어둠 파동·회오리·불사조 등) 발사 <b>직후 반대 방향으로 도망</b> → 스킬은 원래 방향 유지</li>
+        <li>이동 중 발사 → <b>발사 순간의 방향</b>으로 고정(이후 캐릭터가 돌아도 안 바뀜)</li>
+      </ul>
+    </div>
+    <div class="meta-row">
+      <div><b>현재</b> v0.15: 마우스 에임 폐지 · 방향=이동 방향(무입력 시 직전 유지)</div>
+      <div><b>핵심</b> "생성 시점 고정"을 명확화 → 방향과 도주를 분리</div>
+    </div>
+  </section>
+
+  <!-- 4. #10 -->
+  <section class="slide" data-t="#10 엘리트=성장방해">
+    <div class="kicker">항목 · 적 디자인</div>
+    <h2><span class="num">10</span>엘리트 = 성장 방해자</h2>
+    <div class="vs">
+      <div class="side a"><h3>존재 목적</h3><p>플레이어의 <b>성장(젬·처형·빌드)</b>을 방해한다. "안 잡아도 그만"이면 안 됨 — 반드시 상대하게.</p></div>
+      <div class="mid">＋</div>
+      <div class="side b"><h3>죽는 전개</h3><p>기본적인 <b>무지성 무빙</b>(생각 없이 도망만)만 하면 결국 <b>죽는</b> 압박을 목표로 디자인.</p></div>
+    </div>
+    <div class="testbox">
+      <div class="tl">테스트 확인</div>
+      <ul class="clean">
+        <li>엘리트 방치 → <b>성장 저해</b>가 체감되나(예: 젬 흡수 방해 / 압박 디버프)</li>
+        <li>아무 생각 없이 도망만 → <b>일정 시간 뒤 위험·사망</b>으로 이어지나</li>
+      </ul>
+    </div>
+    <div class="meta-row">
+      <div><b>현재</b> 엘리트=도약 예고+그로기+처형</div>
+      <div><b>연결</b> 덱 019(엘리트 위협·인파이팅)</div>
+    </div>
+  </section>
+
+  <!-- 5. #11 -->
+  <section class="slide" data-t="#11 특수 웨이브">
+    <div class="kicker">항목 · 페이싱</div>
+    <h2><span class="num">11</span>특수 웨이브 → 스폰 예산 급상승</h2>
+    <div class="flow">
+      <span class="step">평시<small>기본 스폰 예산</small></span><span class="arr">→</span>
+      <span class="step spike">특수 웨이브 발동<small>특정 타이밍</small></span><span class="arr">→</span>
+      <span class="step spike">일반 몹 예산 ×N<small>밀도 폭발</small></span><span class="arr">→</span>
+      <span class="step">진정<small>정상 복귀</small></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="big">×N</div><div class="lab">특수 웨이브 중 스폰 예산 배수 (데이터로 조절)</div></div>
+      <div class="stat"><div class="big">봉우리</div><div class="lab">긴장 스파이크 → 위기·보상 리듬 형성</div></div>
+    </div>
+    <div class="meta-row">
+      <div><b>현재</b> 3분 페이즈 + 데이터드리븐 웨이브(덱 015)</div>
+      <div><b class="ref">레퍼런스</b> 매직 서바이벌</div>
+    </div>
+  </section>
+
+  <!-- 6. #12 (개정) -->
+  <section class="slide" data-t="#12 오픈맵 전제">
+    <div class="kicker">항목 · 맵 전제 (개정 · 구 #12 폐기)</div>
+    <h2><span class="num">12</span>오픈 맵 기반 — 프랍은 일단 보류</h2>
+    <div class="cols">
+      <div class="card"><h3><span class="dim" style="text-decoration:line-through;">✕ 폐기</span> 절차적 방 라운드 · 방 함정</h3><p>하데스식 방 구조는 <b>구조 변경이 너무 큼</b>. 지금 검증할 건 <b>전투·웨이브</b>지 맵 구조가 아니다.</p></div>
+      <div class="card good"><h3><span class="i">✓</span> 오픈 맵 (프랍 없이)</h3><p>뱀서·매직 서바이벌처럼 <b>열린 필드 그대로</b> 유지. 벽·트랩 같은 <b>고정 배치 오브젝트(프랍)는 지금 안 넣는다</b> — 웨이브 레이어만 우선 검증.</p></div>
+    </div>
+    <div class="quote teal">"맵을 바꾸지 말고, <b>웨이브가 만드는 상황</b>으로 긴장을 만든다."</div>
+    <div class="meta-row">
+      <div><b>예외</b> '가두리 벽'처럼 웨이브가 잠깐 만드는 지형 효과는 <b>프랍이 아니라 이벤트 웨이브</b>로 분류(다음 장)</div>
+      <div><b class="red">주의</b> 덱 009 실제 결론은 <b>"라운드(웨이브+상점) 채택, 오픈 필드는 후순위 보류"</b>였음 — 이번 결정은 그걸 <b>뒤집는 재승인 사안</b>(단순 유지 아님, #15 참고)</div>
+    </div>
+  </section>
+
+  <!-- 7. #13 (개정) -->
+  <section class="slide" data-t="#13 웨이브 분류">
+    <div class="kicker">항목 · 웨이브 분류 (개정 · 구 #13 폐기)</div>
+    <h2><span class="num">13</span>특수 웨이브 = 강화 웨이브 + 이벤트 웨이브</h2>
+    <div class="vs">
+      <div class="side a"><h3>강화 웨이브</h3><p><b>같은 몬스터</b>가 <b>더 많이</b> 나온다. 스폰 버짓 급상승(= #11과 동일 개념). <b class="gold">양</b>의 문제.</p></div>
+      <div class="mid">≠</div>
+      <div class="side b"><h3>이벤트 웨이브</h3><p><b>다른 상황</b>이 벌어진다. 특정 시점에 <b>새 몬스터·지형 효과</b> 등장. <b class="red">질</b>의 문제.</p></div>
+    </div>
+    <div class="chips">
+      <span class="chip gold"><span class="i">◆</span>강화 웨이브 = #11 명칭만 확정</span>
+      <span class="chip red"><span class="i">◆</span>이벤트 웨이브 = 신규(예시 4종, 다음 장)</span>
+    </div>
+    <div class="meta-row">
+      <div><b>권고</b> 강화 웨이브는 <b>물량만</b>. 스탯 강화는 별도 전역 시간 커브(덱 015)가 담당 — 한 웨이브에 양+질을 같이 얹으면 스파이크가 이중으로 겹쳐 밸런싱이 꼬인다</div>
+    </div>
+  </section>
+
+  <!-- 8. 세부 — 이벤트 웨이브 예시 4종 -->
+  <section class="slide" data-t="이벤트 예시 4종">
+    <div class="kicker">세부 · 이벤트 웨이브 — 예시 4종</div>
+    <h2>이벤트 웨이브 예시 4종</h2>
+    <table>
+      <thead><tr><th>이름</th><th>레퍼런스</th><th>효과</th><th>데이터로 조절</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pillar">가두리 벽</span></td><td class="gold">데스 머스트 다이 / VS</td><td>임시 벽으로 구역 폐쇄 → 도주 불가 ~1분 → 강제 교전</td><td>지속시간 · 구역 크기</td></tr>
+        <tr><td><span class="pillar">보석 엘리트화</span></td><td class="gold">매직 서바이벌</td><td>보라 보석에 PC 오버랩 → 오라 확산 → 주변 몹 N마리 엘리트로 변신</td><td>변신 방식(개별 확률 / 고정 개수+타입) · 변신 수 · 엘리트 타입</td></tr>
+        <tr><td><span class="pillar">해파리 링</span></td><td class="gold">VS</td><td>PC 중심 원형 포진 스폰 → 포진 반경이 조였다 풀렸다(주기 반복)</td><td>포진 반경 최소/최대 · 주기</td></tr>
+        <tr><td><span class="pillar">저지선(꽃)</span></td><td class="gold">VS</td><td>고HP·잘 안 죽는 몬스터가 벽처럼 늘어서 스폰 → 틈새 돌파 유도</td><td>체력 · 개수 · 배치 간격</td></tr>
+      </tbody>
+    </table>
+    <div class="quote">이벤트 웨이브 = <b>"몹이 많아진다"</b>가 아니라 <b class="red">"다른 상황이 열린다"</b>.</div>
+  </section>
+
+  <!-- 9. #14 보스전 비전 -->
+  <section class="slide" data-t="#14 보스전 비전">
+    <div class="kicker">항목 · 최종 타이밍 (신규)</div>
+    <h2><span class="num">14</span>보스전 — 처형 N회로 클리어</h2>
+    <div class="vs">
+      <div class="side a"><h3>엘리트</h3><p><b>전략적 판단</b> 위주. 이동(포지셔닝)만 생각해도 <b>피지컬 없이 회피 가능</b>한 수준으로 남긴다.</p></div>
+      <div class="mid">vs</div>
+      <div class="side b"><h3>보스</h3><p><b>빠른 타이밍 판단</b> 요구. 예고→커밋이 짧아 <b>즉각 반응</b>이 필요하다.</p></div>
+    </div>
+    <div class="quote gold" style="border-color:var(--gold);">"보스는 <b>처형 3번</b>을 해야만 쓰러진다 — 한 방이 아니라 <b>반복되는 관문</b>."</div>
+    <div class="meta-row">
+      <div><b>등장</b> 라운드 최종 타이밍(클라이맥스)</div>
+      <div><b>전례</b> v0.1.0 최초 프로토타입에 이미 "Anubis Core" 보스 게이트(1:30 · 그로기 실드바 + 궁극 난무)가 있었음 — 처음부터 있던 지향점</div>
+    </div>
+  </section>
+
+  <!-- 10. #14 첫 보스 — 황소+투우사 -->
+  <section class="slide" data-t="#14 황소+투우사">
+    <div class="kicker">항목 · 첫 보스 컨셉</div>
+    <h2><span class="num">14</span>황소 + 투우사 — 돌진 패턴 하나로 미는 보스</h2>
+    <div class="flow">
+      <span class="step hot">추적<small>chase</small></span><span class="arr">→</span>
+      <span class="step">시야에 적<small>조준선 호밍</small></span><span class="arr">→</span>
+      <span class="step spike">돌진<small>직선 판정 커밋</small></span><span class="arr">→</span>
+      <span class="step">기둥 충돌<small>그로기 + 딜타임</small></span><span class="arr">→</span>
+      <span class="step hot">처형<small>1/3</small></span>
+    </div>
+    <div class="cols">
+      <div class="card good"><h3>1차 스코프</h3><p><b>기둥 4개 스폰</b>부터 — 위치·비주얼만 먼저 확인. 돌진·그로기·처형은 다음 단계.</p></div>
+      <div class="card blue"><h3>기둥 4개 = 쉴드</h3><p>보스 예정 위치 기준 고정 배치 4개. 보스가 <b>박으면 즉시 그로기</b> — HP 감소가 아니라 <b>충돌이 트리거</b>(다음 단계에서 연결).</p></div>
+    </div>
+    <div class="quote red">맵 좁아짐(아레나 경계)은 <b>제외</b> — 오픈 필드 그대로, 기둥만 고정 위치에 놓는다.</div>
+    <div class="meta-row">
+      <div><b>방해 스폰</b> 보스전 중 랜덤 타이밍 — 같은 타입 엘리트 1마리 <b>또는</b> 자코 소량(딜 방해용). 마구잡이 X — 덱 020 '이벤트 웨이브'와 같은 어휘</div>
+    </div>
+  </section>
+
+  <!-- 11. #14 실현성 검토 -->
+  <section class="slide" data-t="#14 실현성 검토">
+    <div class="kicker">검토 · 지금 코드 기준 (index_22)</div>
+    <h2>실현 가능한가 — 구성 요소별</h2>
+    <table>
+      <thead><tr><th>구성 요소</th><th>재사용</th><th>신규 필요</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pillar">기둥 스폰 (1차 스코프)</span></td><td class="gold">✓ 젬·잡몹과 같은 엔티티 스폰 패턴</td><td>없음 — 고정 좌표 4곳 정의 + 렌더링만</td></tr>
+        <tr><td><span class="pillar">돌진 예고→커밋</span></td><td class="gold">✓ 엘리트 도약 예고(windup+호밍 데칼)와 동일 패턴</td><td>방향만 원형→직선, 커밋 후 대시 판정(라인 히트박스)</td></tr>
+        <tr><td><span class="pillar">그로기 발동</span></td><td class="gold">✓ makeGroggy() 그대로 호출</td><td>트리거를 HP0이 아니라 '기둥 충돌'로 새 경로 추가</td></tr>
+        <tr><td><span class="pillar">처형 자체</span></td><td class="gold">✓ tryExecute·처형 연출 재사용</td><td>처형해도 안 죽는 '단계' 개념 — 3회째만 확정 사망</td></tr>
+        <tr><td><span class="pillar">방해 스폰</span></td><td class="gold">✓ 덱 020 이벤트 웨이브 패턴 그대로</td><td>없음(스폰량만 데이터화)</td></tr>
+      </tbody>
+    </table>
+    <div class="quote teal">맵 좁아짐을 빼니 <b>하드 블로커가 사라졌다</b> — 전부 기존 패턴 재사용. 기둥 스폰이 <b>가장 가벼운 첫 스텝</b>.</div>
+    <div class="meta-row">
+      <div><b>참고</b> 기둥은 여전히 '프랍'이지만, 덱 020(#12)의 '프랍 없이' 원칙에 대한 <b>보스 전용 예외</b>(가두리 벽과 같은 논리)</div>
+    </div>
+  </section>
+
+  <!-- 12. 파트 2 표지 -->
+  <section class="slide" data-t="파트2 표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · 파트 2</span>
+      <div class="kicker">밸런스 & 데이터 드리븐 설계 · 신규 확장</div>
+      <h1>파트 2 — <span class="teal">밸런스 데이터 설계</span></h1>
+      <p class="lead dim">총 게임 길이 <b>15분</b> 확정(보스는 15분 시점). 웨이브 버짓·몬스터 스케일링·엘리트 다양화·무기 레벨 구간·템포 페이싱·웨이브 보상까지 — 전부 <b>데이터로 조절 가능</b>하게 초벌 설계.</p>
+      <div class="title-meta">
+        <div>기반 · <b>덱 009·014·015·019</b> 원칙 확장</div>
+        <div>날짜 · <b>2026-07-03</b></div>
+        <div>형식 · <b>초벌 수치 + 데이터 노브</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13. #15 게임 총 길이 -->
+  <section class="slide" data-t="#15 총 길이">
+    <div class="kicker">항목 · 스테이지 길이 (결정)</div>
+    <h2><span class="num">15</span>총 게임 시간 15분 — 보스는 15분 시점</h2>
+    <div class="stats">
+      <div class="stat"><div class="big">15분</div><div class="lab">한 스테이지 총 길이(확정)</div></div>
+      <div class="stat"><div class="big">15:00</div><div class="lab">보스(#14 황소+투우사) 조우 타이밍</div></div>
+    </div>
+    <div class="quote gold" style="border-color:var(--gold);">보스 클리어 = <b>스테이지 끝</b>.</div>
+    <div class="meta-row">
+      <div><b class="red">정정</b> 덱 009 결론은 실제로 "라운드(웨이브+상점) 채택 · 20분 오픈 필드는 후순위 엔드리스 모드로 보류"였음(단순 20분→15분 숫자 수정이 아니라 <b>구조 자체의 재역전</b>)</div>
+      <div><b>구조</b> 다중 라운드(방+상점) 대신 <b>단일 연속 15분 스테이지</b>로 되돌림 — 웨이브 보상(#25)이 상점 역할을 대신함. <b class="gold">PD 재승인 필요</b>(#28 미해결쟁점 참고)</div>
+    </div>
+  </section>
+
+  <!-- 14. #16 웨이브 버짓 -->
+  <section class="slide" data-t="#16 웨이브 버짓">
+    <div class="kicker">항목 · 밸런스 데이터 (초벌)</div>
+    <h2><span class="num">16</span>웨이브 스폰 버짓 커브 (0~15분)</h2>
+    <div class="bars">
+      <div class="bar">0~1분<div class="fill" style="width:22%">잡몹 상한 60</div></div>
+      <div class="bar">1~3분<div class="fill" style="width:38%">100</div></div>
+      <div class="bar">3~5분<div class="fill" style="width:52%">160</div></div>
+      <div class="bar">5~7분<div class="fill" style="width:68%">220</div></div>
+      <div class="bar">7~10분<div class="fill" style="width:82%">280</div></div>
+      <div class="bar">10~13분<div class="fill" style="width:94%">340</div></div>
+      <div class="bar">13~15분<div class="fill" style="width:100%">380</div></div>
+    </div>
+    <table>
+      <thead><tr><th>구간</th><th>잡몹 간격</th><th>엘리트 간격</th><th>엘리트 상한</th></tr></thead>
+      <tbody>
+        <tr><td>0~1분</td><td>1.0s</td><td>—</td><td>0</td></tr>
+        <tr><td>1~3분</td><td>0.7s</td><td>8.0s</td><td>1</td></tr>
+        <tr><td>3~5분</td><td>0.5s</td><td>5.0s</td><td>2</td></tr>
+        <tr><td>5~7분</td><td>0.35s</td><td>3.0s</td><td>3</td></tr>
+        <tr><td>7~10분</td><td>0.3s</td><td>2.5s</td><td>3</td></tr>
+        <tr><td>10~13분</td><td>0.26s</td><td>2.0s</td><td>4</td></tr>
+        <tr><td>13~15분</td><td>0.22s</td><td>1.6s</td><td>4</td></tr>
+      </tbody>
+    </table>
+    <div class="meta-row">
+      <div><b>초벌 수치</b> — 실측 후 조정 전제. 전부 gameBalance.json spawner 구간 배열로 데이터화</div>
+    </div>
+  </section>
+
+  <!-- 15. #17 HP 스케일링 -->
+  <section class="slide" data-t="#17 HP 스케일링">
+    <div class="kicker">항목 · 밸런스 데이터 (초벌)</div>
+    <h2><span class="num">17</span>몬스터 HP 스케일링 커브 초벌</h2>
+    <div class="quote teal">공식 한 줄: <b>HP배율(t) = 1 + k × (t/15분)^p</b> — 덱 015 'HP 지수 커브' 원칙을 15분 기준으로 구체화.</div>
+    <table>
+      <thead><tr><th>시점</th><th>HP 배율</th><th>체감</th></tr></thead>
+      <tbody>
+        <tr><td>0분</td><td class="n">×1.0</td><td>기준치</td></tr>
+        <tr><td>5분</td><td class="n">×1.3</td><td>완만한 증가</td></tr>
+        <tr><td>10분</td><td class="n">×1.7</td><td>체감 시작</td></tr>
+        <tr><td>15분(보스 직전)</td><td class="n">×2.2</td><td>또렷한 압박</td></tr>
+      </tbody>
+    </table>
+    <div class="chips">
+      <span class="chip gold"><span class="i">◆</span>k(기울기)·p(곡률) = 데이터 노브</span>
+      <span class="chip"><span class="i">▶</span>잡몹/엘리트 별도 곡선 가능(엘리트만 더 가파르게)</span>
+    </div>
+  </section>
+
+  <!-- 16. #18 웨이브 스케줄 -->
+  <section class="slide" data-t="#18 웨이브 스케줄">
+    <div class="kicker">항목 · 밸런스 데이터 (초벌)</div>
+    <h2><span class="num">18</span>특수·이벤트 웨이브 등장 스케줄</h2>
+    <table>
+      <thead><tr><th>타이밍</th><th>종류</th><th>타입</th><th>엘리트 타입</th></tr></thead>
+      <tbody>
+        <tr><td class="n">2분</td><td><span class="pillar">강화 웨이브</span></td><td>잡몹 물량 스파이크(워밍업)</td><td class="dim">—</td></tr>
+        <tr><td class="n">4분</td><td><span class="pillar">이벤트 웨이브</span></td><td>보석 엘리트화</td><td class="dim">변신 대상이 곧 엘리트</td></tr>
+        <tr><td class="n">6분</td><td><span class="pillar">강화 웨이브</span></td><td>잡몹+엘리트 동시 스파이크</td><td class="gold">랜덤 1종(물결)</td></tr>
+        <tr><td class="n">8분</td><td><span class="pillar">이벤트 웨이브</span></td><td>가두리 벽(강제 교전)</td><td class="gold">랜덤 1종(물결)</td></tr>
+        <tr><td class="n">10분</td><td><span class="pillar">이벤트 웨이브</span></td><td>해파리 링</td><td class="dim">해파리 자체(별도 몬스터)</td></tr>
+        <tr><td class="n">12분</td><td><span class="pillar">이벤트 웨이브</span></td><td>저지선(꽃)</td><td class="dim">저지선 자체(별도 몬스터)</td></tr>
+        <tr><td class="n">14분</td><td><span class="pillar">강화 웨이브</span></td><td>최종 압박 스파이크</td><td class="gold">랜덤 1종(물결)</td></tr>
+        <tr><td class="n">15분</td><td><span class="pillar">보스</span></td><td>황소+투우사</td><td class="dim">—</td></tr>
+      </tbody>
+    </table>
+    <div class="meta-row">
+      <div><b>원칙</b> 타이밍·타입 전부 <b>슬롯 배열로 데이터화</b> — 순서 바꾸기·타입 교체·추가가 코드 수정 없이 가능</div>
+    </div>
+  </section>
+
+  <!-- 17. #19 엘리트 타입 다양화 (신규) -->
+  <section class="slide" data-t="#19 엘리트 다양화">
+    <div class="kicker">항목 · 밸런스 데이터 (초벌) · 신규</div>
+    <h2><span class="num">19</span>엘리트 타입 다양화 — 웨이브당 한 타입만</h2>
+    <div class="quote teal">매 판 · 웨이브마다 <b>엘리트 타입 하나를 랜덤 배정</b> — 그 웨이브 동안은 그 타입만 나온다.</div>
+    <div class="stats">
+      <div class="stat"><div class="big">15~20%</div><div class="lab">웨이브 스폰 버짓 중 엘리트 비중 (잡몹:엘리트 ≈ 80:20)</div></div>
+      <div class="stat"><div class="big">물결형</div><div class="lab">권고 — 계속 쏟아지지 않고 '스폰→소강→재스폰'</div></div>
+    </div>
+    <div class="vs">
+      <div class="side a"><h3>트리클(계속 쏟아짐)</h3><p>인지 부하↑, 여러 엘리트가 동시에 화면에 쌓임 → '마구잡이'처럼 느껴짐(#13 원칙과 충돌).</p></div>
+      <div class="mid">✕</div>
+      <div class="side b"><h3>물결(스폰→소강→재스폰) <span class="good" style="color:var(--good);">권고</span></h3><p>N마리 한 번에 스폰 → 전부 처리되거나 <b>M초</b> 경과 시 다음 물결. '생각할 시간'과 '압박'이 번갈아 온다 — 덱 019·#10 원칙과 정합.</p></div>
+    </div>
+    <div class="meta-row">
+      <div><b>후보 로스터</b> 덱 019 '1차 프로토 조합 6종'(예고 및 약속·막아서는 빚·깃발 든 대장·오래두면 격노·잡몹 연쇄 폭발·보석 청소기) 재활용</div>
+      <div><b>구현 근거</b> 현재 phase3의 eliteInterval+eliteMax 구조와 유사 — 물결 수(N)·소강 시간(M초)만 데이터화하면 재사용 가능</div>
+    </div>
+  </section>
+
+  <!-- 18. #20 웨이브 스케줄 데이터 구조 -->
+  <section class="slide" data-t="#20 스케줄 데이터 구조">
+    <div class="kicker">항목 · 데이터 스키마 제안</div>
+    <h2><span class="num">20</span>웨이브 스케줄 — 데이터 구조 초안</h2>
+    <table>
+      <thead><tr><th>필드</th><th>타입</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pillar">atMin</span></td><td>숫자</td><td>발동 시점(분)</td></tr>
+        <tr><td><span class="pillar">kind</span></td><td>문자열</td><td>'reinforce'(강화) / 'event'(이벤트) / 'boss'</td></tr>
+        <tr><td><span class="pillar">type</span></td><td>문자열</td><td>이벤트일 때 세부 타입(예: 'elitebloom','cage','jelly','tankline')</td></tr>
+        <tr><td><span class="pillar">eliteType</span></td><td>문자열/랜덤</td><td>물결에 쓸 엘리트 타입(고정 지정 또는 'random')</td></tr>
+        <tr><td><span class="pillar">params</span></td><td>객체</td><td>타입별 파라미터(변신 수·지속시간·물결 수 N·소강 M초 등)</td></tr>
+      </tbody>
+    </table>
+    <div class="quote">슬롯 배열 하나가 <b>스테이지 전체 리듬</b>을 정의한다 — 기획자가 표만 고쳐도 페이싱이 바뀐다.</div>
+  </section>
+
+  <!-- 19. #21 무기 레벨업 원칙 -->
+  <section class="slide" data-t="#21 레벨업 원칙">
+    <div class="kicker">항목 · 무기 성장 원칙</div>
+    <h2><span class="num">21</span>레벨업 = 매 레벨 '한 축만' (VS 방식)</h2>
+    <div class="vs">
+      <div class="side a"><h3>메가봉크 방식 <span class="red">✕</span></h3><p>등급(희귀도) 뽑기로 무기 자체가 갈린다. 이번 프로젝트에선 <b>안 씀</b>(덱 016에서 이미 결론).</p></div>
+      <div class="mid">≠</div>
+      <div class="side b"><h3>VS·매직서바이벌 방식 <span class="good" style="color:var(--good);">✓</span></h3><p>레벨마다 <b>딱 하나</b>의 스탯만 오른다(Lv2: 횟수+1 / Lv3: 쿨감 / Lv4: 범위…). 성장이 또렷하게 읽힌다.</p></div>
+    </div>
+    <div class="meta-row">
+      <div><b>현재</b> weapons.json 레벨스케일은 데미지·수·간격이 <b>매 레벨 동시에</b> 조금씩 오르는 선형 블렌드 — 이번 요청은 <b>레벨마다 한 축만</b> 딱 오르는 방식으로 재구성</div>
+    </div>
+  </section>
+
+  <!-- 20. #22 8레벨 축 로테이션 -->
+  <section class="slide" data-t="#22 8레벨 배분">
+    <div class="kicker">항목 · 무기 레벨 구간 (임시)</div>
+    <h2><span class="num">22</span>8레벨 축 로테이션 — 초안</h2>
+    <table>
+      <thead><tr><th>레벨</th><th>축</th><th>예시 효과</th></tr></thead>
+      <tbody>
+        <tr><td class="n">1</td><td><span class="pillar">시작</span></td><td>기본 발동</td></tr>
+        <tr><td class="n">2</td><td><span class="pillar">횟수</span></td><td>발사수/타격수 +1</td></tr>
+        <tr><td class="n">3</td><td><span class="pillar">쿨타임</span></td><td>발사 간격 -15%</td></tr>
+        <tr><td class="n">4</td><td><span class="pillar">범위</span></td><td>사거리/반경 +20%</td></tr>
+        <tr><td class="n">5</td><td><span class="pillar">데미지</span></td><td>데미지 +25%</td></tr>
+        <tr><td class="n">6</td><td><span class="pillar">횟수</span></td><td>발사수/타격수 +1 (2주기)</td></tr>
+        <tr><td class="n">7</td><td><span class="pillar">쿨타임</span></td><td>발사 간격 -15% (2주기)</td></tr>
+        <tr><td class="n">8</td><td><span class="pillar" style="color:var(--gold);">진화</span></td><td>고유 훅 발동(weapons.json 진화 그대로)</td></tr>
+      </tbody>
+    </table>
+    <div class="chips">
+      <span class="chip gold"><span class="i">◆</span>임시 로테이션 — 무기마다 축 순서 오버라이드 가능(데이터)</span>
+    </div>
+  </section>
+
+  <!-- 21. #23 템포 페이싱 목표 -->
+  <section class="slide" data-t="#23 템포 페이싱">
+    <div class="kicker">항목 · 템포 데이터 (초벌)</div>
+    <h2><span class="num">23</span>템포 페이싱 — 느리게 시작해서 클라이맥스로</h2>
+    <div class="arc">
+      <span class="step">0~3분<small>느긋하게</small></span><span class="arr">→</span>
+      <span class="step hot">3~7분<small>서서히 가속·클라이맥스</small></span><span class="arr">→</span>
+      <span class="step spike">8~15분<small>컨트롤 요구 + 맥스레벨 비주얼</small></span><span class="arr">→</span>
+      <span class="step hot">15분<small>보스</small></span>
+    </div>
+    <div class="quote red">"지금 무기 템포가 너무 빠르다" — <b>최대한 느리게 시작</b>해서 갭을 벌린다.</div>
+  </section>
+
+  <!-- 22. #24 템포 배율 데이터 -->
+  <section class="slide" data-t="#24 템포 배율 데이터">
+    <div class="kicker">항목 · 밸런스 데이터 (초벌)</div>
+    <h2><span class="num">24</span>템포 배율 커브 — 수치 초안</h2>
+    <svg class="curve" viewBox="0 0 720 190" xmlns="http://www.w3.org/2000/svg">
+      <line x1="40" y1="150" x2="700" y2="150" stroke="#1f2738" stroke-width="1.5"/>
+      <path d="M40,40 Q220,30 300,95 T500,120 Q600,130 660,90" fill="none" stroke="#1cf0d4" stroke-width="2.5"/>
+      <text x="45" y="30" fill="#1cf0d4" font-size="12" font-family="sans-serif">느림(×1.6)</text>
+      <text x="300" y="115" fill="#ffd23f" font-size="12" font-family="sans-serif">클라이맥스(×1.0)</text>
+      <text x="560" y="80" fill="#ff2b4e" font-size="12" font-family="sans-serif">컨트롤 구간(×0.8)</text>
+      <text x="55" y="175" fill="#8b97ad" font-size="11" font-family="sans-serif">0분</text>
+      <text x="330" y="175" fill="#8b97ad" font-size="11" font-family="sans-serif">7분</text>
+      <text x="650" y="175" fill="#8b97ad" font-size="11" font-family="sans-serif">15분</text>
+    </svg>
+    <table>
+      <thead><tr><th>구간</th><th>템포 배율</th><th>의미</th></tr></thead>
+      <tbody>
+        <tr><td>0~3분</td><td class="n">×1.6</td><td>발사 간격 1.6배 느리게(여유)</td></tr>
+        <tr><td>3~5분</td><td class="n">×1.6→1.1</td><td>서서히 가속</td></tr>
+        <tr><td>5~7분</td><td class="n">×1.1→0.95</td><td>클라이맥스 도달</td></tr>
+        <tr><td>7~8분</td><td class="n">×0.95</td><td>유지</td></tr>
+        <tr><td>8~15분</td><td class="n">×0.95→0.8</td><td>컨트롤 요구 구간(더 빠름)</td></tr>
+      </tbody>
+    </table>
+    <div class="meta-row">
+      <div><b>적용</b> 모든 무기의 발사간격·틱 값에 곱해지는 전역 배율 — weapons.json 수치 자체는 안 건드리고 <b>런타임 배율</b>로 처리</div>
+    </div>
+  </section>
+
+  <!-- 23. #25 웨이브 보상 흐름 -->
+  <section class="slide" data-t="#25 웨이브 보상 흐름">
+    <div class="kicker">항목 · 보상 시스템 (신규)</div>
+    <h2><span class="num">25</span>특수·이벤트 웨이브 → 처형 보상 선택</h2>
+    <div class="flow">
+      <span class="step spike">웨이브 발동<small>월드 일시정지</small></span><span class="arr">→</span>
+      <span class="step">클리어</span><span class="arr">→</span>
+      <span class="step bad">전역 스폰 정지<small>안전 지대</small></span><span class="arr">→</span>
+      <span class="step gold" style="border-color:rgba(255,210,63,.5);color:var(--gold)">보상 오브젝트 등장</span><span class="arr">→</span>
+      <span class="step hot">처형 A/B/C 선택</span><span class="arr">→</span>
+      <span class="step">스폰 재개</span>
+    </div>
+    <div class="meta-row">
+      <div><b>정신</b> 덱 009가 제안한 '웨이브 클리어 후 상점' 개념이, <b>다중 라운드가 아니라 이번 보상 오브젝트</b>로 수렴</div>
+    </div>
+  </section>
+
+  <!-- 24. #26 사무라이 처형 A/B/C -->
+  <section class="slide" data-t="#26 처형 A/B/C">
+    <div class="kicker">항목 · 처형 보상 3안 (신규)</div>
+    <h2><span class="num">26</span>사무라이 처형 보상 — A / B / C</h2>
+    <div class="cols">
+      <div class="card good"><h3>A · 체인 라이트닝 일섬</h3><p>여러 그로기 대상을 <b>번개로 연결</b>해 순차 처형. 다수 처형에 특화.</p></div>
+      <div class="card blue"><h3>B · 확산 폭발 리프어택</h3><p><b>도약해 내려찍는</b> 일섬(롤 R스킬 리프 참고 — 정확한 챔피언명 확인 필요) — 그 자리에서 <b>서서히 퍼지는 폭발</b>이 발생.</p></div>
+      <div class="card"><h3>C · 아우라 펄스 일섬</h3><p>PC 중심 오라가 <b>퍼졌다가 줄어든다</b>. 수축하는 순간 <b>오라 안의 그로기 대상 전부 처형</b>.</p></div>
+    </div>
+    <div class="meta-row">
+      <div><b>습득</b> #25 보상 오브젝트에서 1개 선택 — 선택 후 사무라이 처형 폼이 그걸로 교체(또는 강화)</div>
+    </div>
+  </section>
+
+  <!-- 25. #27 기존 A/B/C 관계 확인 -->
+  <section class="slide" data-t="#27 A/B/C 관계 확인">
+    <div class="kicker">확인 필요 · 기존 문서와 교차 체크</div>
+    <h2><span class="num">27</span>이 A/B/C, 기존 것과 같은가 다른가?</h2>
+    <div class="matrix">
+      <div class="cell bad"><b>기존 (Punish/executions.json)</b><p>A=파문 발도(광역 청소) · B=연쇄 발도(다수 처형) · C=거합 가속(단일·보스 폭딜)</p></div>
+      <div class="cell good"><b>이번에 말씀하신 것</b><p>A=체인 라이트닝 · B=확산 폭발 리프어택 · C=아우라 펄스</p></div>
+    </div>
+    <div class="quote red">이름·효과가 다르다 — <b>기존 것을 대체</b>하는 안인지, <b>웨이브 보상 전용 별도 세트</b>인지 확인 필요.</div>
+  </section>
+
+  <!-- 26. #28 기타 데이터 요소 -->
+  <section class="slide" data-t="#28 기타 데이터 요소">
+    <div class="kicker">항목 · 추가 제안 (자체 도출)</div>
+    <h2><span class="num">28</span>그 외 데이터화하면 좋은 것들</h2>
+    <div class="chips">
+      <span class="chip"><span class="i">▶</span>방해 스폰 강도(엘리트 1 vs 자코 N) — 웨이브별 선택</span>
+      <span class="chip"><span class="i">▶</span>엘리트 물결 수(N)·소강 시간(M초) — 타입별 오버라이드</span>
+      <span class="chip"><span class="i">▶</span>보상 오브젝트 등장 위치·유예시간</span>
+      <span class="chip"><span class="i">▶</span>무기 레벨 로테이션 — 무기별 오버라이드 배열</span>
+      <span class="chip"><span class="i">▶</span>템포 커브 이징 함수 종류(linear/easeInOut/exponential)</span>
+      <span class="chip"><span class="i">▶</span>웨이브 스케줄 랜덤성(고정 슬롯 vs 확률 가중치)</span>
+    </div>
+  </section>
+
+  <!-- 27. 구현 순서·의존성 (개정) -->
+  <section class="slide" data-t="순서·의존">
+    <div class="kicker">27 · 구현 순서 · 의존성 (개정)</div>
+    <h2>어떤 순서로 얹을까</h2>
+    <div class="cols">
+      <div class="card good"><h3>바로 얹기 (독립)</h3><p><b class="teal">#9 · #10 · #11(강화 웨이브)</b> — 지금 오픈 필드 위에 그대로. 서로 의존 없음.</p></div>
+      <div class="card blue"><h3>그 위에 얹기 (의존 있음)</h3><p><b class="blue">이벤트 웨이브</b> — 보석 엘리트화는 <b>#10(엘리트 시스템)</b>에 의존. 해파리·저지선은 <b>신규 몬스터 타입</b> 추가가 선행.</p></div>
+    </div>
+    <div class="arc">
+      <span class="step hot">9<small>방향 고정</small></span><span class="arr">→</span>
+      <span class="step hot">10<small>엘리트 압박</small></span><span class="arr">→</span>
+      <span class="step hot">11<small>강화 웨이브</small></span><span class="arr">⇒</span>
+      <span class="step">이벤트 웨이브<small>4종 순차 추가</small></span>
+    </div>
+    <p class="dim" style="margin-top:1rem;">⮕ 추천: <b>9 → 10 → 11</b> 먼저 검증 → 이벤트 웨이브는 <b>가두리 벽</b>부터(신규 몬스터 불필요라 가장 가벼움), 그다음 나머지 3종 순차.</p>
+    <div class="chips" style="margin-top:1.1rem;">
+      <span class="chip gold"><span class="i">◆</span>#14 보스전 — 맵 좁아짐 제외 확정. 1차 스텝 = 기둥 4개 스폰만</span>
+    </div>
+  </section>
+
+  <!-- 28. 미해결 쟁점 -->
+  <section class="slide" data-t="미해결 쟁점">
+    <div class="kicker">28 · 토론 계속 — 미해결 쟁점</div>
+    <h2>다음 결정이 필요한 것</h2>
+    <div class="matrix">
+      <div class="cell"><b>쟁점 A · 강화 웨이브, 스탯도 오르나?</b><p>권고: <b class="gold">물량만</b>. 스탯 강화는 전역 시간 커브(덱 015)에 맡기고 웨이브와 분리 — 확인 필요.</p></div>
+      <div class="cell"><b>쟁점 B · 보석 엘리트화 기본값?</b><p>개별 확률형(각 몹 P%) vs 고정형(N마리·특정 타입 하나) — 둘 다 데이터 노브로 만들되 기본값 결정 필요.</p></div>
+      <div class="cell"><b>쟁점 C · 가두리 벽, 지형 충돌 처리</b><p>맵 프랍은 보류했지만 이 벽은 <b>웨이브가 만드는 일시 효과</b>로 예외. 구현 시 이동 충돌 방식 확인.</p></div>
+      <div class="cell"><b>쟁점 D · 이벤트 웨이브 발동 조건</b><p>#11(강화 웨이브)처럼 <b>타이머</b>인지, 처치 수·레벨 같은 <b>조건부</b>인지 — 트리거 결정 필요.</p></div>
+      <div class="cell"><b>쟁점 E · 기둥, 소모성인가 재사용?</b><p>권고: <b class="gold">재사용(무한)</b> — 소모형이면 플레이어가 3회를 못 채우고 클리어 불가능해지는 상태가 생길 위험.</p></div>
+      <div class="cell"><b>쟁점 F · 보스 타이밍 수치</b><p>엘리트 도약(windup 0.78s·PRE 0.2s)보다 <b>더 타이트하게</b>(예: windup 0.5s·PRE 0.12s 제안) — 실측 필요.</p></div>
+      <div class="cell"><b>쟁점 G · 엘리트 물결 N·소강 M초 기본값?</b><p>권고: <b class="gold">N=2~3마리 · M=10~12초</b>(초벌) — 타입별로 오버라이드 가능하게. 실측 필요.</p></div>
+      <div class="cell"><b>쟁점 H · 처형 A/B/C, 기존 것과의 관계?</b><p>#27에서 상세 — 대체안인지 별도 세트인지 <b>확정 필요</b>.</p></div>
+      <div class="cell bad"><b>쟁점 I · ★최우선★ 오픈맵 15분 = PD 재승인 필요</b><p>덱 009·014가 확정한 '라운드+상점' 결론을 이번 방향(#12·#15)이 <b>실질적으로 뒤집었다</b>. 자체 검토에서 발견 — 조용히 넘어가지 말고 <b class="red">명시적 재승인</b> 받을 것.</p></div>
+      <div class="cell"><b>쟁점 J · 무기 레벨업 재구성, 진화 훅까지 영향</b><p>'한 축만' 로테이션(#21·22)으로 바꾸면 14종+슬래시 전부의 <b>진화(Lv8) 발동 시점 스탯 총합</b>이 달라짐 — 진화 훅 재설계도 같이 필요. 또한 덱 016의 "VS식"과 용어가 다른 의미로 충돌하니 정의 정리 필요.</p></div>
+      <div class="cell"><b>쟁점 K · 분 단위 웨이브 버짓, 초 단위 phase1~3 완전 대체?</b><p>gameBalance.json 현재 스포너는 초 단위(phase1 15초·phase2 30초). #16·#17의 분 단위 테이블이 이걸 <b>완전히 대체</b>하는지 <b>병존</b>하는지 명문화 안 됨 — 착수 전 확정 필요.</p></div>
+    </div>
+  </section>
+
+  <!-- 29. 결론 + 체크리스트 -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">29 · 결론 · 착수 체크리스트</div>
+    <h2>다음에 구현할 항목을 고르세요</h2>
+    <div class="quote gold" style="border-color:var(--gold);">"이 덱은 리뷰용. 아래에서 <b>구현할 번호를 체크</b>하면 그 항목부터 step-by-step으로 진행합니다."</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct"><b>#9</b> 스킬 방향 = 발사 순간 고정 (캐릭터 회전과 분리 → 치고 빠지기)</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#10</b> 엘리트 = 성장 방해자 (무지성 무빙만으론 죽는 압박 디자인)</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#11 강화 웨이브</b> — 특정 타이밍 발동 → 일반 몹 스폰 예산 급상승(물량만, 스탯 X)</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#12</b> 오픈 맵 전제 확정 — 절차맵·방 함정 폐기, 프랍 없이 진행</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#13 이벤트 웨이브</b> — 가두리 벽부터 순차 구현(보석 엘리트화 → 해파리 링 → 저지선)</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#14 보스전</b> — 맵 좁아짐은 제외, <b>기둥 4개 스폰(위치·비주얼)</b>부터 우선(돌진·그로기·처형은 다음 단계)</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#15</b> 게임 총 길이 15분 확정 (보스=15분 시점, 단일 연속 스테이지)</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#16·#17</b> 웨이브 버짓 커브 + 몬스터 HP 스케일링 초벌 수치를 gameBalance.json으로 데이터화</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#18·#19</b> 웨이브 스케줄(분·타입) + 엘리트 타입 다양화(웨이브당 1종·물결형·버짓 15~20%) 착수</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#20</b> 웨이브 스케줄 데이터 스키마(atMin/kind/type/eliteType/params) 확정</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#21·#22</b> 무기 레벨업 = 매 레벨 한 축(VS 방식)으로 재구성, 8레벨 로테이션 초안 적용</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#23·#24</b> 템포 배율 커브(0~15분, ×1.6→×0.8) 착수 — "너무 빠르다" 문제 해결</span></label>
+      <label><input type="checkbox"><span class="ct"><b>#25·#26</b> 웨이브 보상 시스템(시간정지→클리어→전역스폰정지→보상) + 사무라이 처형 A/B/C 구현</span></label>
+      <label><input type="checkbox"><span class="ct"><b class="red">(쟁점 I · ★최우선★)</b> 오픈맵 15분 스테이지 방향이 덱 009·014의 '라운드+상점' 결론을 뒤집는다는 것을 <b>명시적으로 재승인</b></span></label>
+      <label><input type="checkbox"><span class="ct">(쟁점 H · 최우선) 처형 A/B/C가 기존 Punish/executions.json 것을 대체하는지 확인</span></label>
+      <label><input type="checkbox"><span class="ct">(쟁점 J) 무기 레벨업 재구성 시 진화(Lv8) 훅도 같이 재설계 범위에 포함 — 승인</span></label>
+      <label><input type="checkbox"><span class="ct">(쟁점 K) 분 단위 웨이브 버짓이 기존 초 단위 phase1~3을 완전 대체 — 승인</span></label>
+      <label><input type="checkbox"><span class="ct">(쟁점 A) 강화 웨이브는 물량만, 스탯 강화는 덱 015 커브로 분리 — 승인</span></label>
+      <label><input type="checkbox"><span class="ct">(쟁점 E) 보스 기둥은 재사용(무한)으로 — 승인</span></label>
+      <label><input type="checkbox"><span class="ct">(쟁점 G) 엘리트 물결 N=2~3·소강 M=10~12초(초벌)로 — 승인</span></label>
+      <label><input type="checkbox"><span class="ct">(순서 제안) 9→10→11 먼저 → 이벤트 웨이브(가두리 벽부터) → 파트2(#15~28) 데이터 스캐폴딩 → 보스전(#14)</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 00</div>
+<div class="foot">테스트 가능 컨텐츠 리스트 #9~#28 · v0.16 (index_22) 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: #9부터 구현해줘 / 특수 웨이브 배수는 5배로..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
