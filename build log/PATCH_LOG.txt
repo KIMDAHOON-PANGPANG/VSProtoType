@@ -5,6 +5,68 @@
 
 
 ================================================================================
+[v0.15.0]  2026-07-03  —  build/index_20.html   "Free Aim (WASD 회전 · 베기 무기화 · 카드 UI 통일)"
+================================================================================
+기반: index_19.html(v0.14.0). 계기: 사용자 피드백 4건 — ① 레벨업 카드 테두리가
+      무기마다 달라 산만함 ② 무덤 거미가 고정 오프셋에 즉시 배치돼 부자연스러움
+      ③ 기본 베기가 무기 슬롯 시스템 밖의 특수 상수로만 존재 ④ 마우스 에임 대신
+      WASD 이동 방향으로 캐릭터가 회전해야 함.
+
+[CHANGED] 레벨업 카드 테두리 — 무기별 W2COL 차등 적용 폐지 → 전 카드 공용 teal
+  (#1cf0d4) 테두리로 통일. 진화 임박(evo-ready) 카드만 예외적으로 골드 강조(기존
+  펄스 글로우·EVOLVE! 뱃지 유지). .up-ico 심볼 박스(52×52 고정 구간)도 teal 톤
+  배경/테두리로 맞춰 "심볼은 아이콘 구간에서, 색은 공용으로" 원칙을 명확화.
+[CHANGED] 무덤 거미(spider) 스폰 연출 — 고정 오프셋 즉시 배치 + 최근접 잡몹
+  조준 방식 폐지. PC 전방(spawnOffset)에서 growDur(0.35s)에 걸쳐 서서히 커지며
+  등장(완전 스폰 전엔 유인 판정 없음) → 스폰 시 정해진 랜덤 방향(dir)으로
+  crawlSpeed(46)만큼 서서히 기어가다 fuse 만료 시 그 자리에서 폭발(기존 폭발
+  로직 그대로). 도발(taunt) 유인 판정도 완전 스폰 이후로 가드.
+[ADDED] 부채꼴 베기(사무라이 전속 기본 무기)를 정식 무기 슬롯 시스템에 편입
+  - BAL.weapons.slash 신설(interval/damage/reach/arc/count/maxLevel/per*) —
+    기존 BAL.player.attackInterval·slashCount·slashReach·slashArc·slashDamage는
+    제거(단일 소스 이전).
+  - makePlayer()가 게임 시작 시 p.weapons에 {id:'slash', level:1, evolved:false}를
+    자동 장착(사무라이 시작 무기) — 무기 슬롯 예산(weaponSlots)엔 미포함(isW2 아님).
+  - syncSlashStats() 신설 — grantWeapon('slash') 호출(레벨업/진화) 시 p.slashXxx
+    캐시(대미지/칼날 수/사거리/부채각/공격 간격)를 BAL.weapons.slash+레벨 기준으로
+    즉시 재계산. playerAttack/doSlash 자체 로직은 무변경(캐시만 소비).
+  - UPGRADES에 w_slash 카드 추가(weapon:true) — 다른 14종과 동일하게 균등 확률
+    카드 풀에 상시 노출, 레벨 1→8 강화 후 MAX 진화(무한검막: 부채각 360도
+    전방위 + 공통 EVO_SPEED_MULT 발동 간격 단축).
+  - renderStatPanel/buildLoadout의 하드코딩된 '기본' 슬롯·loCard 특수 호출 제거
+    → p.weapons 제네릭 루프로 통합(베기가 배열 첫 항목이라 자연히 첫 슬롯에 위치).
+[CHANGED] 조작 — 마우스 에임 폐지, WASD 이동 방향 기반 360도 회전으로 전환
+  - updatePlayer: mouse.x/y 기반 p.facing 계산 제거 → 입력 벡터(ix,iy)가 있을
+    때만 p.facing=atan2(iy,ix) 갱신(무입력 시 직전 방향 유지).
+  - playerAttack의 p.facing=dir(자동 타겟 스냅) 라인 제거 — 베기의 최근접 적
+    자동 타겟팅(로컬 dir 변수, 데미지 판정)은 그대로 유지하되 더 이상 캐릭터
+    스프라이트 회전에 영향을 주지 않음.
+  - 부작용(의도됨): p.facing을 조준 기준으로 쓰는 무기(도끼 투척·불사조 화염 등)는
+    이제 자연히 '최근 이동 방향'을 조준 기준으로 삼는다.
+[DATA] gameBalance.json — _version 0.15.0, weapons.slash 신설(전속 기본 무기),
+  weapons.spider에 spawnOffset/crawlSpeed/growDur 추가(throwRange 제거),
+  player에서 attackInterval/slashCount/slashReach/slashArc/slashDamage 제거.
+  FALLBACK_BALANCE(HTML 내장) 동기화. Contents/Skill/Weapon/weapons.json —
+  "전속_기본무기" 섹션 신설(slash 항목) + spider 스폰 연출 설명 갱신 + 조작(WASD)
+  메모 추가, 버전/기준빌드 v0.15.0/index_20.html. Base/implemented_spec.json —
+  버전/기준빌드 갱신, "전속 기본 무기 편입"·"조작(WASD 360도 회전)" 시스템 항목
+  추가, slash/spider 무기 목록 항목 갱신.
+[VERIFY] 브라우저(로컬 서버)로 index_20.html 실행 — 콘솔 에러 0건. WASD 입력
+  시뮬레이션으로 p.facing이 이동 방향과 정확히 일치하고 무입력 시 직전 방향을
+  유지함을 확인. 자동 베기가 플레이어 정면이 아닌 적도 정상 타격(로컬 dir 변수
+  기반)하면서 p.facing은 변하지 않음을 확인. 무덤 거미를 강제 스폰해 34px
+  오프셋 스폰 → 0.35s 성장 → 이후 랜덤 방향으로 46px/s 크롤 이동을 프레임 단위로
+  검증. 레벨업 카드 40회 재추첨 중 '부채꼴 베기' 카드가 균등 풀에 정상 노출되고,
+  레벨 7(→8 도달) 상태로 강제 설정 시 골드 테두리+EVOLVE! 뱃지가 정상 표시됨을
+  확인. 로드아웃(TAB) 패널에서 베기가 별도 하드코딩 카드 없이 제네릭 루프로만
+  렌더링됨을 확인(Lv/사거리/부채각 스탯 포함). 120프레임 연속 업데이트+렌더
+  스트레스 테스트 예외 0건.
+[KEPT] 무기 1군 14종 발사/월드엔티티 로직(v0.13~v0.14) 및 진화 시스템 전체
+  그대로 유지 — 이번 변경은 카드 UI 색상, 거미 스폰 연출, 베기의 무기화, 조작
+  방식(회전)에 한정.
+
+
+================================================================================
 [v0.14.0]  2026-07-03  —  build/index_19.html   "Level & Evolve (등급제 폐지)"
 ================================================================================
 기반: index_18.html(v0.13.1). 계기: 사용자 지시 — "무기 별 등급이 왜 있는지 모르겠다,

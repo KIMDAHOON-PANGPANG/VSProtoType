@@ -1,18 +1,14 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.14.0",
+  "_version": "0.15.0",
 
   "player": {
     "radius": 16,
     "maxHp": 100,
     "speed": 240,
     "friction": 9,
-    "attackInterval": 0.34,
-    "slashCount": 1,
-    "slashReach": 96,
-    "slashArc": 1.5,
-    "slashDamage": 14,
     "execRadius": 175,
+    "_comment": "v0.15: 베기(자동 근접) 수치는 weapons.slash로 이전 — 사무라이 전속 기본 무기가 정식 레벨/진화 시스템에 편입됐다.",
     "invulnOnHit": 0.4,
     "shieldRegenDelay": 5,
     "shieldRegenPerSec": 0.5,
@@ -176,7 +172,9 @@
   },
 
   "weapons": {
-    "_comment": "v0.14 무기 1군 14종(덱 017/018 확정 로스터 · 매서 몸통 × 롤 한 스푼 × 다크판타지 껍질) — VS식 레벨/진화. 무기는 '순수 데미지'만 넣는다 → HP 0이면 잡몹 즉사/엘리트 그로기→처형(damageEnemy 경유). 처형 연동 금지 — #7 pulse(죽음의 박동)의 '처형 시 +1회'는 제외 확정(무기↔처형 경계). 레벨 파생: 실효값 = base + (level-1)*perX, level은 maxLevel(기본 8)에서 정지 — 그 순간 evolveWeapon()으로 진화(1회성 전환, 각 무기 case의 evolved 분기가 최종 동작을 결정). 진화 공통 보너스: 발동 간격/틱 ×0.65(EVO_SPEED_MULT, ≈1.54배 빠름) + 무기별 고유 훅(주석 참고). 공통 키: windup=발사 전 준비(차지) 연출 시간(초 · PC 주위 무기색 게이지 링+범위 프리뷰), interval=발사 간격(초), tick=지속형 피해 간격(초), damage=1히트 피해, maxLevel=최대 레벨(도달 시 진화). 밸런스는 초벌(컨셉 차별화 우선 · 오버밸런스 허용). 은퇴 7종(homing~brand)은 v0.11 VS 어휘 — 카드 풀 제외·코드/수치 보존(덱 017), maxLevel/진화 미적용.",
+    "_comment": "v0.14 무기 1군 14종(덱 017/018 확정 로스터 · 매서 몸통 × 롤 한 스푼 × 다크판타지 껍질) — VS식 레벨/진화. 무기는 '순수 데미지'만 넣는다 → HP 0이면 잡몹 즉사/엘리트 그로기→처형(damageEnemy 경유). 처형 연동 금지 — #7 pulse(죽음의 박동)의 '처형 시 +1회'는 제외 확정(무기↔처형 경계). 레벨 파생: 실효값 = base + (level-1)*perX, level은 maxLevel(기본 8)에서 정지 — 그 순간 evolveWeapon()으로 진화(1회성 전환, 각 무기 case의 evolved 분기가 최종 동작을 결정). 진화 공통 보너스: 발동 간격/틱 ×0.65(EVO_SPEED_MULT, ≈1.54배 빠름) + 무기별 고유 훅(주석 참고). 공통 키: windup=발사 전 준비(차지) 연출 시간(초 · PC 주위 무기색 게이지 링+범위 프리뷰), interval=발사 간격(초), tick=지속형 피해 간격(초), damage=1히트 피해, maxLevel=최대 레벨(도달 시 진화). 밸런스는 초벌(컨셉 차별화 우선 · 오버밸런스 허용). 은퇴 7종(homing~brand)은 v0.11 VS 어휘 — 카드 풀 제외·코드/수치 보존(덱 017), maxLevel/진화 미적용. v0.15: slash(부채꼴 베기)가 사무라이 전속 기본 무기로 이 시스템에 편입(게임 시작 시 Lv1 자동 장착, syncSlashStats() 참고).",
+    "slash": { "interval": 0.34, "damage": 14, "count": 1, "reach": 96, "arc": 1.5, "arcCap": 2.6, "maxLevel": 8, "perDamage": 3, "perInterval": -0.018, "perReach": 6, "perArc": 0.09, "perCount": 0.3,
+      "_comment": "0 부채꼴 베기(사무라이 전속): 최근접 적 자동 조준 근접 연속 베기. 시작 시 Lv1 상태로 자동 장착(무기 슬롯 예산 weaponSlots엔 미포함). reach/arc=사거리·부채각(라디안), count=동시 칼날 수. MAX 진화 '무한검막': 부채각이 arcCap 대신 360도(TAU) 전방위로 전개 + 공통 EVO_SPEED_MULT 발동 간격 단축." },
     "homing": { "interval": 1.0, "damage": 9, "count": 1, "speed": 380, "turn": 5.5, "life": 1.7, "r": 6, "perDamage": 4, "perCount": 0.5, "perInterval": -0.05 },
     "star":   { "interval": 0.85, "damage": 11, "count": 1, "speed": 560, "pierce": 2, "life": 1.0, "r": 5, "perDamage": 5, "perCount": 0.34, "perPierce": 0.5 },
     "orbit":  { "tick": 0.30, "damage": 7, "count": 2, "radius": 74, "spin": 2.2, "perDamage": 3, "perCount": 0.5, "perRadius": 6 },
@@ -199,8 +197,8 @@
       "_comment": "6 독안개 자취(신지드 Q · #58e845): 상시 — 이동하면 dropInterval마다 발밑에 독 장판(zoneR·zoneLife). 장판 틱 피해 + 밟은 적 중독(dotDps×dotTime 도트). '이동이 곧 공격'. MAX 진화 '역병의 창시자': 장판이 영구 잔존(생성 캡 90개까지 누적 트레일)." },
     "pulse": { "windup": 0.50, "interval": 3.6, "damage": 26, "r1": 200, "band": 26, "expandTime": 0.5, "maxLevel": 8, "perDamage": 9, "perR1": 22, "perInterval": -0.15,
       "_comment": "7 죽음의 박동(카서스 E · #ff46e3): interval마다 크게 팽창하는 링 1회(순간 광역) — 링 파면(band 두께)이 스치는 적 1회 타격. ※ '처형 시 +1회'는 제외 확정(무기에 처형 연동 금지). MAX 진화 '영원한 고동': 파면 두께(band) 1.8배." },
-    "spider": { "windup": 0.40, "interval": 6.5, "damage": 34, "tauntR": 240, "fuse": 2.2, "blastR": 120, "throwRange": 280, "maxLevel": 8, "perDamage": 12, "perBlastR": 10, "perInterval": -0.3,
-      "_comment": "8 무덤 거미(엘리스 W · #c9a06b): 잡몹 밀집 지점에 미끼 알 투척 → tauntR 내 잡몹이 미끼로 몰려감(도발 · 기본은 엘리트 면역) → fuse초 후 blastR 폭발(폭발 피해는 전체 적용). MAX 진화 '무덤의 여왕': 엘리트도 도발됨(면역 해제)." },
+    "spider": { "windup": 0.40, "interval": 6.5, "damage": 34, "tauntR": 240, "fuse": 2.2, "blastR": 120, "spawnOffset": 34, "crawlSpeed": 46, "growDur": 0.35, "maxLevel": 8, "perDamage": 12, "perBlastR": 10, "perInterval": -0.3,
+      "_comment": "8 무덤 거미(엘리스 W · #c9a06b): PC 전방 spawnOffset 위치에서 growDur초에 걸쳐 서서히 태어난 뒤(완전 스폰 전엔 유인 불가), 스폰 시 정해진 랜덤 방향으로 crawlSpeed로 서서히 기어간다 → tauntR 내 잡몹이 유인됨(도발 · 기본은 엘리트 면역) → fuse초 후 blastR 폭발(폭발 피해는 전체 적용). v0.15: 고정 오프셋 즉시 배치·최근접 잡몹 조준 방식 폐지 → PC 앞 스폰+랜덤 방향 크롤로 교체. MAX 진화 '무덤의 여왕': 엘리트도 도발됨(면역 해제)." },
     "skullrain": { "windup": 0.50, "interval": 6.0, "count": 8, "damage": 16, "impactR": 52, "zoneR": 140, "dropLead": 0.45, "dropGap": 0.16, "bigDamage": 44, "bigR": 95, "offMin": 110, "offMax": 330, "maxLevel": 8, "perDamage": 5, "perBigDamage": 14, "perCount": 0.75, "perInterval": -0.25,
       "_comment": "9 불타는 해골 비(갱플랭크 R · #ff4433): 플레이어 주변 랜덤 지대(offMin~offMax 오프셋 · zoneR 산포)에 해골 count발 연속 낙하(예고 데칼 dropLead+i*dropGap) → 마지막 중앙 대형 1발(bigDamage·bigR). 지대에 그로기가 뭉친다. MAX 진화 '대재앙': 낙하 수 1.6배 + 대형탄 2발(산포)." },
     "frostspear": { "windup": 0.45, "interval": 4.8, "count": 6, "damage": 19, "impactR": 44, "freeze": 1.2, "dropLead": 0.4, "dropGap": 0.12, "range": 360, "maxLevel": 8, "perDamage": 7, "perCount": 0.75, "perFreeze": 0.1, "perInterval": -0.2,
