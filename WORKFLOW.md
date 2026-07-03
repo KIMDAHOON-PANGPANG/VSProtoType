@@ -10,8 +10,8 @@
 
 | 항목 | 값 |
 |---|---|
-| 최신 버전 | **v0.13.1** |
-| 최신 플레이 파일 | **`build/index_18.html`** |
+| 최신 버전 | **v0.14.0** |
+| 최신 플레이 파일 | **`build/index_19.html`** |
 | 밸런스 단일 소스 | **`build/gameBalance.json`** |
 | 패치 내역 | **`build log/PATCH_LOG.txt`** (내림차순) |
 | GitHub 리포 | **`KIMDAHOON-PANGPANG/VSProtoType`** (`origin/main`) |
@@ -205,7 +205,8 @@ spawner(phase1·2·3) / xp / contactDamageScale
 | `build/index_15.html` | v0.11.0 — 무기 슬롯(VS식 자동 무기고): 기반 5종 + 유니크 2종(처형 파문·낙인) + 무기 레벨업 카드 |
 | `build/index_16.html` | v0.12.0 — RMB 처형(LMB 해제) + 비겹침 몸 충돌(뚫고 지나가면 접촉 피해 · 처형 중/직후 1초 통과) + 유니크 2종 카드 미노출 |
 | `build/index_17.html` | v0.13.0 — 무기 1군 14종(덱 017/018 · 매서 몸통×롤 한 스푼) + 연출 3종 세트(차지 링·범위 표시·틱 컬러) + 상태이상(빙결·중독·도발) + 슬롯 예산 6 · 기존 5종 카드 은퇴 |
-| `build/index_18.html` | v0.13.1 — 전설 천장(legendPity): 슬롯 만석+낮은 전설 가중치가 겹쳐 전설 3종을 영구히 못 보던 버그 수정 (**현재 최신**) |
+| `build/index_18.html` | v0.13.1 — 전설 천장(legendPity): 슬롯 만석+낮은 전설 가중치가 겹쳐 전설 3종을 영구히 못 보던 버그 수정 |
+| `build/index_19.html` | v0.14.0 — 등급제(rar) 완전 폐지 → VS식 레벨+진화: 무기 1군 14종 균등 확률 카드 + maxLevel(8) 도달 시 evolveWeapon(무기별 고유 훅 14종 + 공통 발사간격 35%↓) (**현재 최신**) |
 | `build/gameBalance.json` | 모든 PC·몬스터·**무기(weapons)** 밸런스 수치 (단일 소스) |
 | `build log/PATCH_LOG.txt` | 패치 내역 (내림차순) |
 | `WORKFLOW.md` | 이 문서 — 작업 규칙 (루트) |
