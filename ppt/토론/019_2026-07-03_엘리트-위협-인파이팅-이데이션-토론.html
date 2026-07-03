@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>엘리트 위협 & 인파이팅 이데이션 토론 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a; --orange:#ff7a1a; --purple:#b061ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;}
+  #deck{position:fixed; inset:0;}
+  .slide{position:absolute; inset:0; display:none; flex-direction:column; justify-content:center;
+    padding:5vh 6.5vw; opacity:0; transition:opacity .35s ease;}
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.78rem; letter-spacing:.2em; color:var(--teal); text-transform:uppercase; margin-bottom:.85rem; font-weight:700;}
+  h1{font-size:clamp(1.7rem,4.2vw,3.1rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.25rem,2.7vw,2rem); line-height:1.18; font-weight:800; margin-bottom:.9rem;}
+  h2 .num{color:var(--gold); margin-right:.4rem;}
+  p,li{font-size:clamp(.9rem,1.3vw,1.08rem); line-height:1.5; color:var(--ink);}
+  .dim{color:var(--dim);} b,strong{color:#fff;}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);} .orange{color:var(--orange);} .purple{color:var(--purple);}
+
+  .title-wrap{max-width:980px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.16em; color:var(--dim); margin-bottom:1.5rem;}
+  .title-meta{margin-top:1.7rem; display:flex; gap:2.2rem; flex-wrap:wrap; color:var(--dim); font-size:.88rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+  .lead{font-size:clamp(.98rem,1.5vw,1.3rem); line-height:1.5; max-width:68ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.5rem 0 .5rem 1.1rem; margin:.85rem 0;
+    font-size:clamp(.96rem,1.55vw,1.28rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+
+  .threads{display:flex; gap:.9rem; margin-top:1.2rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:.95rem 1.1rem;}
+  .thread .t{font-size:.7rem; letter-spacing:.14em; color:var(--gold); text-transform:uppercase; font-weight:800;}
+  .thread h3{font-size:1rem; margin:.35rem 0 .3rem; font-weight:800;} .thread p{font-size:.82rem; color:var(--dim); line-height:1.4;}
+
+  .flow{display:flex; align-items:center; gap:.45rem; flex-wrap:wrap; margin-top:.9rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.5rem .85rem; font-weight:800; font-size:.86rem; text-align:center;}
+  .flow .step.bad{border-color:rgba(255,43,78,.45); color:var(--red);} .flow .step.hot{border-color:var(--teal); color:var(--teal);}
+  .flow .step small{display:block; color:var(--dim); font-weight:600; font-size:.66rem; margin-top:.1rem;}
+  .flow .arr{color:var(--dim); font-weight:900; font-size:1.05rem;} .flow .loop{color:var(--red); font-weight:900;}
+
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:stretch; margin-top:.85rem;}
+  .vs .side{background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:1rem 1.15rem;}
+  .vs .side.a{border-color:rgba(255,43,78,.45);} .vs .side.b{border-color:rgba(28,240,212,.5);}
+  .vs .side h3{font-size:1.05rem; font-weight:900; margin-bottom:.4rem;} .vs .side p{font-size:.85rem; color:var(--dim); line-height:1.5;} .vs .side p b{color:#fff;}
+  .vs .mid{display:grid; place-items:center; font-weight:900; color:var(--dim);}
+
+  /* 아이디어 카드 그리드 */
+  .igrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:.6rem; margin-top:.7rem;}
+  .icard{background:var(--panel); border:1px solid var(--line); border-radius:11px; padding:.7rem .9rem;}
+  .icard .iname{font-weight:800; font-size:.95rem; display:flex; align-items:baseline; gap:.45rem; flex-wrap:wrap;}
+  .icard .itag{display:inline-block; font-size:.63rem; font-weight:800; letter-spacing:.05em; padding:.12em .5em; border-radius:5px; background:rgba(28,240,212,.13); color:var(--teal);}
+  .icard .itag.r{background:rgba(255,43,78,.13); color:var(--red);}
+  .icard .itag.g{background:rgba(255,210,63,.13); color:var(--gold);}
+  .icard .idesc{font-size:.78rem; color:var(--dim); line-height:1.42; margin-top:.28rem;}
+  .icard .idesc b{color:#fff;}
+  .icard .iwhy{font-size:.74rem; color:var(--teal2); line-height:1.4; margin-top:.3rem;}
+  .icard.pick{border-color:rgba(28,240,212,.55);}
+  .icard.cut{border-color:rgba(255,43,78,.4); opacity:.85;}
+
+  .chips{display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.55rem;}
+  .chip{display:inline-flex; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:999px;
+    padding:.32rem .8rem; font-weight:800; font-size:.82rem; color:var(--ink);}
+  .chip .i{color:var(--teal); margin-right:.35rem; font-weight:900;}
+  .chip.gold{border-color:rgba(255,210,63,.5); color:var(--gold);} .chip.gold .i{color:var(--gold);}
+
+  .note{margin-top:.8rem; font-size:.82rem; color:var(--dim);}
+  .note code, .ct code{color:var(--teal2); background:rgba(28,240,212,.08); padding:.05em .4em; border-radius:4px; font-size:.92em;}
+
+  .checklist{display:flex; flex-direction:column; gap:.36rem; margin-top:.75rem; max-width:940px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.46rem .85rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.1rem; height:1.1rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center; color:#04201c; font-size:.78rem; font-weight:900;}
+  .checklist .ct{font-size:.85rem; line-height:1.4; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:.4rem; align-items:center; z-index:30;}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:20px; border-radius:4px;}
+  #count{position:fixed; bottom:18px; right:24px; color:var(--dim); font-size:.78rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:18px; left:24px; color:var(--faint); font-size:.72rem; letter-spacing:.06em; z-index:30;}
+  .hint{position:fixed; top:16px; right:24px; color:var(--faint); font-size:.7rem; z-index:30;}
+  .arrow-btn{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line); font-size:2.1rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow-btn:hover{color:var(--teal);} #prev{left:6px;} #next{right:6px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- 1. 표지 -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · v0.16 기반 · 멀티에이전트 이데이션</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>엘리트 위협 & <span class="teal">인파이팅</span> 이데이션</h1>
+      <p class="lead dim">엘리트가 수치 이전에 <b>컨셉으로 무섭게</b>, 방치·회피-온리 소극 플레이가 <b>성립 안 되게</b>,<br>유저가 스스로 <b>"지금 들어가서 끊어야 한다"</b>고 판단하는 전투 양상 만들기.</p>
+      <div class="title-meta">
+        <div>기반 · <b>v0.16.1 (index_22)</b></div>
+        <div>날짜 · <b>2026-07-03</b></div>
+        <div>방식 · <b>4렌즈 병렬 이데이션(36안) → 원칙 선별(19안)</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 아젠다 -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>소극 플레이가 성립하는 게 문제다</h2>
+    <div class="flow">
+      <span class="step bad">자코만 사냥<small>젬 수급 OK</small></span><span class="arr">+</span>
+      <span class="step bad">엘리트 방치<small>아무 일 없음</small></span><span class="arr">+</span>
+      <span class="step bad">저스트 회피만<small>도약 오면 피함</small></span>
+      <span class="loop">↺</span><span class="arr">=</span>
+      <span class="step bad">인파이팅 이유 0</span>
+    </div>
+    <div class="threads">
+      <div class="thread"><div class="t">질문 ①</div><h3>위협 컨셉</h3><p>수치 말고 패턴·존재감으로 어떻게 무섭게?</p></div>
+      <div class="thread"><div class="t">질문 ②</div><h3>방치 비용</h3><p>안 잡으면 전장이 어떻게 나빠져야 하나?</p></div>
+      <div class="thread"><div class="t">질문 ③</div><h3>들어갈 이유</h3><p>인파이팅이 최고 효율이 되는 당근은?</p></div>
+    </div>
+    <p class="note">현재 엘리트: HP 50 · 느린 추적 · 패턴 <b class="red">도약 1개</b>뿐. 방치 페널티 0, 인파이팅 보상 미미.</p>
+  </section>
+
+  <!-- 3. 설계 원칙 -->
+  <section class="slide" data-t="채찍의 방향">
+    <div class="kicker">02 · 설계 원칙 — 채찍의 방향</div>
+    <h2>조작 강요 ❌ · <span class="teal">전장 악화</span> ⭕</h2>
+    <div class="vs">
+      <div class="side a"><h3 class="red">✗ 나쁜 채찍 (08 교훈)</h3><p><b>조작을 더 하라고 강요</b> — 연타 노동, 잔손질, 벌 피하기 의무.<br>예: 안 누르면 부활 → 강제 클릭.</p></div>
+      <div class="mid">→</div>
+      <div class="side b"><h3 class="teal">✓ 좋은 채찍</h3><p><b>전장 상태가 전략적으로 악화</b> — 잡몹 강화, 스폰 가속, 공간 잠식, 경제 저주.<br>죽이러 가는 건 유저의 <b>전략 판단</b>.</p></div>
+    </div>
+    <div class="chips">
+      <span class="chip"><span class="i">✓</span>회피 손맛 보존 — '회피만 하는 선택'만 나쁘게</span>
+      <span class="chip"><span class="i">✓</span>수백 마리 속 가독성 — 색·소리·화면톤</span>
+      <span class="chip"><span class="i">✓</span>처형은 여전히 carrot</span>
+    </div>
+  </section>
+
+  <!-- 4. 세부 A 위협 컨셉 -->
+  <section class="slide" data-t="A 위협 컨셉 6">
+    <div class="kicker">03 · 세부 A — 엘리트 위협 컨셉 · 패턴 6</div>
+    <h2>수치 말고 <span class="teal">패턴·존재감</span>으로</h2>
+    <div class="igrid">
+      <div class="icard pick"><div class="iname">🚦 예고 빛 약속 <span class="itag">공통 언어</span></div><div class="idesc"><b>빨강</b>=무조건 피하기 · <b>노랑</b>=저스트로 받아치기 · <b>보라</b>=잡기(회피 이동으로만). 어떤 엘리트가 나와도 안 깨지는 색 규칙.</div><div class="iwhy">→ 노랑은 붙어야 보상 — 파고들게 됨. 모양·무늬 병행(색약 대비)</div></div>
+      <div class="icard pick"><div class="iname">🛡 막아서는 방패 <span class="itag">위치 싸움</span></div><div class="idesc">정면 피해 크게 감소, <b>등·옆구리는 그대로</b>. 자세 중 걸음 느림, 몇 초 뒤 풀림.</div><div class="iwhy">→ 회피가 도망이 아니라 '등 뒤로 돌아 들어가는 수단'이 됨</div></div>
+      <div class="icard"><div class="iname">🫳 덥석 잡기 <span class="itag">보라 규칙</span></div><div class="idesc">보라 빛 0.8초 예고 → 달려들어 붙잡음. 잡히면 조임 피해, <b>저스트로 빠지면 크게 휘청·탈진</b>.</div><div class="iwhy">→ 위협과 당근이 한 패턴에 — 붙고 싶어짐</div></div>
+      <div class="icard"><div class="iname">✝ 바닥 금 긋기 <span class="itag">피하기=다가가기</span></div><div class="idesc">십자 빛금 예고 → 금 따라 내려찍기. <b>안전 빈칸이 엘리트 발밑에만</b> 생김(빈칸 잡몹은 밀어냄).</div><div class="iwhy">→ 살려면 코앞으로 — 지형이 인파이팅 강제</div></div>
+      <div class="icard"><div class="iname">🎯 저격 정예 <span class="itag">거리 봉쇄</span></div><div class="idesc">멀리서 조준선 + 느린 유도탄. <b>붙으면 근접 패턴으로 전환</b> → 그때만 저스트·처형 열림. 동시 1~2마리 제한.</div><div class="iwhy">→ 멀리 있는 선택만 나쁘게 — 회피 너프 없이 거리 유지 봉쇄</div></div>
+      <div class="icard"><div class="iname">👣 갈라지는 길 등장 <span class="itag">존재감</span></div><div class="idesc">화면 밖 발소리(최근접 1마리) → 등장 시 북소리와 함께 <b>잡몹 떼가 갈라져 길</b>이 생기고 가장자리 붉어짐. 연출 1초 내.</div><div class="iwhy">→ 갈라진 길이 그대로 돌격 동선 — 등장 연출이 인파이팅 유도</div></div>
+    </div>
+  </section>
+
+  <!-- 5. 세부 B 방치 에스컬레이션 -->
+  <section class="slide" data-t="B 방치 비용 5">
+    <div class="kicker">04 · 세부 B — 방치하면 전장이 나빠진다 · 5</div>
+    <h2>안 잡는 비용이 <span class="red">복리로</span> 커진다</h2>
+    <div class="igrid">
+      <div class="icard pick"><div class="iname">🚩 깃발 든 대장 <span class="itag r">잡몹 강화</span></div><div class="idesc">오라가 10초마다 넓어짐(상한 3단계). 안의 잡몹 <b>붉게 물들며 빨라지고 단단해짐</b>. 처형하면 오라 꺼지고 강화 잡몹 잠깐 그로기.</div><div class="iwhy">→ 목을 따면 되돌아온다 — 전략 압박의 교과서</div></div>
+      <div class="icard"><div class="iname">💎 젬 먹는 포식자 <span class="itag r">경제 도둑</span></div><div class="idesc">바닥 젬을 훔쳐 먹고 커짐(상한 필수). <b>처형하면 이자 20% 붙여 토해냄</b>. 방치 = 레벨업 지연.</div><div class="iwhy">→ 채찍(레벨 지연)과 당근(몰아받기)이 한 몸</div></div>
+      <div class="icard"><div class="iname">🌀 차원문 문지기 <span class="itag r">스폰 가속</span></div><div class="idesc">15초 버틸 때마다 전체 스폰 속도 +1칸(게이지 표시·상한 필수). 처형 시 원상복구 + 문 붕괴로 주변 잡몹 폭발.</div><div class="iwhy">→ 날씨(잡몹) 자체를 나쁘게 — 카이팅의 한계 도래</div></div>
+      <div class="icard"><div class="iname">🟣 땅 썩히는 자 <span class="itag r">공간 잠식</span></div><div class="idesc">지나간 자리에 오염 웅덩이(면적 상한 30%). 위에서 플레이어 감속. <b>처형하면 전부 정화</b> + 잠깐 이속 장판.</div><div class="iwhy">→ 뱀서의 생명줄 '돌 공간'을 실시간 잠식 — 회피 동선 카운터 겸용</div></div>
+      <div class="icard"><div class="iname">🕰 저주 시계탑 <span class="itag r">경제 저주</span></div><div class="idesc">시계 한 바퀴마다 저주 1겹 — ①자석 감소 ②젬 -15% ③회복 반감 (HUD 표시). <b>이동·공격은 절대 안 건드림</b>. 처형 시 전부 해제 + 자석 축복.</div><div class="iwhy">→ 조작 그대로, 경제만 세금 — 원칙을 지키는 저주</div></div>
+    </div>
+  </section>
+
+  <!-- 6. 세부 C 인파이팅 당근 -->
+  <section class="slide" data-t="C 당근 4">
+    <div class="kicker">05 · 세부 C — 들어가면 크게 이득 · 4</div>
+    <h2>인파이팅 = <span class="good">최고 효율</span>로 만들기</h2>
+    <div class="igrid">
+      <div class="icard pick"><div class="iname">💥 잡몹 연쇄 폭발 <span class="itag g">화면 청소</span></div><div class="idesc">처형하면 주변 잡몹 도미노 폭발(횟수·반경 상한), 터진 잡몹도 젬 그대로. <b>떼가 빽빽할수록 더 넓게 비워짐</b>.</div><div class="iwhy">→ 떼 한가운데 엘리트가 최고 효율 — 스스로 파고들게 됨</div></div>
+      <div class="icard pick"><div class="iname">🧲 보석 청소기 <span class="itag g">수확 버튼</span></div><div class="idesc">처형 순간 넓은 반경의 젬이 전부 빨려옴(화면 전체는 X — 자석템 자리 보존).</div><div class="iwhy">→ 바닥 줍기 동선보다 처형이 빠른 수확. 구현 최저가</div></div>
+      <div class="icard"><div class="iname">⭕ 정화의 원 <span class="itag g">안전지대</span></div><div class="idesc">처형 자리에 몇 초 빛나는 원 — 접촉 피해 무효 + 소량 회복. 짧게·낮게 잡아 캠핑 방지.</div><div class="iwhy">→ 한복판 들어가는 결단 자체가 보상 — 공포를 줄이는 심리 당근</div></div>
+      <div class="icard"><div class="iname">⏳ 신선도 보너스 <span class="itag g">속도 보상</span></div><div class="idesc">엘리트 머리 위 게이지가 서서히 감소. 많이 남았을 때 잡을수록 젬 폭발↑. <b>다 식어도 기본 보상 그대로(벌 없음)</b>.</div><div class="iwhy">→ 찔끔딜보다 붙어서 집중딜이 항상 이득</div></div>
+    </div>
+  </section>
+
+  <!-- 7. 세부 D 회피-온리 카운터 -->
+  <section class="slide" data-t="D 회피 카운터 4">
+    <div class="kicker">06 · 세부 D — 회피만 돌면 점점 나빠진다 · 4</div>
+    <h2>회피 손맛은 그대로, <span class="red">'회피만 하는 선택'</span>만 나쁘게</h2>
+    <div class="igrid">
+      <div class="icard pick"><div class="iname">🔥 오래두면 격노 <span class="itag">시간 압박</span></div><div class="idesc">스폰 후 시간이 지나면 격노(예고: 몸 붉게 달아오름) — 이속·도약 빈도↑, <b>그로기 시간↓(처형 창 축소)</b>. 상한 필수.</div><div class="iwhy">→ 구현 = 타이머 하나. 원칙에 가장 정확히 맞는 카운터</div></div>
+      <div class="icard pick"><div class="iname">👁 간파 내성 <span class="itag">보상 경제</span></div><div class="idesc">같은 개체에 저스트 반복 성공 시 슬로우·탈진 충전 단계적 감소(회피 성공 자체는 그대로). <b>아무 엘리트든 처형하면 전부 리셋</b>. 내성 단계는 눈빛·게이지로 표시.</div><div class="iwhy">→ 처형이 보상을 되살리는 스위치</div></div>
+      <div class="icard"><div class="iname">⚡ 엇박자 협공 <span class="itag">머릿수 위협</span></div><div class="idesc">엘리트 2마리 이상이면 도약 타이밍 반 박자씩 엇갈림. <b>최소 회피 창은 항상 보장</b>(읽으면 피할 수 있는 선).</div><div class="iwhy">→ 한 마리라도 빨리 처형해 겹침을 끊는 판단 유도</div></div>
+      <div class="icard"><div class="iname">💣 시한폭탄 착지 <span class="itag">자리 압박</span></div><div class="idesc">도약 착지 지점에 지연 폭발 표식 — 같은 자리 빙빙 도는 버티기 동선 차단. <b>폭발은 저스트 무적 종료 후에도 여유 있게 늦게</b>.</div><div class="iwhy">→ 제자리 회피 루프의 공간 비용이 쌓임</div></div>
+    </div>
+  </section>
+
+  <!-- 8. 탈락 사례 -->
+  <section class="slide" data-t="탈락 4 · 이유">
+    <div class="kicker">07 · 걸러낸 것 — 원칙 위반 4</div>
+    <h2>이건 <span class="red">안 넣는다</span> (이유 포함)</h2>
+    <div class="igrid">
+      <div class="icard cut"><div class="iname">😡 성난 부활 <span class="itag r">탈락</span></div><div class="idesc">처형 놓치면 더 센 놈으로 부활.</div><div class="iwhy" style="color:var(--red)">✗ 처형이 당근이 아니라 '벌 피하기 의무'가 됨 — 08 실패 모드 재림</div></div>
+      <div class="icard cut"><div class="iname">🎭 속임수 도약 <span class="itag r">탈락</span></div><div class="idesc">페이크 후 반 박자 늦은 진짜 도약.</div><div class="iwhy" style="color:var(--red)">✗ '읽고 반응'하는 저스트의 신뢰를 깨서 회피 손맛 자체를 죽임</div></div>
+      <div class="icard cut"><div class="iname">🐗 폭식하는 괴물 <span class="itag r">탈락</span></div><div class="idesc">잡몹 먹고 3단 진화 → 미니보스.</div><div class="iwhy" style="color:var(--red)">✗ 프로토 범위 초과 + 약한 빌드에 사망 선고. 경제 축은 '젬 포식자'로 흡수</div></div>
+      <div class="icard cut"><div class="iname">🔒 카드 훔치는 자 <span class="itag r">탈락</span></div><div class="idesc">살아있으면 레벨업 카드 1장 잠금.</div><div class="iwhy" style="color:var(--red)">✗ 게임 최고의 보상 순간(레벨업)의 기분을 직접 훼손 — 스트레스형 채찍</div></div>
+    </div>
+    <p class="note">기준: ① 채찍=전장 악화만 ② 회피 손맛 보존 ③ 처형=carrot 유지 ④ 단일 캔버스 프로토 구현 가능.</p>
+  </section>
+
+  <!-- 9. 추천 1차 조합 -->
+  <section class="slide" data-t="★ 1차 조합 6">
+    <div class="kicker">08 · 추천 — 1차 프로토 조합 6</div>
+    <h2>한 번에 다 넣지 않는다 — <span class="teal">이 여섯 개부터</span></h2>
+    <div class="igrid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="icard pick"><div class="iname">🚦 예고 빛 약속</div><div class="iwhy">위협 · 모든 엘리트의 공통 언어(가독성 뼈대)</div></div>
+      <div class="icard pick"><div class="iname">🛡 막아서는 방패</div><div class="iwhy">위협 · 위치 싸움 — 등 뒤로 돌아야 딜이 박힘</div></div>
+      <div class="icard pick"><div class="iname">🚩 깃발 든 대장</div><div class="iwhy">방치 비용 · 잡몹이 붉게 물들며 강해짐</div></div>
+      <div class="icard pick"><div class="iname">🔥 오래두면 격노</div><div class="iwhy">방치 비용 · 시간 끌수록 처형 창 축소</div></div>
+      <div class="icard pick"><div class="iname">💥 잡몹 연쇄 폭발</div><div class="iwhy">당근 · 처형 = 화면 청소</div></div>
+      <div class="icard pick"><div class="iname">🧲 보석 청소기</div><div class="iwhy">당근 · 처형 = 수확 버튼</div></div>
+    </div>
+    <div class="quote teal" style="margin-top:.9rem;">전부 타이머·반경 판정·색 틴트 수준 = 프로토에 바로 들어감.<br>검증 질문 하나 — <b>"유저가 시키지 않아도 엘리트에게 먼저 달려가는가?"</b></div>
+    <p class="note">2차 후보(검증 후): 덥석 잡기(보라 규칙) · 저격 정예 · 젬 포식자 · 간파 내성 · 땅 썩히는 자.</p>
+  </section>
+
+  <!-- 10. 결론 + 체크리스트 -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">09 · 결론 — 결정 & 체크리스트</div>
+    <h2>위협 = 패턴 · 채찍 = 전장 악화 · 당근 = <span class="teal">처형 효율</span></h2>
+    <div class="quote" style="border-color:var(--gold);">엘리트 위협은 <b>예고 색 규칙 + 패턴 다양화</b>로, 방치 비용은 <b>전장 악화(잡몹 강화·격노)</b>로,<br>인파이팅은 <b>처형=청소+수확</b> 당근으로. 1차 조합 6개 → <b>"먼저 달려가는가"</b> 검증.</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct">원칙 승인: 채찍 = 조작 강요 ❌ / <b>전장 악화</b> ⭕ (08 교훈 계승)</span></label>
+      <label><input type="checkbox"><span class="ct"><b>예고 빛 약속</b> 채택 — 빨강(피하기)/노랑(저스트)/보라(잡기) 색 규칙 고정 + 모양 병행</span></label>
+      <label><input type="checkbox"><span class="ct">신규 엘리트 패턴: <b>막아서는 방패</b>(정면 감쇄·후면 취약) 1순위 구현</span></label>
+      <label><input type="checkbox"><span class="ct">방치 비용: <b>깃발 든 대장</b>(잡몹 단계 강화·상한 3) + <b>오래두면 격노</b>(그로기 창 축소·상한)</span></label>
+      <label><input type="checkbox"><span class="ct">당근: <b>잡몹 연쇄 폭발</b> + <b>보석 청소기</b> — 처형 = 화면 청소 + 수확</span></label>
+      <label><input type="checkbox"><span class="ct">탈락 4종 확정 기각: 성난 부활 · 속임수 도약 · 폭식 괴물 · 카드 잠금</span></label>
+      <label><input type="checkbox"><span class="ct">2차 후보 보류: 덥석 잡기 · 저격 정예 · 젬 포식자 · 간파 내성 · 땅 썩히는 자</span></label>
+      <label><input type="checkbox"><span class="ct">(구현) 1차 조합 6개를 다음 인덱스에 + <code>gameBalance.json</code>에 손잡이 등록</span></label>
+      <label><input type="checkbox"><span class="ct">(검증) "유저가 시키지 않아도 엘리트에게 먼저 달려가는가?" 체감 테스트</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow-btn" id="prev">‹</button>
+<button class="arrow-btn" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 10</div>
+<div class="foot">엘리트 위협 & 인파이팅 이데이션 · v0.16 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 1차 조합 6개를 index_23으로 구현 / 방패 엘리트부터..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
