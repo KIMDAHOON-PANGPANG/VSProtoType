@@ -1,6 +1,6 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.17.0",
+  "_version": "0.18.0",
 
   "player": {
     "radius": 16,
@@ -114,6 +114,11 @@
         "preWindow": 0.2,
         "_comment": "도약 패턴: 도약 중(windup+air)에는 무적, 착지(hit)부터 피해. windup=예고(초) → air=체공(초) → 착지 radius(px) AoE damage. cooldownMin/Max=재시전 간격, initMin/Max=첫 도약 지연. triggerRange=이 거리 안일 때만 도약. homing=데칼이 PC 추적하는 시간(초), homingRate=추적 속도. preWindow=착지(hit) 몇 초 전부터 PRE 판정(흰색 강조)이 열려 회피 시 저스트 회피 발동(크면 쉬움). PRE 판정 크기=hit radius."
       }
+    },
+    "eliteTypes": {
+      "vacuum": { "gemRange": 600, "dashMult": 1.4 },
+      "berserker": { "rageTime": 12, "speedMax": 1.9, "dmgMax": 1.8 },
+      "_comment": "v0.18 (5) 타입 노브 — vacuum(보석 청소기): gemRange 내 젬 추적·흡수(dashMult=젬 향할 때 가속) / berserker(격노): rageTime초에 걸쳐 속도 ×speedMax·접촉피해 ×dmgMax까지 상승."
     }
   },
 
@@ -135,17 +140,43 @@
     ],
     "eliteMode": "wave",
     "eliteWave": { "sizeMin": 2, "sizeMax": 3, "lullSec": 11 },
-    "eliteRoster": ["knight"],
+    "eliteRoster": ["knight", "vacuum", "berserker"],
+    "_rosterComment": "v0.18 (5): 물결마다 직전과 다른 타입 로테이션('매번 바뀐다'). knight=도약 패링 / vacuum=보석 청소기(젬 흡수로 성장 방해) / berserker=오래두면 격노(방치 시 가속·강타).",
     "eliteRadiusMin": 220,
     "eliteRadiusMax": 360
   },
 
   "hpScale": {
-    "k": 1.2,
-    "p": 1.26,
-    "eliteK": 1.2,
-    "eliteP": 1.26,
-    "_comment": "v0.17 (덱 020 #17): 몬스터 HP 스케일링 — HP배율(t) = 1 + k·(t/스테이지길이)^p. k1.2·p1.26 → 0분 ×1.0 / 5분 ×1.3 / 10분 ×1.7 / 15분 ×2.2 (초벌 앵커). 스폰 시점에 HP에 굽는다(소급 X). 엘리트만 더 가파르게 하려면 eliteK/eliteP."
+    "k": 1.35,
+    "p": 1.05,
+    "eliteK": 1.35,
+    "eliteP": 1.05,
+    "_comment": "v0.18 (4): 초반 기울기 상향(2분 이후 '죽을 것 같은 느낌' 가미) — 2분 ×1.16 / 5분 ×1.43 / 10분 ×1.88 / 15분 ×2.35 (v0.17: 1.15/1.3/1.7/2.2). 공식 HP배율(t)=1+k·(t/스테이지길이)^p, 스폰 시점에 굽는다(소급 X)."
+  },
+
+  "tempo": {
+    "points": [
+      { "atMin": 0,   "mult": 1.15 },
+      { "atMin": 1,   "mult": 1.55 },
+      { "atMin": 2,   "mult": 1.55 },
+      { "atMin": 3.5, "mult": 1.0 },
+      { "atMin": 8,   "mult": 0.95 },
+      { "atMin": 15,  "mult": 0.85 }
+    ],
+    "_comment": "v0.18 (4): 전역 공격 템포 커브 — 모든 무기 발사 간격·틱에 곱하는 배율(구간 선형 보간). 1~2분 ×1.55 = 스킬 쿨이 길어 카이팅해야 생존하는 구간 → 3.5분 정상화 → 후반 소폭 가속. weapons 수치는 그대로 두고 런타임 배율만."
+  },
+
+  "midboss": {
+    "hp": 800,
+    "radius": 40,
+    "speed": 48,
+    "leapRadius": 160,
+    "leapDamage": 34,
+    "execNeed": 2,
+    "hpRestore": 0.5,
+    "staggerMax": 220,
+    "spawnRadius": 380,
+    "_comment": "v0.18 (3): 5분 중간보스 — 리프어택 엘리트 베리에이션(리프 반경 88→160 광역). hp='약 20초는 맞아야 그로기 1번' 초벌(실측 조정 전제). execNeed=처형 N회째만 확정 사망(그 전엔 hpRestore 비율로 기상). 그로기 만료 시 항상 부활(전용 보상 유실 방지)."
   },
 
   "elitePressure": {
@@ -155,15 +186,22 @@
   },
 
   "waveSchedule": [
-    { "atMin": 2,  "kind": "reinforce", "type": "fodder",     "params": { "mult": 2.5, "durationSec": 20 } },
-    { "atMin": 4,  "kind": "event",     "type": "elitebloom", "params": { "mode": "fixed", "count": 3, "chance": 0.35, "auraR": 220, "offset": 260, "lifeSec": 20 } },
-    { "atMin": 6,  "kind": "reinforce", "type": "both",       "eliteType": "random", "params": { "mult": 2.2, "durationSec": 20, "eliteN": 2 } },
-    { "atMin": 8,  "kind": "event",     "type": "cage",       "eliteType": "random", "params": { "radius": 430, "durationSec": 60 } },
-    { "atMin": 10, "kind": "event",     "type": "jelly",      "params": { "count": 14, "radiusMin": 190, "radiusMax": 340, "periodSec": 6, "durationSec": 30, "hp": 60, "damage": 10, "speed": 170, "radius": 14 } },
-    { "atMin": 12, "kind": "event",     "type": "tankline",   "params": { "count": 7, "spacing": 72, "hpMult": 8, "durationSec": 45, "offset": 300, "radius": 20 } },
-    { "atMin": 14, "kind": "reinforce", "type": "both",       "eliteType": "random", "params": { "mult": 3.0, "durationSec": 30, "eliteN": 3 } },
+    { "atMin": 1,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 1.8, "durationSec": 15 } },
+    { "atMin": 2,  "kind": "reinforce", "type": "fodder",                            "params": { "mult": 4.0, "durationSec": 25, "burst": 24 } },
+    { "atMin": 3,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 2.2, "durationSec": 20 } },
+    { "atMin": 4,  "kind": "event",     "type": "elitebloom", "reward": "exclusive", "params": { "mode": "fixed", "count": 3, "chance": 0.35, "auraR": 220, "offset": 260, "lifeSec": 20 } },
+    { "atMin": 5,  "kind": "midboss",   "type": "bull_calf",  "reward": "exclusive" },
+    { "atMin": 7,  "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 2.2, "durationSec": 20, "eliteN": 2 } },
+    { "atMin": 8,  "kind": "event",     "type": "cage",       "reward": "common",    "eliteType": "random", "params": { "radius": 430, "durationSec": 60 } },
+    { "atMin": 9,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 2.4, "durationSec": 20 } },
+    { "atMin": 10, "kind": "event",     "type": "jelly",      "reward": "exclusive", "params": { "count": 14, "radiusMin": 190, "radiusMax": 340, "periodSec": 6, "durationSec": 30, "hp": 60, "damage": 10, "speed": 170, "radius": 14 } },
+    { "atMin": 11, "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 2.6, "durationSec": 20, "eliteN": 2 } },
+    { "atMin": 12, "kind": "event",     "type": "tankline",   "reward": "common",    "params": { "count": 7, "spacing": 72, "hpMult": 8, "durationSec": 45, "offset": 300, "radius": 20 } },
+    { "atMin": 13, "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 2.8, "durationSec": 25 } },
+    { "atMin": 14, "kind": "reinforce", "type": "both",                              "eliteType": "random", "params": { "mult": 3.2, "durationSec": 30, "eliteN": 3 } },
     { "atMin": 15, "kind": "boss",      "type": "bull" }
   ],
+  "_waveScheduleComment": "v0.18 (6) 보상 흐름: 홀수 분 특수(강화) 웨이브=버티면 공용 처형 보상 / 이벤트 2회(4분 보석·10분 해파리)+5분 중간보스=전용 처형 보상(총 3회) / 8분 가두리·12분 저지선=공용 / 2분 대량(burst 즉시 스폰)·14분 최종 압박=순수 위협(보상 X).",
 
   "boss": {
     "offsetY": -220,
