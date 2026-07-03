@@ -10,8 +10,8 @@
 
 | 항목 | 값 |
 |---|---|
-| 최신 버전 | **v0.12.0** |
-| 최신 플레이 파일 | **`build/index_16.html`** |
+| 최신 버전 | **v0.13.0** |
+| 최신 플레이 파일 | **`build/index_17.html`** |
 | 밸런스 단일 소스 | **`build/gameBalance.json`** |
 | 패치 내역 | **`build log/PATCH_LOG.txt`** (내림차순) |
 | GitHub 리포 | **`KIMDAHOON-PANGPANG/VSProtoType`** (`origin/main`) |
@@ -203,7 +203,8 @@ spawner(phase1·2·3) / xp / contactDamageScale
 | `build/index_13.html` | v0.10.2 — 처형 1회당 1명(execution.maxTargets 1) |
 | `build/index_14.html` | v0.10.3 — 자동 베기 조준 버그 수정 + 흡혈각인(처형 시 HP 회복) 제거 |
 | `build/index_15.html` | v0.11.0 — 무기 슬롯(VS식 자동 무기고): 기반 5종 + 유니크 2종(처형 파문·낙인) + 무기 레벨업 카드 |
-| `build/index_16.html` | v0.12.0 — RMB 처형(LMB 해제) + 비겹침 몸 충돌(뚫고 지나가면 접촉 피해 · 처형 중/직후 1초 통과) + 유니크 2종 카드 미노출 (**현재 최신**) |
+| `build/index_16.html` | v0.12.0 — RMB 처형(LMB 해제) + 비겹침 몸 충돌(뚫고 지나가면 접촉 피해 · 처형 중/직후 1초 통과) + 유니크 2종 카드 미노출 |
+| `build/index_17.html` | v0.13.0 — 무기 1군 14종(덱 017/018 · 매서 몸통×롤 한 스푼) + 연출 3종 세트(차지 링·범위 표시·틱 컬러) + 상태이상(빙결·중독·도발) + 슬롯 예산 6 · 기존 5종 카드 은퇴 (**현재 최신**) |
 | `build/gameBalance.json` | 모든 PC·몬스터·**무기(weapons)** 밸런스 수치 (단일 소스) |
 | `build log/PATCH_LOG.txt` | 패치 내역 (내림차순) |
 | `WORKFLOW.md` | 이 문서 — 작업 규칙 (루트) |

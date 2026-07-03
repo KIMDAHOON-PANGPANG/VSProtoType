@@ -4,8 +4,8 @@
     {
       "name": "vslike",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "5605"],
-      "port": 5605
+      "runtimeArgs": ["-m", "http.server", "5607"],
+      "port": 5607
     }
   ]
 }
