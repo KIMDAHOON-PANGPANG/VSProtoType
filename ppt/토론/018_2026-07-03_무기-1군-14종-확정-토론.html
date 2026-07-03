@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>무기 1군 14종 확정 토론 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a; --orange:#ff7a1a; --purple:#b061ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;}
+  #deck{position:fixed; inset:0;}
+  .slide{position:absolute; inset:0; display:none; flex-direction:column; justify-content:center;
+    padding:5.5vh 7vw; opacity:0; transition:opacity .35s ease;}
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.78rem; letter-spacing:.2em; color:var(--teal); text-transform:uppercase; margin-bottom:.9rem; font-weight:700;}
+  h1{font-size:clamp(1.7rem,4.2vw,3.1rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.3rem,2.9vw,2.1rem); line-height:1.18; font-weight:800; margin-bottom:1rem;}
+  h2 .num{color:var(--gold); margin-right:.4rem;}
+  p,li{font-size:clamp(.9rem,1.35vw,1.12rem); line-height:1.5; color:var(--ink);}
+  .dim{color:var(--dim);} b,strong{color:#fff;}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);} .orange{color:var(--orange);} .purple{color:var(--purple);}
+
+  .title-wrap{max-width:960px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.16em; color:var(--dim); margin-bottom:1.5rem;}
+  .title-meta{margin-top:1.8rem; display:flex; gap:2.2rem; flex-wrap:wrap; color:var(--dim); font-size:.88rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+  .lead{font-size:clamp(1rem,1.55vw,1.32rem); line-height:1.5; max-width:66ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.5rem 0 .5rem 1.15rem; margin:.9rem 0;
+    font-size:clamp(.98rem,1.6vw,1.3rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+
+  .threads{display:flex; gap:1rem; margin-top:1.4rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem 1.15rem;}
+  .thread .t{font-size:.72rem; letter-spacing:.14em; color:var(--gold); text-transform:uppercase; font-weight:800;}
+  .thread h3{font-size:1.02rem; margin:.4rem 0 .3rem; font-weight:800;} .thread p{font-size:.83rem; color:var(--dim); line-height:1.4;}
+
+  .flow{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:1rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800; font-size:.88rem;}
+  .flow .step.bad{border-color:rgba(255,43,78,.45); color:var(--red);} .flow .step.hot{border-color:var(--teal); color:var(--teal);}
+  .flow .step small{display:block; color:var(--dim); font-weight:600; font-size:.68rem; margin-top:.12rem;}
+  .flow .arr{color:var(--dim); font-weight:900; font-size:1.1rem;}
+
+  .cols{display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; align-items:stretch; margin-top:.7rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:1.05rem 1.15rem; display:flex; flex-direction:column; position:relative;}
+  .card.pick{border-color:rgba(28,240,212,.6); box-shadow:0 0 20px rgba(28,240,212,.1);}
+  .card .rec{position:absolute; top:.7rem; right:.7rem; font-size:.66rem; font-weight:900; color:#04201c; background:var(--teal); border-radius:5px; padding:.12em .5em;}
+  .card .role{font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); font-weight:800;}
+  .card h3{font-size:1.1rem; font-weight:900; margin:.35rem 0 .45rem;}
+  .card p{font-size:.84rem; color:var(--dim); line-height:1.45;} .card p b{color:#fff;}
+
+  /* 무기 로스터 카드 (deck 17 스타일 계승) */
+  .wgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(228px,1fr)); gap:.6rem; margin-top:.8rem;}
+  .wcard{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.65rem .85rem;}
+  .wcard .wname{font-weight:800; font-size:.92rem; display:flex; align-items:baseline; gap:.45rem; flex-wrap:wrap;}
+  .wcard .wsrc{font-size:.7rem; color:var(--faint); font-weight:600;}
+  .wcard .wdesc{font-size:.78rem; color:var(--dim); line-height:1.4; margin-top:.28rem;}
+  .wcard .wtag{display:inline-block; font-size:.64rem; font-weight:800; letter-spacing:.06em; padding:.12em .5em; border-radius:5px; background:rgba(28,240,212,.14); color:var(--teal);}
+  .wcard.pick{border-color:rgba(28,240,212,.55);}
+
+  .note{margin-top:.9rem; font-size:.83rem; color:var(--dim);}
+  .note code, .ct code{color:var(--teal2); background:rgba(28,240,212,.08); padding:.05em .4em; border-radius:4px; font-size:.92em;}
+
+  .checklist{display:flex; flex-direction:column; gap:.38rem; margin-top:.8rem; max-width:940px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.48rem .85rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.1rem; height:1.1rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center; color:#04201c; font-size:.78rem; font-weight:900;}
+  .checklist .ct{font-size:.86rem; line-height:1.4; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:.4rem; align-items:center; z-index:30;}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:20px; border-radius:4px;}
+  #count{position:fixed; bottom:18px; right:24px; color:var(--dim); font-size:.78rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:18px; left:24px; color:var(--faint); font-size:.72rem; letter-spacing:.06em; z-index:30;}
+  .hint{position:fixed; top:16px; right:24px; color:var(--faint); font-size:.7rem; z-index:30;}
+  .arrow-btn{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line); font-size:2.1rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow-btn:hover{color:var(--teal);} #prev{left:6px;} #next{right:6px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- 1. 표지 -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · 17 후속 · 무기 로스터 확정</span>
+      <div class="kicker">기획 토론 · Design Debate</div>
+      <h1>무기 1군 <span class="teal">14종 확정</span></h1>
+      <p class="lead dim">17에서 잡은 리스트를 확정한다. <b>1~13은 그대로</b>, <b>#14(처형 연동)만 교체</b> —<br>상시로 쓰는 '육각' 클래식 무기로.</p>
+      <div class="title-meta">
+        <div>참고 · <b>덱 17 (무기 리부트)</b></div>
+        <div>날짜 · <b>2026-07-03</b></div>
+        <div>기반 · <b>v0.10</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 아젠다 -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>17 리스트 확정 + #14 교체</h2>
+    <div class="threads">
+      <div class="thread"><div class="t">유지</div><h3>1 ~ 13 그대로</h3><p>17에서 체크한 8종 + 신규 5종. 손대지 않는다.</p></div>
+      <div class="thread"><div class="t">제외</div><h3>#14 처형 연동</h3><p>'사슬 묶인 망령'은 처형→소환. 무기 빌드에 넣으면 안 됨.</p></div>
+      <div class="thread"><div class="t">신규</div><h3>#14 = 상시 육각</h3><p>완전 클래식 · 상시 · 작은 육각 무기로 자리 채움.</p></div>
+    </div>
+    <p class="note">원칙(13·14): <b>무기 = 데미지</b> / <b>처형 = 별도 결정타.</b> 처형 연동 무기는 경계를 무너뜨린다.</p>
+  </section>
+
+  <!-- 3. 세부 ① 왜 #14 교체 -->
+  <section class="slide" data-t="① 왜 #14 교체">
+    <div class="kicker">02 · 세부 ① — #14는 무기가 아니라 '처형'</div>
+    <h2>버리지 말고 <span class="teal">자리를 옮긴다</span></h2>
+    <div class="flow">
+      <span class="step bad">사슬 묶인 망령<small>처형 → 망령 소환</small></span>
+      <span class="arr">⇒</span>
+      <span class="step hot">강령술사 클래스<small>'처형 형태'로 이동 (전속)</small></span>
+      <span class="arr">&nbsp;/&nbsp;</span>
+      <span class="step">무기 #14 자리<small>신규 상시 무기</small></span>
+    </div>
+    <p class="note"><b>'처형 → 망령 소환'은 좋은 아이디어</b> — 다만 <b class="red">무기가 아니라 처형</b>이다. 처형 형태는 <b>클래스 전속</b>(05·13)이니, 강령술사(모데카이저) 클래스의 <b>처형 형태</b>로 옮기면 딱 맞는다. 무기 슬롯은 비니까 상시 클래식으로 채운다.</p>
+  </section>
+
+  <!-- 4. 세부 ② #14 신규 3안 -->
+  <section class="slide" data-t="② #14 신규 3안">
+    <div class="kicker">03 · 세부 ② — 상시 '육각' 클래식 (무난한 것)</div>
+    <h2>#14 신규 무기 — 3안</h2>
+    <div class="cols">
+      <div class="card pick"><span class="rec">추천</span><div class="role">A · 마늘형</div><h3>육각 오라</h3><p>플레이어 주위 <b>상시 육각 장판</b>. 접촉 지속 데미지 + 살짝 넉백. <b>조준 X · 순수 상시.</b> 근접 청소·생존.</p></div>
+      <div class="card"><div class="role">B · 성경형</div><h3>육각 궤도</h3><p>작은 <b>육각 파편이 상시 회전</b>. 닿는 적 데미지. 개수↑로 성장. 방어막 겸 딜.</p></div>
+      <div class="card"><div class="role">C · 완드형</div><h3>육각 유도탄</h3><p>짧은 주기로 <b>근처 적에 육각 파편 튕김</b>. 거의 상시 · 자동 타겟. 원거리 견제.</p></div>
+    </div>
+    <p class="note">셋 다 롤 챔프 무관한 <b>완전 클래식</b>. 추천 = <b class="teal">A 육각 오라</b> — '상시 작은 육각'에 가장 정확히 맞고 조준이 없어 가장 무난.</p>
+  </section>
+
+  <!-- 5. 확정 로스터 14종 -->
+  <section class="slide" data-t="확정 14종">
+    <div class="kicker">04 · 최종 — 1군 로스터 확정</div>
+    <h2><span class="num">✔</span>주력 14종 — 1~13 그대로 · 14만 교체</h2>
+    <div class="wgrid">
+      <div class="wcard"><div class="wname">1 혼령 구슬</div><div class="wdesc">자동타겟 · 튕김 4연쇄 <span class="wsrc">진 Q</span></div></div>
+      <div class="wcard"><div class="wname">2 어둠 파동</div><div class="wdesc">모으기 → 밀집 방향 관통파 <span class="wsrc">제라스 Q</span></div></div>
+      <div class="wcard"><div class="wname">3 울부짖는 회오리</div><div class="wdesc">머금기 → 커져서 전진 <span class="wsrc">잔나 Q</span></div></div>
+      <div class="wcard"><div class="wname">4 되찾는 도끼</div><div class="wdesc">관통 투척 · 주우면 쿨 초기화 <span class="wsrc">올라프 Q</span></div></div>
+      <div class="wcard"><div class="wname">5 불사조 화염</div><div class="wdesc">전방 부채꼴 불꽃 파동 <span class="wsrc">우디르 R</span></div></div>
+      <div class="wcard"><div class="wname">6 독안개 자취</div><div class="wdesc">이동 궤적 독 장판 · 중독 <span class="wsrc">신지드 Q</span></div></div>
+      <div class="wcard"><div class="wname">7 죽음의 박동</div><div class="wdesc">주기 팽창 링 · 처형 시 +1회 <span class="wsrc">카서스 E</span></div></div>
+      <div class="wcard"><div class="wname">8 무덤 거미</div><div class="wdesc">잡몹 끌어모아 폭발하는 미끼 <span class="wsrc">엘리스 W</span></div></div>
+      <div class="wcard"><div class="wname">9 불타는 해골 비 ★</div><div class="wdesc">랜덤 지대 연속 낙하 포격 <span class="wsrc">갱플랭크 R</span></div></div>
+      <div class="wcard"><div class="wname">10 얼어붙은 창 소나기 ★</div><div class="wdesc">낙하 · 엘리트 조준 · 빙결 <span class="wsrc">제라스 R</span></div></div>
+      <div class="wcard"><div class="wname">11 해골 감시탑 ★</div><div class="wdesc">설치 포탑 · 화력 공백 0 <span class="wsrc">하이머딩거 Q</span></div></div>
+      <div class="wcard"><div class="wname">12 핏빛 낫 바퀴 ★</div><div class="wdesc">궤도 회전 · 날 끝 강타 <span class="wsrc">다리우스 Q</span></div></div>
+      <div class="wcard"><div class="wname">13 핏빛 썰물 ★</div><div class="wdesc">화면 횡단 왕복 파도 <span class="wsrc">시비르 Q</span></div></div>
+      <div class="wcard pick"><div class="wname">14 육각 오라 <span class="wtag">교체 · 신규 상시</span></div><div class="wdesc">주위 <b>상시 육각 장판</b> · 접촉 지속 데미지 <span class="wsrc">클래식(마늘형)</span></div></div>
+    </div>
+    <p class="note">1~13 = 17 그대로 / <b class="teal">14만 사슬 묶인 망령 → 육각 오라</b>로 교체. 매서 14종 예산 유지.</p>
+  </section>
+
+  <!-- 6. 결론 + 체크리스트 -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">05 · 결론 — 확정 & 체크리스트</div>
+    <h2>14종 확정 · #14 = <span class="teal">육각 오라</span></h2>
+    <div class="quote" style="border-color:var(--gold);">무기 1군 14종 확정 — <b>1~13 그대로</b>. #14 '사슬 묶인 망령(처형)'은 <b>강령술사 처형 형태</b>로 옮기고,<br>무기 자리는 <b>상시 육각 오라(마늘형)</b>로 채운다.</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct">무기 1군 <b>14종 확정</b> — 17의 1~13 그대로 유지</span></label>
+      <label><input type="checkbox"><span class="ct">#14 <b>사슬 묶인 망령 = 무기에서 제외</b> (처형 연동 → 무기 아님)</span></label>
+      <label><input type="checkbox"><span class="ct">'처형 → 망령 소환' = <b>강령술사 클래스 '처형 형태'로 이동</b> (05·13)</span></label>
+      <label><input type="checkbox"><span class="ct">#14 신규 무기 = <b>육각 오라</b>(마늘형 상시 장판) 채택 <b class="teal">[추천]</b></span></label>
+      <label><input type="checkbox"><span class="ct">(대안) 육각 궤도(성경형) / 육각 유도탄(완드형) 중 택 가능</span></label>
+      <label><input type="checkbox"><span class="ct">원칙: 무기는 전부 <b>데미지</b> — 처형 연동 무기 금지</span></label>
+      <label><input type="checkbox"><span class="ct">17 '클래스 묶음'의 강령술사 자리 — 망령 빠진 뒤 재구성</span></label>
+      <label><input type="checkbox"><span class="ct">(구현) 로스터 반영 시 <b>#14만 육각 오라로</b> 교체</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow-btn" id="prev">‹</button>
+<button class="arrow-btn" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 06</div>
+<div class="foot">무기 1군 14종 확정 토론 · 17 후속 · v0.10 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 확정 14종을 index_18로 구현 / 육각 오라 수치 스펙까지..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
