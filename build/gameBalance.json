@@ -1,6 +1,6 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.18.0",
+  "_version": "0.19.0",
 
   "player": {
     "radius": 16,
@@ -68,7 +68,7 @@
   },
 
   "groggy": {
-    "duration": 3,
+    "duration": 2.4,
     "reviveEnabled": true,
     "reviveHpFraction": 0.4,
     "reviveInvuln": 0.4,
@@ -105,7 +105,7 @@
         "windup": 0.78,
         "air": 0.36,
         "recover": 0.6,
-        "radius": 88,
+        "radius": 120,
         "damage": 24,
         "rise": 50,
         "triggerRange": 560,
@@ -118,7 +118,8 @@
     "eliteTypes": {
       "vacuum": { "gemRange": 600, "dashMult": 1.4 },
       "berserker": { "rageTime": 12, "speedMax": 1.9, "dmgMax": 1.8 },
-      "_comment": "v0.18 (5) 타입 노브 — vacuum(보석 청소기): gemRange 내 젬 추적·흡수(dashMult=젬 향할 때 가속) / berserker(격노): rageTime초에 걸쳐 속도 ×speedMax·접촉피해 ×dmgMax까지 상승."
+      "spreader": { "auraR": 240, "chance": 0.4, "maxConverts": 3 },
+      "_comment": "v0.18~19 타입 노브 — vacuum: gemRange 내 젬 추적·흡수(dashMult=가속) / berserker: rageTime초에 걸쳐 속도 ×speedMax·접촉피해 ×dmgMax / spreader(전염): 첫 그로기 미처형(부활) 순간 auraR 내 잡몹이 각각 chance 확률로 리프 엘리트 변이(최대 maxConverts)."
     }
   },
 
@@ -140,8 +141,10 @@
     ],
     "eliteMode": "wave",
     "eliteWave": { "sizeMin": 2, "sizeMax": 3, "lullSec": 11 },
-    "eliteRoster": ["knight", "vacuum", "berserker"],
-    "_rosterComment": "v0.18 (5): 물결마다 직전과 다른 타입 로테이션('매번 바뀐다'). knight=도약 패링 / vacuum=보석 청소기(젬 흡수로 성장 방해) / berserker=오래두면 격노(방치 시 가속·강타).",
+    "eliteRoster": ["knight", "vacuum", "berserker", "spreader"],
+    "_rosterComment": "v0.18~19: 물결마다 직전과 다른 타입 로테이션('매번 바뀐다'). knight=도약 패링 / vacuum=보석 청소기(젬 흡수로 성장 방해) / berserker=오래두면 격노(방치 시 가속·강타) / spreader=전염(첫 그로기 미처형 시 주변 잡몹을 확률적으로 리프 엘리트로 변이 → 처형 강제).",
+    "rushSpeedMult": 1.8,
+    "_rushComment": "v0.19 (A): 강화(특수) 웨이브 스폰 잡몹의 이속 배수 기본값 — 슬롯 params.speedMult로 개별 오버라이드. 쿨타임(템포)이 벅찰 정도로 몰려오는 러시 압박(추후 공용 무기 빌드의 쿨감 스탯 가치를 세우는 장치).",
     "eliteRadiusMin": 220,
     "eliteRadiusMax": 360
   },
@@ -170,13 +173,15 @@
     "hp": 800,
     "radius": 40,
     "speed": 48,
-    "leapRadius": 160,
+    "leapRadius": 240,
     "leapDamage": 34,
+    "leapCdMin": 4.5,
+    "leapCdMax": 6.2,
     "execNeed": 2,
     "hpRestore": 0.5,
     "staggerMax": 220,
     "spawnRadius": 380,
-    "_comment": "v0.18 (3): 5분 중간보스 — 리프어택 엘리트 베리에이션(리프 반경 88→160 광역). hp='약 20초는 맞아야 그로기 1번' 초벌(실측 조정 전제). execNeed=처형 N회째만 확정 사망(그 전엔 hpRestore 비율로 기상). 그로기 만료 시 항상 부활(전용 보상 유실 방지)."
+    "_comment": "v0.19 (C): 5분 중간보스 — 리프 반경 240(일반 120의 2배: 대시 거리(~137px)로 못 벗어남 = 사실상 저스트 회피 강제). leapCdMin/Max=리프 쿨 별도 상향(리프 사이 = 플레이어 딜 타임). hp='약 20초는 맞아야 그로기 1번' 초벌. execNeed=처형 N회째만 확정 사망(그 전엔 hpRestore 비율로 기상). 그로기 만료 시 항상 부활(전용 보상 유실 방지)."
   },
 
   "elitePressure": {
