@@ -1,6 +1,6 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.19.0",
+  "_version": "0.20.0",
 
   "player": {
     "radius": 16,
@@ -170,7 +170,7 @@
   },
 
   "midboss": {
-    "hp": 800,
+    "hp": 1200,
     "radius": 40,
     "speed": 48,
     "leapRadius": 240,
@@ -181,6 +181,8 @@
     "hpRestore": 0.5,
     "staggerMax": 220,
     "spawnRadius": 380,
+    "repel": { "radius": 340, "duration": 1.1, "band": 30, "damage": 10, "knockback": 420 },
+    "_repelComment": "v0.20 (2): 떨쳐내기 — 처형을 '버티고' 기상할 때(마지막 처형 제외) 자신 기준 점점 커지는 원형 파동. 파면(band 두께)이 PC를 지나면 넉백(knockback, 무적 무관)+소량 피해(무적 존중) → 잠깐 거리 벌리기. duration 후 추적 복귀.",
     "_comment": "v0.19 (C): 5분 중간보스 — 리프 반경 240(일반 120의 2배: 대시 거리(~137px)로 못 벗어남 = 사실상 저스트 회피 강제). leapCdMin/Max=리프 쿨 별도 상향(리프 사이 = 플레이어 딜 타임). hp='약 20초는 맞아야 그로기 1번' 초벌. execNeed=처형 N회째만 확정 사망(그 전엔 hpRestore 비율로 기상). 그로기 만료 시 항상 부활(전용 보상 유실 방지)."
   },
 
