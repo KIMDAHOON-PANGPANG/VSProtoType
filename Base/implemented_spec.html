@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EXECUTE // Survivors — 구현 스펙 대시보드 (v0.20.0)</title>
+<style>
+  :root{
+    --bg:#0a0d13; --bg2:#0e131c; --panel:#111825; --panel2:#0d1420;
+    --border:#1e2836; --border2:#2a3648;
+    --text:#e6edf5; --muted:#8394a8; --dim:#5d6b7e;
+    --teal:#1cf0d4; --red:#ff2b4e; --gold:#ffcf4d; --purple:#b061ff; --blue:#52a8ff;
+    --done:#1cf0d4; --partial:#ffcf4d; --todo:#ff6b83; --kip:#b061ff; --hidden:#7d8aa0;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(28,240,212,.06), transparent 60%),
+      radial-gradient(1000px 500px at -10% 10%, rgba(255,43,78,.05), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:14px; line-height:1.6; letter-spacing:-.01em;
+  }
+  code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace; font-size:.86em;
+    background:rgba(28,240,212,.08); color:#9ff3e6; border:1px solid rgba(28,240,212,.18);
+    padding:.05em .4em; border-radius:5px; white-space:nowrap;}
+  a{color:inherit; text-decoration:none}
+
+  /* ---------- Hero ---------- */
+  .hero{position:relative; overflow:hidden; border-bottom:1px solid var(--border);
+    padding:34px clamp(16px,4vw,48px) 26px; background:linear-gradient(180deg,rgba(28,240,212,.04),transparent);}
+  .hero .kicker{font-size:11px; letter-spacing:.32em; color:var(--teal); text-transform:uppercase; font-weight:700}
+  .hero h1{margin:.28em 0 .1em; font-size:clamp(24px,3.4vw,38px); font-weight:800; letter-spacing:-.02em}
+  .hero h1 .slash{color:var(--red)}
+  .hero .sub{color:var(--muted); font-size:14px; max-width:70ch}
+  .metabar{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px}
+  .metabar .m{display:flex; flex-direction:column; gap:2px; background:var(--panel);
+    border:1px solid var(--border); border-radius:12px; padding:9px 14px; min-width:120px}
+  .metabar .m .k{font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
+  .metabar .m .v{font-size:15px; font-weight:700}
+  .metabar .m .v.mono{font-family:Consolas,monospace; color:var(--teal)}
+  .rule{margin-top:14px; font-size:12.5px; color:var(--dim)}
+  .rule b{color:var(--muted); font-weight:600}
+
+  /* ---------- Stats ---------- */
+  .stats{display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); gap:12px; margin-top:20px}
+  .stat{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px 16px;
+    cursor:pointer; transition:.15s; position:relative; overflow:hidden}
+  .stat:hover{border-color:var(--border2); transform:translateY(-2px)}
+  .stat.active{border-color:var(--sc); box-shadow:0 0 0 1px var(--sc), 0 8px 24px -12px var(--sc)}
+  .stat .n{font-size:26px; font-weight:800; line-height:1}
+  .stat .l{font-size:12px; color:var(--muted); margin-top:5px; display:flex; align-items:center; gap:6px}
+  .stat .l .dot{width:8px; height:8px; border-radius:50%; background:var(--sc)}
+  .stat[data-k="all"]{--sc:var(--text)}
+  .stat[data-k="구현"]{--sc:var(--done)}
+  .stat[data-k="부분구현"]{--sc:var(--partial)}
+  .stat[data-k="미구현"]{--sc:var(--todo)}
+  .stat[data-k="KIP"]{--sc:var(--kip)}
+  .stat[data-k="미노출"]{--sc:var(--hidden)}
+  .progresswrap{margin-top:16px}
+  .progress{height:8px; border-radius:99px; background:var(--panel); border:1px solid var(--border); overflow:hidden; display:flex}
+  .progress i{display:block; height:100%}
+  .progress i.done{background:linear-gradient(90deg,#1cf0d4,#14b8a6)}
+  .progress i.partial{background:var(--partial)}
+  .progress i.kip{background:var(--kip)}
+  .progress i.todo{background:var(--todo)}
+  .plabel{font-size:11.5px; color:var(--dim); margin-top:7px}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{position:sticky; top:0; z-index:20; backdrop-filter:blur(10px);
+    background:rgba(10,13,19,.82); border-bottom:1px solid var(--border);
+    padding:12px clamp(16px,4vw,48px); display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+  .search{flex:1; min-width:200px; position:relative}
+  .search input{width:100%; background:var(--panel2); border:1px solid var(--border2); color:var(--text);
+    border-radius:11px; padding:10px 14px 10px 38px; font-size:14px; outline:none; transition:.15s}
+  .search input:focus{border-color:var(--teal); box-shadow:0 0 0 3px rgba(28,240,212,.12)}
+  .search svg{position:absolute; left:12px; top:50%; transform:translateY(-50%); opacity:.5}
+  .chips{display:flex; gap:7px; flex-wrap:wrap}
+  .chip{border:1px solid var(--border2); background:var(--panel); color:var(--muted);
+    padding:7px 13px; border-radius:99px; font-size:12.5px; cursor:pointer; transition:.15s; font-weight:600;
+    display:flex; align-items:center; gap:6px}
+  .chip .dot{width:7px; height:7px; border-radius:50%; background:var(--cc,var(--muted))}
+  .chip[data-k="구현"]{--cc:var(--done)} .chip[data-k="부분구현"]{--cc:var(--partial)}
+  .chip[data-k="미구현"]{--cc:var(--todo)} .chip[data-k="KIP"]{--cc:var(--kip)}
+  .chip[data-k="미노출"]{--cc:var(--hidden)}
+  .chip:hover{border-color:var(--cc); color:var(--text)}
+  .chip.active{background:var(--cc); color:#08131b; border-color:var(--cc)}
+  .chip.active .dot{background:#08131b}
+
+  /* ---------- Layout ---------- */
+  .layout{display:grid; grid-template-columns:238px 1fr; gap:0; align-items:start}
+  aside{position:sticky; top:63px; align-self:start; max-height:calc(100vh - 63px); overflow-y:auto;
+    padding:20px 10px 40px 16px; border-right:1px solid var(--border)}
+  aside .navgroup{font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim);
+    margin:16px 8px 6px; font-weight:700}
+  aside a.nav{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 10px;
+    border-radius:9px; color:var(--muted); font-size:13px; transition:.12s; border:1px solid transparent}
+  aside a.nav:hover{background:var(--panel); color:var(--text)}
+  aside a.nav.active{background:rgba(28,240,212,.1); color:var(--teal); border-color:rgba(28,240,212,.22)}
+  aside a.nav.indent{padding-left:20px; font-size:12.5px}
+  aside a.nav .cnt{font-size:11px; color:var(--dim); background:var(--panel2); border:1px solid var(--border);
+    border-radius:99px; padding:1px 8px; min-width:24px; text-align:center}
+  aside a.nav.active .cnt{color:var(--teal); border-color:rgba(28,240,212,.3)}
+
+  main{padding:24px clamp(16px,3vw,40px) 90px; min-width:0}
+  section.block{margin-bottom:14px; scroll-margin-top:74px}
+  .block > h2{font-size:19px; font-weight:800; margin:26px 0 4px; display:flex; align-items:center; gap:10px}
+  .block > h2 .ic{width:26px; height:26px; display:grid; place-items:center; border-radius:8px;
+    background:rgba(28,240,212,.1); border:1px solid rgba(28,240,212,.25); font-size:14px}
+  .block > .blurb{color:var(--dim); font-size:12.5px; margin:0 0 14px}
+
+  .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:12px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2)); border:1px solid var(--border);
+    border-radius:14px; padding:15px 16px; transition:.15s; position:relative; overflow:hidden}
+  .card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--ac,var(--border2))}
+  .card[data-status="구현"]{--ac:var(--done)} .card[data-status="부분구현"]{--ac:var(--partial)}
+  .card[data-status="미구현"]{--ac:var(--todo)} .card[data-status="KIP"]{--ac:var(--kip)}
+  .card[data-status="미노출"]{--ac:var(--hidden)}
+  .card:hover{border-color:var(--border2); transform:translateY(-2px); box-shadow:0 12px 30px -18px #000}
+  .card .ch{display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:7px}
+  .card h3{margin:0; font-size:14.5px; font-weight:700; flex:1; min-width:0; line-height:1.35}
+  .card .desc{color:var(--muted); font-size:13px; margin:0}
+  .card .subs{margin:9px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px}
+  .card .subs li{position:relative; padding-left:16px; font-size:12.5px; color:var(--muted)}
+  .card .subs li::before{content:"▸"; position:absolute; left:0; color:var(--teal); font-size:10px; top:2px}
+  .card .subs li b{color:var(--text); font-weight:700}
+
+  .pill{font-size:10.5px; font-weight:800; letter-spacing:.02em; padding:3px 9px; border-radius:99px;
+    white-space:nowrap; border:1px solid; text-transform:uppercase}
+  .pill.구현{color:var(--done); border-color:rgba(28,240,212,.4); background:rgba(28,240,212,.1)}
+  .pill.부분구현{color:var(--partial); border-color:rgba(255,207,77,.4); background:rgba(255,207,77,.1)}
+  .pill.미구현{color:var(--todo); border-color:rgba(255,107,131,.4); background:rgba(255,107,131,.1)}
+  .pill.KIP{color:var(--kip); border-color:rgba(176,97,255,.4); background:rgba(176,97,255,.12)}
+  .pill.미노출{color:var(--hidden); border-color:rgba(125,138,160,.4); background:rgba(125,138,160,.1)}
+  .ver{font-size:10px; font-family:Consolas,monospace; color:var(--blue); border:1px solid rgba(82,168,255,.32);
+    background:rgba(82,168,255,.08); padding:2px 7px; border-radius:6px; white-space:nowrap; font-weight:600}
+
+  /* ---------- Tables ---------- */
+  .tablewrap{border:1px solid var(--border); border-radius:14px; overflow:hidden; overflow-x:auto; background:var(--panel2)}
+  table{width:100%; border-collapse:collapse; font-size:12.8px; min-width:640px}
+  thead th{background:var(--bg2); color:var(--dim); text-align:left; font-weight:700; font-size:10.5px;
+    letter-spacing:.1em; text-transform:uppercase; padding:11px 13px; border-bottom:1px solid var(--border); white-space:nowrap}
+  tbody td{padding:11px 13px; border-bottom:1px solid var(--border); vertical-align:top}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:rgba(28,240,212,.03)}
+  td .wname{font-weight:700; color:var(--text)}
+  .sw{display:inline-flex; align-items:center; gap:8px; white-space:nowrap}
+  .sw .box{width:15px; height:15px; border-radius:5px; border:1px solid rgba(255,255,255,.22); flex:none}
+  .sw .hex{font-family:Consolas,monospace; font-size:11px; color:var(--dim)}
+  td.mono, .mono{font-family:Consolas,monospace}
+  .tag-src{font-size:11px; color:var(--purple); background:rgba(176,97,255,.08);
+    border:1px solid rgba(176,97,255,.22); padding:1px 7px; border-radius:6px; white-space:nowrap}
+  .hp{font-family:Consolas,monospace; font-weight:700; color:var(--gold)}
+  .rosternum{font-size:10.5px; color:var(--dim); font-family:Consolas,monospace}
+
+  /* ---------- Backlog ---------- */
+  .backlog{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:10px}
+  .bl{display:flex; gap:11px; align-items:flex-start; background:var(--panel2); border:1px solid var(--border);
+    border-left:3px solid var(--todo); border-radius:11px; padding:12px 14px; font-size:13px; color:var(--muted)}
+  .bl .x{color:var(--todo); font-weight:800; flex:none; margin-top:-1px}
+
+  .noresult{display:none; text-align:center; padding:60px 20px; color:var(--dim)}
+  .noresult.show{display:block}
+  .noresult .big{font-size:40px; margin-bottom:8px}
+
+  footer{border-top:1px solid var(--border); padding:20px clamp(16px,4vw,48px); color:var(--dim); font-size:11.5px;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px}
+
+  .backtop{position:fixed; right:20px; bottom:20px; z-index:30; width:44px; height:44px; border-radius:12px;
+    background:var(--teal); color:#07131a; border:none; font-size:20px; cursor:pointer; display:none;
+    box-shadow:0 8px 24px -8px rgba(28,240,212,.6); font-weight:800}
+  .backtop.show{display:block}
+
+  ::-webkit-scrollbar{width:10px; height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--border2); border-radius:99px; border:2px solid var(--bg)}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  @media(max-width:900px){
+    .layout{grid-template-columns:1fr}
+    aside{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker">Implemented Spec · PD 검수용</div>
+  <h1>EXECUTE <span class="slash">//</span> Survivors</h1>
+  <p class="sub">지금 무엇이 구현되어 있는지 · 어떤 시스템/컨텐츠가 구성됐는지를 한눈에. 아래는 요약이 아닌 <b style="color:var(--muted)">풀 스펙 리스트</b>입니다.</p>
+
+  <div class="metabar">
+    <div class="m"><span class="k">기준 빌드</span><span class="v mono">index_26.html</span></div>
+    <div class="m"><span class="k">버전</span><span class="v mono">v0.20.0</span></div>
+    <div class="m"><span class="k">기준일</span><span class="v">2026-07-04</span></div>
+    <div class="m"><span class="k">상태값</span><span class="v" style="font-size:12px">구현·부분구현·미구현·KIP</span></div>
+  </div>
+  <p class="rule">📌 <b>갱신 규칙</b> — 항상 마지막 인덱스 빌드 기준으로 이 문서를 갱신한다.</p>
+
+  <div class="stats" id="stats"></div>
+  <div class="progresswrap">
+    <div class="progress" id="progress"></div>
+    <div class="plabel" id="plabel"></div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="q" type="search" placeholder="스펙 검색  —  이름 · 설명 · 무기 id · 원본 챔피언…" autocomplete="off">
+  </div>
+  <div class="chips" id="chips"></div>
+</div>
+
+<div class="layout">
+  <aside id="nav"></aside>
+  <main id="main">
+    <div class="noresult" id="noresult"><div class="big">🔍</div>검색 결과가 없습니다.</div>
+  </main>
+</div>
+
+<footer>
+  <span>EXECUTE // Survivors — 구현 스펙 대시보드</span>
+  <span>build/index_26.html · v0.20.0 · 2026-07-04</span>
+</footer>
+
+<button class="backtop" id="backtop" title="맨 위로">↑</button>
+
+<script>
+/* ============================ DATA ============================ */
+const systemGroups = [
+  { id:"g-core", nav:"코어 · 처형 루프", icon:"⚔", items:[
+    {n:"이중 몬스터 구조", s:"구현", d:"잡몹=즉사 / 엘리트=그로기"},
+    {n:"그로기", s:"구현", v:["v0.19"], d:"엘리트 HP 0 → 사망 대신 그로기(2.4초) · 만료 경고 1.0초 유지"},
+    {n:"처형(일섬)", s:"구현", d:"RMB · 불릿타임 루트 대시 · 확정 사망(부활X) · 종료 후 1초 무적·통과 버퍼"},
+    {n:"처형 쿨다운 환급", s:"구현", d:"쿨 10초 · 처치 수만큼 환급(사실상 리셋)"},
+    {n:"저스트 회피", s:"구현", d:"SPACE 무적 대시 · 도약 딱맞춤 → PERFECT → 탈진/약점/스태거"},
+  ]},
+  { id:"g-elite", nav:"엘리트", icon:"👑", items:[
+    {n:"엘리트 도약 패턴", s:"구현", v:["v0.19"], d:"예고 → 도약(무적) → 착지 광역 · PRE 판정 회피창 · 반경 88→120"},
+    {n:"엘리트 부활", s:"구현", d:"미처형 그로기 만료 시 1회 부활(40% HP) 후 소멸"},
+    {n:"엘리트 로스터 (4종 로테이션)", s:"구현", v:["v0.18~0.19"], d:"물결마다 직전 타입 제외 랜덤 배정(`pickEliteType`).", subs:[
+      "<b>knight</b> — 도약 패링(기존)",
+      "<b>vacuum</b> — 보석 청소기: 반경 600 내 젬 추적·흡수로 성장 방해",
+      "<b>berserker</b> — 방치 시 12초에 걸쳐 격노(속도 ×1.9 · 접촉피해 ×1.8)",
+      "<b>spreader</b> — 전염: 첫 그로기를 처형 안 하고 넘기면 부활 순간 반경 240 내 잡몹 각 40% 확률로 리프 엘리트 변이(최대 3기 상한) → 처형 사실상 강제",
+    ]},
+    {n:"엘리트 성장 방해 (elitePressure)", s:"구현", v:["v0.17"], d:"생존 엘리트가 반경 260 내면 '위압' → 끌려오던 젬도 정지(자석 차단), 걸어가 직접 주워야 함. 엘리트 제거 시 즉시 해제."},
+  ]},
+  { id:"g-weapon", nav:"무기 · 성장", icon:"🗡", items:[
+    {n:"무기 슬롯(자동 무기고)", s:"구현", d:"무기=순수 데미지 · 자동 발사/지속 · HP0→그로기→처형 · 동시 소지 6슬롯(`weaponSlots`, v0.15부터 사무라이 전속 베기는 슬롯 예산과 별개로 항상 장착)"},
+    {n:"무기 1군 14종", s:"구현", v:["v0.13"], d:"덱 017/018 확정 로스터 · 매서 몸통×롤 한 스푼 · 전 무기 준비(차지) 링/범위 표시/틱 컬러 연출 · 고유색 14종"},
+    {n:"무기 레벨/진화 (등급제 폐지)", s:"구현", v:["v0.14"], d:"희귀도(rar) 완전 폐지 — 무기는 종류+레벨만. 레벨업 카드 균등 확률 노출(가중치 없음). 레벨 1→최대레벨(8) 도달 시 1회 진화(`evolveWeapon`) — 무기별 고유 훅 1개 + 공통 발사간격 35%p 단축(`EVO_SPEED_MULT=0.65`). 진화 완료 무기는 카드 풀에서 제외."},
+    {n:"전속 기본 무기 편입", s:"구현", v:["v0.15"], d:"사무라이 시작 무기 '부채꼴 베기'가 별도 `p.slashXxx` 상수에서 정식 무기(`slash`)로 전환. 시작 시 Lv1 자동 장착, 다른 14종과 동일한 레벨업/진화(MAX 진화 '무한검막': 부채각 360도) 지원. 슬롯 예산엔 미포함(`isW2` 아님) · 레벨업 카드 풀엔 상시 노출."},
+    {n:"투사체 시스템", s:"구현", d:"유도 조향 · 관통 hitSet · 수명/충돌 + v0.13 월드 엔티티(파동·장판·낙하·포탑·미끼)"},
+    {n:"무기 상태이상", s:"구현", d:"빙결(이동 정지 · 도약 무적 중 미부여) · 중독(도트) · 도발(잡몹 한정)"},
+    {n:"레벨업 카드", s:"구현", v:["v0.15","v0.18"], d:"v0.15 — 전속 베기 포함 15개 카드 균등 확률 노출(등급 가중치 없음) · 테두리는 무기별 색 대신 공용 컬러(teal)로 통일, 진화 임박 카드만 골드 강조 · 슬롯 만석 시 보유(미진화) 무기 강화만 · 진화 완료 무기는 풀에서 제외(장신구 스탯은 KIP). v0.18 — 설명 3단계 간소화(최초 습득=컨셉 한 줄 / 보유 강화=성장 요약만 / 진화=결과 한 줄, 긴 설명·롤 레퍼런스 제거)"},
+    {n:"차지(준비) 무기 조준 고정", s:"구현", v:["v0.18"], d:"불사조 화염·되찾는 도끼·핏빛 썰물 — 차지 '시작' 순간 `p.facing`을 `w.aim`으로 락, 차지 중 캐릭터가 돌아도 발사 방향 불변(버그 픽스: 기존엔 발사 순간 facing을 읽어 도망 방향으로 오발). `darkwave`/`gale`은 적 밀집 자동 조준이라 기존 유지."},
+  ]},
+  { id:"g-ctrl", nav:"조작 · UI · 표현", icon:"🎮", items:[
+    {n:"조작 (WASD 360도 회전)", s:"구현", v:["v0.15"], d:"마우스 에임 폐지. 캐릭터 회전(`facing`)은 WASD 이동 방향으로만 결정(무입력 시 직전 방향 유지). 베기의 자동 타겟팅(최근접 적 조준)은 유지하되 캐릭터 스프라이트 회전에 영향 없음 — `p.facing`을 쓰는 무기(도끼 투척·불사조 화염 등)는 자연히 이동 방향을 조준 기준으로 삼음."},
+    {n:"팩션 가시성", s:"구현", v:["v0.16"], d:"적 몸 색이 스킬 색과 겹쳐 아군 스킬 VFX와 구분하기 어렵던 문제를 임시 해결. 생존 적 = 적대 팩션(hostile `#ff2b4e` 붉은) 외곽 링/글로우, 플레이어 = 아군(ally `#1cf0d4` teal) 링. 몸 색(잡몹 파랑·엘리트 보라)은 역할 식별용 유지, 그로기(gold)·도약예고(yellow/white) 상태 텔레그래프 최우선(팩션 링은 생존 상태에만). `FACTION.on` 토글."},
+    {n:"로드아웃 패널 (TAB)", s:"구현", d:"TAB/ESC 일시정지 · 무기/장신구/처형 확인"},
+  ]},
+  { id:"g-wave", nav:"웨이브 디렉터 · 페이싱", icon:"🌊", items:[
+    {n:"웨이브 디렉터 (3분 페이즈 폐지)", s:"구현", v:["v0.17"], d:"덱 020 확정. 기존 3분 phase1~3 삭제, 15분 단일 연속 스테이지(`stage.lengthMin`)로 재설계. HUD가 `STAGE m/15'` 진행 표기. 스포너는 분 단위 버짓 밴드 7구간(`bandAt(tMin)` 룩업 — 캡 60→380 · 잡몹 간격 1.0→0.22s · 엘리트 상한 0→4, 전부 데이터 드리븐)."},
+    {n:"몬스터 HP 스케일링 (hpMult)", s:"구현", v:["v0.17"], d:"HP배율(t)=1+k·(t/15분)^p, 잡몹/엘리트 별도 노브(k·p). v0.17 앵커 0/5/10/15분 = ×1.0/1.3/1.7/2.2 → v0.18 상향(k1.35·p1.05)으로 ×1.0/1.16/1.43/1.88/2.35(2·5·10·15분). 스폰 시점에 굽고 소급 없음."},
+    {n:"전역 템포 커브 (tempo.points)", s:"구현", v:["v0.18"], d:"구간 선형 보간 런타임 배율. 1~2분 ×1.55(공격 주기 대폭 감속, 카이팅 강제) → 3.5분 정상화 → 후반 ×0.85. 전 무기 발사 간격·지속 틱·베기에 적용(무기 자체 수치는 불변)."},
+    {n:"엘리트 물결형 스폰 (eliteMode 'wave')", s:"구현", v:["v0.17"], d:"N(2~3)마리 스폰 → 전부 처리 or 소강(11초) 경과 시 다음 물결. 웨이브당 로스터 1종 랜덤 배정. `trickle`(간격 스폰) 폴백 병행."},
+    {n:"웨이브 스케줄 슬롯 (waveSchedule)", s:"구현", v:["v0.17"], d:"분 단위 확정 이벤트 배열(`atMin/kind/type/params`, 슬롯별 1회 발동). 2분 강화(보상 X) → 4분 보석 엘리트화 → 6분 강화(both) → 8분 가두리 → 10분 해파리 → 12분 저지선 → 14분 강화 → 15분 보스. v0.19에서 강화 웨이브가 고속 러시(이속 ×1.8, `rushSpeedMult`)로 변종."},
+    {n:"이벤트 웨이브 4종", s:"구현", v:["v0.17"], d:"'양이 아니라 다른 상황'.", subs:[
+      "<b>가두리 벽</b> — 플레이어만 가두는 임시 원형 벽, 적은 걸어 들어와 강제 교전",
+      "<b>보석 엘리트화</b> — 밟으면 주변 잡몹이 엘리트로 변신, 방치 시 소멸하는 선택형 위험",
+      "<b>해파리 링</b> — PC 중심 원형 포진, 반경이 주기적으로 조였다 풀림",
+      "<b>저지선</b> — 고HP 벽 일렬 스폰, 이동 불가·틈새 돌파 유도",
+    ]},
+    {n:"보스 기둥 (15분, 1차 스코프)", s:"부분구현", v:["v0.17"], d:"BOSS 배너 + 보스 예정 위치 기준 링에 기둥 4개 고정 스폰(재사용형 비주얼)만 구현. 돌진·기둥 충돌 그로기·처형×3 등 본편 전투는 미구현(다음 빌드 스코프)."},
+  ]},
+  { id:"g-boss", nav:"중간보스 · 보상", icon:"💀", items:[
+    {n:"5분 중간보스", s:"구현", v:["v0.18~0.20"], d:"리프어택 엘리트 베리에이션(광역 리프 반경 160→240 · 그로기 시엔 저스트 회피로만 사실상 회피 가능 · 리프 쿨다운 별도 상향) · HP 800커브→1200(v0.20) · 처형 2회(`execNeed`)째만 확정 사망, 1회차는 50% HP로 기상 · 그로기 만료 시 항상 부활(전용 보상 유실 방지) · v0.20 '떨쳐내기(repel)' — 처형을 버티고 기상할 때 확산 파동으로 추적 복귀 전 넉백+소량 피해(마지막 처형엔 없음)."},
+    {n:"처형 강화 보상 시스템 (리워크)", s:"구현", v:["v0.18~0.20"], d:"처형 강화가 PUNISH 패널 자동 장착에서 보상 오브젝트 습득형으로 전환.", subs:[
+      "<b>공용 카드 4종(반복 스택)</b> — 반경 +45 / 환급 +3s / 연계 대상 +1 / 쿨 -15%",
+      "<b>전용(사무라이) 3종(각 1회)</b> — 연쇄 발도 · 파문 발도 · 거합 가속",
+      "<b>보상 흐름</b> — 슬롯별 데이터화(강화·가두리=버티기, 보석=전멸 조건, 중간보스=전용+공용 등)",
+      "<b>v0.20 2단계 교정</b> — 전용 3종 전부 노출 → 1개 선택 → 이어서 공용 1개 선택(전용 소진 시 1단계 자동 스킵)",
+    ]},
+    {n:"보상 픽업 오버랩 버그 수정", s:"구현", v:["v0.19"], d:"이벤트 클리어 보상도 플레이어 근처(120px) 스폰으로 통일 · 수명 30→45초 · 픽업 반경 `p.r+16`→`+26`(시각 링과 일치) · 화면 밖 보상 방향 화살표+잔여초 표시(`drawRewardArrows`) 신규."},
+  ]},
+  { id:"g-misc", nav:"기타 시스템", icon:"🧩", items:[
+    {n:"오버드라이브", s:"부분구현", d:"기능/버프 존재 · 처형 발동은 제거 · 획득처=전직 퀘스트(미구현)"},
+    {n:"접촉 피해(틱)", s:"구현", d:"뱀서식 틱 피해 · 둘러싸이면 누적 · 회피는 피해만 면제(몸 충돌 유지)"},
+    {n:"몸 충돌(비겹침)", s:"구현", d:"플레이어-적 겹침 금지(밀어냄+접촉 틱) · 적끼리 공간 해시 분리(0.9 배율 밀집) · 처형 중/직후 통과"},
+    {n:"XP · 레벨 · 젬 자석", s:"구현", v:["v0.17"], d:"잡몹=자석 젬 / 엘리트=비자석(직접 획득) · 생존 엘리트 반경 내 '위압'으로 자석 추가 차단(`elitePressure`)"},
+    {n:"보호막", s:"부분구현", d:"필드/재생 로직 존재 · 획득 카드는 KIP(미노출)"},
+    {n:"밸런스 외부 JSON", s:"구현", d:"`gameBalance.json` 단일 소스 + 내장 FALLBACK 동기"},
+  ]},
+];
+
+const characters = [
+  {n:"사무라이", s:"구현", base:"부채꼴 베기(근접·전속)", exec:"일섬", grid:"이동형 × 라인"},
+];
+
+const weapons = [
+  {id:"slash",     n:"부채꼴 베기",       t:"전속 근접",   fire:"근접 부채꼴 · 자동 타겟",           src:"—",         c:"#1cf0d4", s:"구현", note:"v0.15 — 사무라이 시작 무기(Lv1 자동 장착) · 14종과 동일 레벨업/진화(MAX: 무한검막, 부채각 360도). 슬롯 예산 밖 항상 장착."},
+  {id:"soulorb",   n:"혼령 구슬",         t:"1군",         fire:"자동타겟 · 튕김 4연쇄",             src:"진 Q",      c:"#cfeaff", s:"구현", note:""},
+  {id:"darkwave",  n:"어둠 파동",         t:"1군",         fire:"모으기 → 밀집 방향 관통파",          src:"제라스 Q",  c:"#b061ff", s:"구현", note:""},
+  {id:"gale",      n:"울부짖는 회오리",   t:"1군",         fire:"머금기 → 커져서 전진",              src:"잔나 Q",    c:"#7dffc8", s:"구현", note:""},
+  {id:"axe",       n:"되찾는 도끼",       t:"1군",         fire:"관통 투척 · 줍기=쿨 초기화",         src:"올라프 Q",  c:"#ffb35a", s:"구현", note:""},
+  {id:"phoenix",   n:"불사조 화염",       t:"1군",         fire:"전방 부채꼴 화염 파동",             src:"우디르 R",  c:"#ff7a1a", s:"구현", note:""},
+  {id:"venom",     n:"독안개 자취",       t:"1군",         fire:"이동 궤적 독 장판 · 중독",           src:"신지드 Q",  c:"#58e845", s:"구현", note:""},
+  {id:"pulse",     n:"죽음의 박동",       t:"1군",         fire:"주기 팽창 링",                     src:"카서스 E",  c:"#ff46e3", s:"구현", note:"'처형 시 +1회' 제외 확정 — 무기에 처형 연동 금지"},
+  {id:"spider",    n:"무덤 거미",         t:"1군",         fire:"소환 → 랜덤 방향(화살표 예고) 직선 이동 도발 미끼 → 자폭", src:"엘리스 W", c:"#c9a06b", s:"구현", note:"v0.16 — 크롤속도/스폰성장/퓨즈('거의 안 움직임') 폐지 → 직선이동거리(220)+시간(2초, =자폭 타이머) 데이터 드리븐 + 스폰 방향 화살표"},
+  {id:"skullrain", n:"불타는 해골 비",    t:"1군·신규6",   fire:"랜덤 지대 연속 낙하 포격",           src:"갱플랭크 R",c:"#ff4433", s:"구현", note:""},
+  {id:"frostspear",n:"얼어붙은 창 소나기",t:"1군·신규6",   fire:"낙하 · 엘리트 조준 · 빙결",          src:"제라스 R",  c:"#52c2ff", s:"구현", note:""},
+  {id:"watchtower",n:"해골 감시탑",       t:"1군·신규6",   fire:"설치 포탑",                        src:"하이머딩거 Q",c:"#fff3b0", s:"구현", note:""},
+  {id:"scythe",    n:"핏빛 낫 바퀴",      t:"1군·신규6",   fire:"궤도 회전 · 날 끝 강타",            src:"다리우스 Q",c:"#d32050", s:"구현", note:""},
+  {id:"tide",      n:"핏빛 썰물",         t:"1군·신규6",   fire:"화면 횡단 왕복 파도",              src:"시비르 Q",  c:"#ff7d9c", s:"구현", note:""},
+  {id:"hexaura",   n:"육각 오라",         t:"1군·신규6",   fire:"상시 육각 장판(마늘형)",           src:"클래식",    c:"#e8ff6b", s:"구현", note:"덱 018: 구 #14 '사슬 묶인 망령' 교체 — 망령은 강령술사 처형 형태로 이동"},
+];
+
+const retired = [
+  {id:"homing", n:"유도 화살",  t:"은퇴",         s:"구현(미노출)", note:"v0.13 카드 풀 은퇴 · 코드 보존"},
+  {id:"star",   n:"관통 표창",  t:"은퇴",         s:"구현(미노출)", note:"v0.13 카드 풀 은퇴 · 코드 보존"},
+  {id:"orbit",  n:"궤도 검",    t:"은퇴",         s:"구현(미노출)", note:"v0.13 카드 풀 은퇴 · 코드 보존"},
+  {id:"bolt",   n:"낙뢰",      t:"은퇴",         s:"구현(미노출)", note:"v0.13 카드 풀 은퇴 · 코드 보존"},
+  {id:"aura",   n:"파쇄 오라",  t:"은퇴",         s:"구현(미노출)", note:"v0.13 카드 풀 은퇴 · 코드 보존"},
+  {id:"shock",  n:"처형 파문",  t:"유니크·은퇴",  s:"구현(미노출)", note:"처형 레이어 재배치 후보"},
+  {id:"brand",  n:"낙인 표식",  t:"유니크·은퇴",  s:"구현(미노출)", note:"장신구/처형 레이어 재배치 후보"},
+];
+
+const enemies = [
+  {id:"fodder",         n:"스웜 잡몹",         hp:"10",   roster:"—",       s:"구현", d:"그로기 없음 · 즉사 · 파란 XP · v0.19 강화 웨이브에서 이속 ×1.8 러시 변종(rushed)"},
+  {id:"elite-knight",   n:"엘리트 나이트",     hp:"50",   roster:"로스터 1/4", s:"구현", d:"육각 · 도약 패턴(반경 120) · 그로기(2.4초) · 1회 부활"},
+  {id:"elite-vacuum",   n:"엘리트 보석 청소기",hp:"—",    roster:"로스터 2/4", s:"구현", d:"vacuum (v0.18) · 반경 600 내 젬 추적·흡수(성장 직접 방해) · 남보라+흡입 아크"},
+  {id:"elite-berserker",n:"엘리트 광전사",     hp:"—",    roster:"로스터 3/4", s:"구현", d:"berserker (v0.18) · 방치 시 12초에 걸쳐 격노(속도 ×1.9 · 접촉피해 ×1.8) · 자홍→빨강 몸색"},
+  {id:"elite-spreader", n:"엘리트 전염체",     hp:"—",    roster:"로스터 4/4", s:"구현", d:"spreader (v0.19) · 첫 그로기 미처형 부활 시 반경 240 내 잡몹 각 40%로 리프 엘리트 변이(최대 3기) — 처형 사실상 강제 · 녹색+포자 점선 링"},
+  {id:"midboss",        n:"5분 중간보스",      hp:"1200", roster:"리프 베리에이션", s:"구현", d:"광역 리프(반경 240, 저스트 회피 필수) · 처형 2회째만 확정 사망(1회차 50% HP 기상) · 그로기 만료 시 항상 부활 · 떨쳐내기(repel) 파동으로 추적 복귀 지연"},
+];
+
+const executions = [
+  {id:"iai", n:"일섬", owner:"사무라이", grid:"이동형 × 라인 × 없음", s:"구현"},
+];
+
+const growth = [
+  {n:"레벨업", s:"구현", d:"전속 베기 + 무기 1군 14종(총 15종) 카드 균등 확률(v0.14 등급제 폐지) · 슬롯(6) 만석 시 보유(미진화) 강화만 · 최대레벨(8) 도달 시 진화 후 풀 제외"},
+  {n:"장신구(공용 스탯)", s:"KIP", d:"스탯 카드 15종 코드 보존 · 현재 레벨업 미노출"},
+  {n:"전직 / 시련", s:"미구현", d:"—"},
+  {n:"특수 각인 / 탈리스만 A·B·C", s:"미구현(기획만)", d:"—"},
+];
+
+const backlog = [
+  "장신구 시스템(공용 스탯 카드 → 장신구로 재편)",
+  "전직 / 시련(보스·보물) 트리거",
+  "라운드 구조(웨이브+상점) — 현재는 15분 단일 연속 스테이지(v0.17 웨이브 디렉터, 덱 009 라운드+상점 결론 재역전)",
+  "상점 / 경제(젬→재화)",
+  "15분 보스 본편 전투 — 기둥 4개 비주얼만 구현, 돌진/기둥충돌 그로기/처형×3은 다음 빌드",
+  "신규 연출형 처형 강화 A/B/C(라이트닝/리프/펄스) — 현재는 기존 Punish 컨셉 재활용 초벌만 구현",
+  "2번째 캐릭터(마법사) 및 그 처형",
+  "오버드라이브 획득처(전직 퀘스트 레벨 플레이)",
+  "특수 각인 · 탈리스만식 처형 빌드 분기",
+];
+
+/* ============================ HELPERS ============================ */
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function fmt(s){return esc(s).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/&lt;b&gt;/g,"<b>").replace(/&lt;\/b&gt;/g,"</b>");}
+function bucket(s){
+  if(s.indexOf("구현(미노출)")===0) return "미노출";
+  if(s.indexOf("부분구현")===0) return "부분구현";
+  if(s.indexOf("구현")===0) return "구현";
+  if(s.indexOf("KIP")===0) return "KIP";
+  return "미구현";
+}
+function pill(s){var b=bucket(s);var label=s.replace("구현(미노출)","구현·미노출").replace("미구현(기획만)","미구현·기획만");return '<span class="pill '+b+'">'+esc(label)+'</span>';}
+function vers(v){return (v||[]).map(function(x){return '<span class="ver">'+esc(x)+'</span>';}).join(" ");}
+function light(hex){var c=hex.replace("#","");var r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);return (r*299+g*587+b*114)/1000>150;}
+
+/* ============================ RENDER ============================ */
+const main = document.getElementById("main");
+const navEl = document.getElementById("nav");
+const navEntries = [];
+let allStatuses = [];
+
+function card(it){
+  var b = bucket(it.s);
+  var subs = it.subs ? '<ul class="subs">'+it.subs.map(function(x){return "<li>"+fmt(x)+"</li>";}).join("")+"</ul>" : "";
+  var text = (it.n+" "+it.d+" "+(it.subs?it.subs.join(" "):"")+" "+(it.v?it.v.join(" "):"")).toLowerCase();
+  allStatuses.push(b);
+  return '<div class="card item" data-status="'+b+'" data-text="'+esc(text)+'">'+
+    '<div class="ch">'+pill(it.s)+'<h3>'+esc(it.n)+'</h3>'+vers(it.v)+'</div>'+
+    '<p class="desc">'+fmt(it.d)+'</p>'+subs+'</div>';
+}
+
+// --- Systems header
+var sysHead = document.createElement("section");
+sysHead.className="block";
+sysHead.innerHTML = '<h2><span class="ic">⚙</span> 시스템</h2><p class="blurb">코어 처형 루프부터 웨이브 디렉터·보상까지 — 구동 중인 전체 시스템.</p>';
+main.insertBefore(sysHead, document.getElementById("noresult"));
+navEntries.push({id:"sys-top", label:"시스템", head:true});
+
+systemGroups.forEach(function(g){
+  var sec = document.createElement("section");
+  sec.className="block"; sec.id=g.id;
+  sec.innerHTML = '<h2><span class="ic">'+g.icon+'</span> '+esc(g.nav)+'</h2>'+
+    '<div class="cards">'+g.items.map(card).join("")+'</div>';
+  main.insertBefore(sec, document.getElementById("noresult"));
+  navEntries.push({id:g.id, label:g.nav, cnt:g.items.length, indent:true});
+});
+
+// --- Content header
+navEntries.push({id:"content-top", label:"컨텐츠", head:true});
+
+// Characters
+(function(){
+  var sec=document.createElement("section"); sec.className="block"; sec.id="c-char";
+  var rows = characters.map(function(ch){
+    var b=bucket(ch.s);allStatuses.push(b);
+    var text=(ch.n+" "+ch.base+" "+ch.exec+" "+ch.grid).toLowerCase();
+    return '<tr class="item" data-status="'+b+'" data-text="'+esc(text)+'">'+
+      '<td><span class="wname">'+esc(ch.n)+'</span></td><td>'+pill(ch.s)+'</td>'+
+      '<td>'+esc(ch.base)+'</td><td>'+esc(ch.exec)+'</td><td>'+esc(ch.grid)+'</td></tr>';
+  }).join("");
+  sec.innerHTML='<h2><span class="ic">🥷</span> 캐릭터</h2><div class="tablewrap"><table>'+
+    '<thead><tr><th>이름</th><th>상태</th><th>기본무기</th><th>처형</th><th>그리드좌표</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  main.insertBefore(sec, document.getElementById("noresult"));
+  navEntries.push({id:"c-char", label:"캐릭터", cnt:characters.length, indent:true});
+})();
+
+// Weapons
+(function(){
+  var sec=document.createElement("section"); sec.className="block"; sec.id="c-weapon";
+  var rows = weapons.map(function(w){
+    var b=bucket(w.s);allStatuses.push(b);
+    var text=(w.id+" "+w.n+" "+w.t+" "+w.fire+" "+w.src+" "+w.note).toLowerCase();
+    var sw='<span class="sw"><span class="box" style="background:'+w.c+(light(w.c)?';border-color:rgba(0,0,0,.3)':'')+'"></span><span class="hex">'+w.c+'</span></span>';
+    return '<tr class="item" data-status="'+b+'" data-text="'+esc(text)+'">'+
+      '<td class="mono">'+esc(w.id)+'</td>'+
+      '<td><span class="wname">'+esc(w.n)+'</span></td>'+
+      '<td>'+esc(w.t)+'</td>'+
+      '<td>'+esc(w.fire)+'</td>'+
+      '<td>'+(w.src==="—"?'<span style="color:var(--dim)">—</span>':'<span class="tag-src">'+esc(w.src)+'</span>')+'</td>'+
+      '<td>'+sw+'</td>'+
+      '<td>'+pill(w.s)+'</td>'+
+      '<td style="color:var(--muted)">'+fmt(w.note||"—")+'</td></tr>';
+  }).join("");
+  sec.innerHTML='<h2><span class="ic">🗡</span> 무기 <span style="font-size:12px;color:var(--dim);font-weight:600">· 노출 로스터 15종</span></h2>'+
+    '<div class="tablewrap"><table><thead><tr><th>id</th><th>이름</th><th>분류</th><th>발사모양</th><th>원본</th><th>색</th><th>상태</th><th>비고</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  main.insertBefore(sec, document.getElementById("noresult"));
+  navEntries.push({id:"c-weapon", label:"무기", cnt:weapons.length, indent:true});
+})();
+
+// Retired weapons
+(function(){
+  var sec=document.createElement("section"); sec.className="block"; sec.id="c-retired";
+  var rows = retired.map(function(w){
+    var b=bucket(w.s);allStatuses.push(b);
+    var text=(w.id+" "+w.n+" "+w.t+" "+w.note).toLowerCase();
+    return '<tr class="item" data-status="'+b+'" data-text="'+esc(text)+'">'+
+      '<td class="mono">'+esc(w.id)+'</td><td><span class="wname">'+esc(w.n)+'</span></td>'+
+      '<td>'+esc(w.t)+'</td><td>'+pill(w.s)+'</td><td style="color:var(--muted)">'+esc(w.note)+'</td></tr>';
+  }).join("");
+  sec.innerHTML='<h2><span class="ic">📦</span> 은퇴 · 미노출 무기 <span style="font-size:12px;color:var(--dim);font-weight:600">· 코드 보존</span></h2>'+
+    '<div class="tablewrap"><table><thead><tr><th>id</th><th>이름</th><th>분류</th><th>상태</th><th>비고</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  main.insertBefore(sec, document.getElementById("noresult"));
+  navEntries.push({id:"c-retired", label:"은퇴 무기", cnt:retired.length, indent:true});
+})();
+
+// Enemies
+(function(){
+  var sec=document.createElement("section"); sec.className="block"; sec.id="c-enemy";
+  var rows = enemies.map(function(e){
+    var b=bucket(e.s);allStatuses.push(b);
+    var text=(e.id+" "+e.n+" "+e.roster+" "+e.d).toLowerCase();
+    return '<tr class="item" data-status="'+b+'" data-text="'+esc(text)+'">'+
+      '<td class="mono">'+esc(e.id)+'</td>'+
+      '<td><span class="wname">'+esc(e.n)+'</span></td>'+
+      '<td class="hp">'+esc(e.hp)+'</td>'+
+      '<td><span class="rosternum">'+esc(e.roster)+'</span></td>'+
+      '<td>'+pill(e.s)+'</td>'+
+      '<td style="color:var(--muted)">'+fmt(e.d)+'</td></tr>';
+  }).join("");
+  sec.innerHTML='<h2><span class="ic">👾</span> 적</h2>'+
+    '<div class="tablewrap"><table><thead><tr><th>id</th><th>이름</th><th>HP</th><th>분류</th><th>상태</th><th>특성</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  main.insertBefore(sec, document.getElementById("noresult"));
+  navEntries.push({id:"c-enemy", label:"적", cnt:enemies.length, indent:true});
+})();
+
+// Executions
+(function(){
+  var sec=document.createElement("section"); sec.className="block"; sec.id="c-exec";
+  var rows = executions.map(function(x){
+    var b=bucket(x.s);allStatuses.push(b);
+    var text=(x.id+" "+x.n+" "+x.owner+" "+x.grid).toLowerCase();
+    return '<tr class="item" data-status="'+b+'" data-text="'+esc(text)+'">'+
+      '<td class="mono">'+esc(x.id)+'</td><td><span class="wname">'+esc(x.n)+'</span></td>'+
+      '<td>'+esc(x.owner)+'</td><td>'+esc(x.grid)+'</td><td>'+pill(x.s)+'</td></tr>';
+  }).join("");
+  sec.innerHTML='<h2><span class="ic">⚡</span> 처형</h2>'+
+    '<div class="tablewrap"><table><thead><tr><th>id</th><th>이름</th><th>소유</th><th>그리드좌표</th><th>상태</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  main.insertBefore(sec, document.getElementById("noresult"));
+  navEntries.push({id:"c-exec", label:"처형", cnt:executions.length, indent:true});
+})();
+
+// Growth
+(function(){
+  var sec=document.createElement("section"); sec.className="block"; sec.id="c-growth";
+  var rows = growth.map(function(g){
+    var b=bucket(g.s);allStatuses.push(b);
+    var text=(g.n+" "+g.d).toLowerCase();
+    return '<tr class="item" data-status="'+b+'" data-text="'+esc(text)+'">'+
+      '<td><span class="wname">'+esc(g.n)+'</span></td><td>'+pill(g.s)+'</td>'+
+      '<td style="color:var(--muted)">'+esc(g.d)+'</td></tr>';
+  }).join("");
+  sec.innerHTML='<h2><span class="ic">🌱</span> 성장</h2>'+
+    '<div class="tablewrap"><table><thead><tr><th>항목</th><th>상태</th><th>내용</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  main.insertBefore(sec, document.getElementById("noresult"));
+  navEntries.push({id:"c-growth", label:"성장", cnt:growth.length, indent:true});
+})();
+
+// Backlog
+(function(){
+  var sec=document.createElement("section"); sec.className="block"; sec.id="backlog";
+  var rows = backlog.map(function(t){
+    allStatuses.push("미구현");
+    return '<div class="bl item" data-status="미구현" data-text="'+esc(t.toLowerCase())+'"><span class="x">✕</span><span>'+esc(t)+'</span></div>';
+  }).join("");
+  sec.innerHTML='<h2><span class="ic">🗂</span> 미구현 · KIP</h2><p class="blurb">아직 착수 전이거나 기획 보류 상태인 항목.</p><div class="backlog">'+rows+'</div>';
+  main.insertBefore(sec, document.getElementById("noresult"));
+  navEntries.push({id:"backlog", label:"미구현 · KIP", cnt:backlog.length, head:true});
+})();
+
+/* ============================ NAV ============================ */
+navEntries.forEach(function(e){
+  if(e.head){
+    var g=document.createElement("div"); g.className="navgroup"; g.textContent=e.label; navEl.appendChild(g);
+    if(e.id==="sys-top"||e.id==="content-top") return;
+  }
+  var a=document.createElement("a"); a.className="nav"+(e.indent?" indent":""); a.href="#"+e.id;
+  a.innerHTML='<span>'+esc(e.label)+'</span>'+(e.cnt!=null?'<span class="cnt">'+e.cnt+'</span>':'');
+  a.dataset.target=e.id;
+  navEl.appendChild(a);
+});
+
+/* ============================ STATS + CHIPS ============================ */
+var STATUS_ORDER=["구현","부분구현","미구현","KIP","미노출"];
+var counts={}; STATUS_ORDER.forEach(function(k){counts[k]=0;});
+allStatuses.forEach(function(b){counts[b]=(counts[b]||0)+1;});
+var total=allStatuses.length;
+
+var statsEl=document.getElementById("stats");
+var statDefs=[{k:"all",l:"전체 스펙"}].concat(STATUS_ORDER.map(function(k){return {k:k,l:k};}));
+statsEl.innerHTML=statDefs.map(function(d){
+  var n=d.k==="all"?total:(counts[d.k]||0);
+  var dot=d.k==="all"?"":'<span class="dot"></span>';
+  return '<div class="stat" data-k="'+d.k+'"><div class="n">'+n+'</div><div class="l">'+dot+esc(d.l)+'</div></div>';
+}).join("");
+
+var chipsEl=document.getElementById("chips");
+chipsEl.innerHTML=STATUS_ORDER.filter(function(k){return counts[k]>0;}).map(function(k){
+  return '<div class="chip" data-k="'+k+'"><span class="dot"></span>'+esc(k)+' <span style="opacity:.7">'+counts[k]+'</span></div>';
+}).join("");
+
+var progEl=document.getElementById("progress");
+progEl.innerHTML=
+  '<i class="done" style="width:'+(counts["구현"]/total*100)+'%"></i>'+
+  '<i class="partial" style="width:'+(counts["부분구현"]/total*100)+'%"></i>'+
+  '<i class="kip" style="width:'+((counts["KIP"]+counts["미노출"])/total*100)+'%"></i>'+
+  '<i class="todo" style="width:'+(counts["미구현"]/total*100)+'%"></i>';
+document.getElementById("plabel").textContent=
+  "총 "+total+"개 항목 · 구현 "+counts["구현"]+" · 부분구현 "+counts["부분구현"]+" · 미노출 "+counts["미노출"]+" · KIP "+counts["KIP"]+" · 미구현 "+counts["미구현"];
+
+/* ============================ FILTER LOGIC ============================ */
+var activeStatus=new Set();
+var qEl=document.getElementById("q");
+
+function applyFilter(){
+  var q=qEl.value.trim().toLowerCase();
+  var items=document.querySelectorAll(".item");
+  var anyVisible=false;
+  items.forEach(function(el){
+    var okText=!q || el.dataset.text.indexOf(q)>=0;
+    var okStat=activeStatus.size===0 || activeStatus.has(el.dataset.status);
+    var show=okText&&okStat;
+    el.style.display=show?"":"none";
+    if(show) anyVisible=true;
+  });
+  // hide empty blocks / wrappers
+  document.querySelectorAll("section.block").forEach(function(sec){
+    if(sec.querySelector(".item")===null) return; // header-only (시스템 헤더) → keep
+    var vis=sec.querySelectorAll(".item:not([style*='display: none'])").length;
+    sec.style.display=vis?"":"none";
+  });
+  // hide tablewrap/cards if empty handled by section; also hide table rows already done
+  document.querySelectorAll(".tablewrap").forEach(function(tw){
+    var vis=tw.querySelectorAll("tr.item:not([style*='display: none'])").length;
+    tw.style.display=vis?"":"none";
+  });
+  document.getElementById("noresult").classList.toggle("show", !anyVisible);
+}
+
+qEl.addEventListener("input", applyFilter);
+
+chipsEl.querySelectorAll(".chip").forEach(function(chip){
+  chip.addEventListener("click", function(){
+    var k=chip.dataset.k;
+    if(activeStatus.has(k)){activeStatus.delete(k); chip.classList.remove("active");}
+    else{activeStatus.add(k); chip.classList.add("active");}
+    syncStats(); applyFilter();
+  });
+});
+statsEl.querySelectorAll(".stat").forEach(function(st){
+  st.addEventListener("click", function(){
+    var k=st.dataset.k;
+    if(k==="all"){activeStatus.clear(); chipsEl.querySelectorAll(".chip").forEach(function(c){c.classList.remove("active");});}
+    else{
+      if(activeStatus.has(k)) activeStatus.delete(k); else activeStatus.add(k);
+      var chip=chipsEl.querySelector('.chip[data-k="'+k+'"]'); if(chip) chip.classList.toggle("active", activeStatus.has(k));
+    }
+    syncStats(); applyFilter();
+  });
+});
+function syncStats(){
+  statsEl.querySelectorAll(".stat").forEach(function(st){
+    var k=st.dataset.k;
+    if(k==="all") st.classList.toggle("active", activeStatus.size===0);
+    else st.classList.toggle("active", activeStatus.has(k));
+  });
+}
+syncStats();
+
+/* ============================ SCROLLSPY ============================ */
+var navLinks=navEl.querySelectorAll("a.nav");
+var spy=new IntersectionObserver(function(entries){
+  entries.forEach(function(en){
+    if(en.isIntersecting){
+      navLinks.forEach(function(a){a.classList.toggle("active", a.dataset.target===en.target.id);});
+    }
+  });
+},{rootMargin:"-40% 0px -55% 0px"});
+document.querySelectorAll("section.block[id]").forEach(function(s){spy.observe(s);});
+
+/* ============================ BACK TO TOP ============================ */
+var bt=document.getElementById("backtop");
+window.addEventListener("scroll", function(){ bt.classList.toggle("show", window.scrollY>500); });
+bt.addEventListener("click", function(){ window.scrollTo({top:0,behavior:"smooth"}); });
+</script>
+</body>
+</html>
