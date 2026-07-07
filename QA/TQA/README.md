@@ -1,6 +1,6 @@
 # TQA — Technical QA (스펙·수치 검증)
 
-> 실행은 **VSQA 스킬**(`.claude/skills/VSQA`)이 담당한다 — "TQA 돌려줘 / 검증해줘"라고만 하면 된다.
+> 실행은 **VSQA 스킬**(`.claude/skills/VSQA`)이 담당한다 — `/vstqa` 또는 "TQA 돌려줘 / 검증해줘"라고만 하면 된다.
 
 **"스펙대로 도는가, 수치가 목표 범위에 있는가"** 를 기계(봇)가 검증하는 영역.
 재미 판정은 하지 않는다 — 그건 [FQA](../FQA/README.md) 의 몫.

@@ -190,7 +190,7 @@ document.getElementById("resetBtn").onclick=()=>{ if(confirm("입력을 모두 �
 
 function buildPrompt(){
   const mark={o:"⭕",x:"❌",m:"➖"};
-  let p="/fqa 세션 "+SESSION.n+" 판정 ("+SESSION.theme+", "+SESSION.build+"):\n";
+  let p="/vsfqa 세션 "+SESSION.n+" 판정 ("+SESSION.theme+", "+SESSION.build+"):\n";
   ITEMS.forEach(it=>{
     const v=state.v[it.id], m=(state.m[it.id]||"").trim();
     if(!v&&!m) return;
