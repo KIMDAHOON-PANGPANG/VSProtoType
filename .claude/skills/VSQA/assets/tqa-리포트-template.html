@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<!--
+  VSQA · TQA 리포트 템플릿
+  채우는 법 (Claude):
+   1) 아래 REPORT / SUMMARY / FLAGS / NOTES 데이터 블록만 교체한다. CSS/JS 골격은 건드리지 않는다.
+   2) SUMMARY 행 키는 자유(표 헤더는 키 이름 그대로) — 시나리오별 요약 지표를 넣는다.
+   3) FLAGS 는 진단 플래그 + 관찰 사항. act:true 면 "조치 후보"로 체크박스가 붙는다.
+   4) 파일 위치: QA/TQA/bot/logs/YYYY-MM-DD_주제_리포트.html
+  사용법 (사용자):
+   더블클릭으로 열기 → 조치하고 싶은 플래그 체크 + 메모 → [후속 요청 프롬프트 복사] → Claude 채팅에 붙여넣기.
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TQA 리포트 · __주제__</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --panel2:#141926; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --good:#5fe39a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:radial-gradient(1100px 500px at 75% -10%, rgba(58,160,255,.06), transparent 60%), var(--bg);
+    color:var(--ink); font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    letter-spacing:-.01em; padding:4vh 6vw 140px;}
+  .wrap{max-width:1000px; margin:0 auto;}
+  .brand{font-size:.72rem; letter-spacing:.2em; color:var(--blue); font-weight:800; text-transform:uppercase;}
+  h1{font-size:clamp(1.5rem,3.6vw,2.3rem); font-weight:800; margin:.4rem 0 .3rem;}
+  .meta{color:var(--dim); font-size:.9rem; display:flex; gap:1.6rem; flex-wrap:wrap; margin-bottom:1.4rem;}
+  .meta b{color:var(--blue);}
+  h2{font-size:1rem; font-weight:800; letter-spacing:.08em; color:var(--gold); margin:1.6rem 0 .6rem;}
+
+  .tablewrap{border:1px solid var(--line); border-radius:12px; overflow-x:auto; background:var(--panel2);}
+  table{border-collapse:collapse; width:100%; font-size:.85rem; min-width:640px;}
+  th,td{text-align:right; padding:.55rem .8rem; border-bottom:1px solid var(--line); white-space:nowrap;}
+  th{background:var(--bg); color:var(--dim); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;}
+  th:first-child, td:first-child{text-align:left;}
+  tr:last-child td{border-bottom:none;}
+  td.dead{color:var(--red); font-weight:800;} td.alive{color:var(--teal); font-weight:800;}
+
+  .flag{background:linear-gradient(160deg,var(--panel2),var(--panel)); border:1px solid var(--line);
+    border-left:3px solid var(--red); border-radius:12px; padding:1rem 1.2rem; margin-bottom:.8rem;}
+  .flag.info{border-left-color:var(--blue);}
+  .flag .head{display:flex; gap:.7rem; align-items:flex-start;}
+  .flag .head input{appearance:none; -webkit-appearance:none; width:1.25rem; height:1.25rem; flex:0 0 auto; margin-top:.1rem;
+    border:2px solid var(--dim); border-radius:6px; cursor:pointer; position:relative; transition:.13s;}
+  .flag .head input:checked{background:var(--teal); border-color:var(--teal);}
+  .flag .head input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center; color:#04201c; font-weight:900; font-size:.8rem;}
+  .flag .head label{cursor:pointer; flex:1;}
+  .flag .head b{font-size:.98rem;}
+  .flag .detail{margin-top:.4rem; font-size:.85rem; color:var(--dim); line-height:1.55;}
+  .flag .memo{width:100%; margin-top:.6rem; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:8px; padding:.5rem .8rem; font-family:inherit; font-size:.85rem; resize:vertical; min-height:38px; display:none;}
+  .flag.checked .memo{display:block;}
+  .flag.checked{border-color:rgba(28,240,212,.4);}
+  .acthint{font-size:.78rem; color:var(--faint); margin:.2rem 0 .8rem;}
+
+  ul.notes{list-style:none; display:flex; flex-direction:column; gap:.5rem;}
+  ul.notes li{position:relative; padding-left:1.3rem; font-size:.9rem; color:var(--dim); line-height:1.55;}
+  ul.notes li::before{content:"▸"; position:absolute; left:0; color:var(--blue);}
+
+  .free{margin-top:1.4rem;}
+  .free b{display:block; font-size:.8rem; letter-spacing:.14em; color:var(--gold); margin-bottom:.4rem;}
+  .free textarea{width:100%; min-height:76px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:9px; padding:.6rem .8rem; font-family:inherit; font-size:.88rem; line-height:1.5; resize:vertical;}
+
+  .dock{position:fixed; left:0; right:0; bottom:0; background:rgba(10,12,18,.92); backdrop-filter:blur(8px);
+    border-top:1px solid var(--line); padding:.9rem 6vw; display:flex; gap:1rem; align-items:center; z-index:20;}
+  .dock .stat{font-size:.82rem; color:var(--dim); flex:1;}
+  .dock .stat b{color:var(--teal);}
+  .copy{background:var(--teal); color:#04201c; border:none; border-radius:10px; padding:.75rem 1.4rem;
+    font-weight:900; font-size:.95rem; cursor:pointer; font-family:inherit; box-shadow:0 4px 18px rgba(28,240,212,.3);}
+  .msg{font-size:.85rem; color:var(--good); font-weight:800; min-width:90px;}
+  .pv-overlay{position:fixed; inset:0; z-index:40; background:rgba(5,7,12,.84); display:grid; place-items:center; padding:5vh 6vw;}
+  .pv-overlay.hidden{display:none;}
+  .pv-box{width:min(720px,100%); max-height:85vh; overflow:auto; background:var(--panel); border:1px solid var(--line);
+    border-radius:14px; padding:1.3rem 1.5rem;}
+  .pv-box textarea{width:100%; min-height:240px; margin-top:.8rem; background:var(--bg); color:var(--ink);
+    border:1px solid var(--line); border-radius:10px; padding:.9rem 1rem;
+    font-family:"Cascadia Code",Consolas,monospace; font-size:.84rem; line-height:1.55; resize:vertical;}
+  .pv-actions{display:flex; gap:.8rem; margin-top:.8rem; align-items:center;}
+  .reset{background:none; border:1px solid var(--line); color:var(--faint); border-radius:10px; padding:.7rem 1rem; font-size:.8rem; cursor:pointer; font-family:inherit;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">EXECUTE // SURVIVORS · TQA</div>
+  <h1 id="title"></h1>
+  <div class="meta" id="meta"></div>
+
+  <h2>시나리오 요약</h2>
+  <div class="tablewrap"><table id="sumTable"></table></div>
+
+  <h2>진단 플래그 · 관찰</h2>
+  <p class="acthint">조치하고 싶은 항목에 체크하고(메모 칸이 열림) 맨 아래 버튼으로 후속 요청을 만드세요.</p>
+  <div id="flags"></div>
+
+  <h2>해석 노트</h2>
+  <ul class="notes" id="notes"></ul>
+
+  <div class="free">
+    <b>기타 의견 / 추가로 궁금한 것</b>
+    <textarea id="freeText" placeholder="예: 낫 딜 지분이 계속 40%가 넘는데 다음엔 낫 너프 스윕 보고 싶음"></textarea>
+  </div>
+</div>
+
+<div class="dock">
+  <div class="stat" id="stat">조치 후보 0건 선택</div>
+  <span class="msg" id="msg"></span>
+  <button class="reset" id="resetBtn">입력 초기화</button>
+  <button class="copy" id="copyBtn">📋 후속 요청 프롬프트 복사</button>
+</div>
+
+<div class="pv-overlay hidden" id="pv">
+  <div class="pv-box">
+    <b>Claude 에게 보낼 후속 요청</b>
+    <textarea id="pvText" readonly spellcheck="false"></textarea>
+    <div class="pv-actions">
+      <button class="copy" id="pvCopy">📋 복사</button>
+      <span class="msg" id="pvMsg"></span>
+      <button class="reset" id="pvClose" style="margin-left:auto;">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= 데이터 (Claude 가 이 블록만 교체) ================= */
+const REPORT = {
+  id: "YYYY-MM-DD_주제",           // localStorage 키 겸 식별자
+  title: "__리포트 제목__",
+  date: "YYYY-MM-DD", build: "vX.Y.Z / index_N.html",
+  batch: "__배치 구성 — 예: 7시나리오 × 3시드 × 900s__",
+  logfile: "__로그 파일명.json__",
+};
+const SUMMARY = [                   // 키 이름이 그대로 표 헤더가 된다. 결과 키에 '생존'/'사망' 포함 시 색 강조
+  { "시나리오":"__standard__", "결과":"생존 2/3", "생존s":"900·900·417", "받은피해/분":"1.4~14.4", "딜1위":"scythe 41%" },
+];
+const FLAGS = [                     // act:true = 조치 후보(체크박스), false = 정보성
+  { icon:"🔻", title:"__죽은 무기 의심 — axe 평균 딜지분 1.7%__", detail:"__상세 근거__", act:true },
+  { icon:"👥", title:"__밀도 경고 — 동시 적 341__", detail:"__상세__", act:true, info:false },
+];
+const NOTES = [
+  "__해석 한 줄 — 예: 스폰×2는 위협이 아니라 XP 공급(역설 재확인)__",
+];
+/* ==================================================================== */
+
+const LS = "tqa_"+REPORT.id;
+const state = JSON.parse(localStorage.getItem(LS)||"{}");
+state.c = state.c||{}; state.m = state.m||{}; state.free = state.free||"";
+
+document.getElementById("title").textContent = REPORT.title;
+document.getElementById("meta").innerHTML =
+  "<span>날짜 · <b>"+REPORT.date+"</b></span><span>빌드 · <b>"+REPORT.build+"</b></span>"+
+  "<span>배치 · <b>"+REPORT.batch+"</b></span><span>로그 · <b>"+REPORT.logfile+"</b></span>";
+
+// 요약 표
+(function(){
+  const t=document.getElementById("sumTable");
+  if(!SUMMARY.length) return;
+  const keys=Object.keys(SUMMARY[0]);
+  t.innerHTML = "<thead><tr>"+keys.map(k=>"<th>"+k+"</th>").join("")+"</tr></thead><tbody>"+
+    SUMMARY.map(r=>"<tr>"+keys.map(k=>{
+      const v=String(r[k]??"");
+      const cls = /사망|0\/3/.test(v)&&k.includes("결과") ? "dead" : (/생존/.test(v)&&k.includes("결과") ? "alive":"");
+      return "<td class='"+cls+"'>"+v+"</td>";
+    }).join("")+"</tr>").join("")+"</tbody>";
+})();
+
+// 플래그
+const fbox=document.getElementById("flags");
+FLAGS.forEach((f,i)=>{
+  const d=document.createElement("div"); d.className="flag"+(f.act?"":" info"); d.dataset.i=i;
+  d.innerHTML =
+    '<div class="head">'+(f.act?'<input type="checkbox" id="f'+i+'">':'<span style="width:1.25rem"></span>')+
+    '<label for="f'+i+'"><b>'+f.icon+" "+f.title+'</b><div class="detail">'+f.detail+'</div></label></div>'+
+    (f.act?'<textarea class="memo" data-i="'+i+'" placeholder="어떻게 조치할지 의견 (선택) — 예: 버프 방향으로, 다음 버전에서"></textarea>':'');
+  fbox.appendChild(d);
+});
+document.getElementById("notes").innerHTML = NOTES.map(n=>"<li>"+n+"</li>").join("");
+
+function sync(){
+  document.querySelectorAll(".flag input[type=checkbox]").forEach(c=>{
+    const i=c.closest(".flag").dataset.i;
+    c.checked=!!state.c[i];
+    c.closest(".flag").classList.toggle("checked", !!state.c[i]);
+  });
+  document.querySelectorAll(".flag .memo").forEach(t=>{ if(t.value!==(state.m[t.dataset.i]||"")) t.value=state.m[t.dataset.i]||""; });
+  const ft=document.getElementById("freeText"); if(ft.value!==state.free) ft.value=state.free;
+  document.getElementById("stat").innerHTML = "조치 후보 <b>"+Object.keys(state.c).length+"</b>건 선택"+(state.free?" · 기타 의견 ✓":"");
+}
+function save(){ localStorage.setItem(LS, JSON.stringify(state)); sync(); }
+
+document.addEventListener("change", e=>{
+  if(e.target.matches(".flag input[type=checkbox]")){
+    const i=e.target.closest(".flag").dataset.i;
+    if(e.target.checked) state.c[i]=true; else delete state.c[i];
+    save();
+  }
+});
+document.addEventListener("input", e=>{
+  if(e.target.matches(".flag .memo")){ state.m[e.target.dataset.i]=e.target.value; save(); }
+  if(e.target.id==="freeText"){ state.free=e.target.value; save(); }
+});
+document.getElementById("resetBtn").onclick=()=>{ if(confirm("입력을 모두 지울까요?")){ localStorage.removeItem(LS); location.reload(); } };
+
+function buildPrompt(){
+  let p="/tqa 후속 요청 ("+REPORT.title+", "+REPORT.build+"):\n";
+  let n=0;
+  FLAGS.forEach((f,i)=>{
+    if(!state.c[i]) return;
+    n++;
+    const m=(state.m[i]||"").trim();
+    p+=n+". "+f.icon+" "+f.title+(m?" — 의견: "+m:"")+"\n";
+  });
+  const fr=(state.free||"").trim();
+  if(fr) p+="\n기타: "+fr+"\n";
+  p+="\n체크한 항목을 검토해서 조치안(밸런스/코드/추가 계측)을 제안하고 진행해줘. 근거 로그: QA/TQA/bot/logs/"+REPORT.logfile;
+  return p;
+}
+const pv=document.getElementById("pv"), pvText=document.getElementById("pvText");
+document.getElementById("copyBtn").onclick=()=>{
+  if(!Object.keys(state.c).length && !(state.free||"").trim()){ alert("조치할 항목을 체크하거나 기타 의견을 적어주세요."); return; }
+  pvText.value=buildPrompt(); document.getElementById("pvMsg").textContent=""; pv.classList.remove("hidden");
+};
+document.getElementById("pvClose").onclick=()=>pv.classList.add("hidden");
+pv.addEventListener("click",e=>{ if(e.target===pv) pv.classList.add("hidden"); });
+document.getElementById("pvCopy").onclick=()=>{
+  pvText.focus(); pvText.select(); pvText.setSelectionRange(0,999999);
+  const ok=()=>document.getElementById("pvMsg").textContent="복사됨 ✓";
+  const no=()=>document.getElementById("pvMsg").textContent="복사 실패 — 직접 선택해 복사하세요";
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(pvText.value).then(ok, ()=>{try{document.execCommand("copy")?ok():no();}catch(e){no();}});
+  else{ try{document.execCommand("copy")?ok():no();}catch(e){no();} }
+};
+sync();
+</script>
+</body>
+</html>
