@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QA 실측 로드맵 — 처형 성장이 먼저다 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 8vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1.1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.6vw,3.4rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.4rem,3.2vw,2.3rem); line-height:1.18; font-weight:800; margin-bottom:1.4rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.95rem,1.45vw,1.18rem); line-height:1.6; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  em{font-style:normal; color:var(--gold);}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);}
+
+  .title-wrap{max-width:920px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.8rem;}
+  .title-meta{margin-top:2rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.05rem,1.8vw,1.45rem); line-height:1.55; max-width:60ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.4rem 0;
+    font-size:clamp(1.05rem,1.9vw,1.5rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote.red{border-color:var(--red);}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.8rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+  .threads{display:flex; gap:1rem; margin-top:1.8rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.08rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem 2.6rem; align-items:start; margin-top:.6rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.2rem 1.3rem;}
+  .card.bad{border-color:rgba(255,43,78,.35);}
+  .card.good{border-color:rgba(95,227,154,.35);}
+  .card h3{font-size:1rem; font-weight:800; margin-bottom:.5rem; display:flex; align-items:center; gap:.5rem;}
+  .card p{font-size:.92rem; color:var(--dim); line-height:1.5;}
+  .tag{display:inline-block; font-size:.7rem; letter-spacing:.1em; padding:.15em .55em; border-radius:5px; font-weight:700;}
+  .tag.x{background:rgba(255,43,78,.14); color:var(--red);}
+  .tag.o{background:rgba(95,227,154,.14); color:var(--good);}
+
+  table{border-collapse:collapse; width:100%; margin-top:.4rem; font-size:.92rem;}
+  th,td{text-align:left; padding:.7rem .9rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700;}
+
+  .spikes{display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:1.4rem;}
+  .spike{display:flex; gap:.9rem; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem;}
+  .spike .n{flex:0 0 2rem; height:2rem; border-radius:8px; background:var(--teal); color:#04201c; font-weight:800;
+    display:grid; place-items:center; font-size:1rem;}
+  .spike .b{font-size:.92rem; line-height:1.45;}
+  .spike .b b{color:#fff;} .spike .b span{color:var(--dim); font-size:.84rem;}
+
+  .open{display:flex; gap:1.4rem; margin-top:1rem; flex-wrap:wrap;}
+  .open .q{flex:1 1 320px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.4rem 1.5rem;}
+  .open .q .lab{font-size:.78rem; letter-spacing:.14em; color:var(--gold); font-weight:800;}
+  .open .q h3{font-size:1.15rem; margin:.55rem 0 .6rem; font-weight:800; line-height:1.3;}
+  .open .q p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+
+  .flow{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:1rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800; font-size:.9rem; text-align:center;}
+  .flow .step.hot{border-color:var(--teal); color:var(--teal); box-shadow:0 0 14px rgba(28,240,212,.15);}
+  .flow .step.bad{border-color:rgba(255,43,78,.4); color:var(--red);}
+  .flow .step small{display:block; color:var(--dim); font-weight:600; font-size:.7rem; margin-top:.15rem;}
+  .flow .arr{color:var(--dim); font-weight:900; font-size:1.1rem;}
+  .arc{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:.9rem;}
+  .arc .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800;}
+  .arc .step small{display:block; color:var(--faint); font-weight:600; font-size:.68rem; margin-top:.1rem;}
+  .arc .arr{color:var(--dim); font-weight:900;}
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:stretch; margin-top:.9rem;}
+  .vs .side{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .vs .side.a{border-color:rgba(58,160,255,.4);} .vs .side.b{border-color:rgba(28,240,212,.45);}
+  .vs .side h3{font-size:1rem; font-weight:800; margin-bottom:.4rem;}
+  .vs .side p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+  .vs .mid{display:grid; place-items:center; font-weight:900; color:var(--red); font-size:1.1rem;}
+  .matrix{display:grid; grid-template-columns:1fr 1fr; gap:.7rem; margin-top:.9rem;}
+  .matrix .cell{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.9rem 1rem;}
+  .matrix .cell b{color:#fff; font-size:.95rem;} .matrix .cell p{font-size:.82rem; color:var(--dim); margin-top:.25rem; line-height:1.4;}
+  .matrix .cell.good{border-color:rgba(95,227,154,.4);} .matrix .cell.bad{border-color:rgba(255,43,78,.4);}
+  .bars{display:flex; flex-direction:column; gap:.6rem; margin-top:.9rem; max-width:660px;}
+  .bars .bar{display:grid; grid-template-columns:8rem 1fr; gap:.7rem; align-items:center; font-size:.85rem; color:var(--dim);}
+  .bars .bar .fill{height:1.5rem; border-radius:6px; background:linear-gradient(90deg,var(--blue),var(--teal)); display:flex; align-items:center; padding:0 .55rem; color:#04201c; font-weight:800; font-size:.76rem; white-space:nowrap;}
+  .stats{display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;}
+  .stat{flex:1 1 150px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .stat .big{font-size:2.2rem; font-weight:900; color:var(--teal); line-height:1;}
+  .stat .lab{font-size:.82rem; color:var(--dim); margin-top:.35rem; line-height:1.4;}
+  .chips{display:flex; gap:.55rem; flex-wrap:wrap; margin-top:.9rem;}
+  .chip{background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:.42rem .95rem; font-weight:700; font-size:.88rem;}
+  .chip .i{color:var(--teal); margin-right:.35rem;}
+
+  .checklist{display:flex; flex-direction:column; gap:.55rem; margin-top:1.2rem; max-width:780px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.7rem .9rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.2rem; height:1.2rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#04201c; font-size:.85rem; font-weight:900;}
+  .checklist .ct{font-size:.95rem; line-height:1.45; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- ===== 1. 표지 ===== -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · QA 봇 실측 기반</div>
+      <h1>다음 로드맵 —<br><span class="red">처형 성장</span>이 먼저다</h1>
+      <p class="lead dim">봇 시뮬레이션 48런 실측 + 구현 스펙 문서를 근거로, v0.21부터 무엇을 어떤 순서로 만들지 정하는 토론.</p>
+      <div class="title-meta">
+        <div>기반 빌드 · <b>v0.20.0 (index_26)</b></div>
+        <div>날짜 · <b>2026-07-07</b></div>
+        <div>근거 · <b>QA봇 48런 · implemented_spec · 뱀서 리서치</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 2. 아젠다 ===== -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>무기는 성장하는데, 왜 처형은 성장하지 않는가</h2>
+    <div class="quote">"v0.21~v0.23 — 처형의 성장 축을 게임의 중심 성장으로 만들 것인가?"</div>
+    <p class="dim">무기는 레벨 1→8 + 진화가 있다. 처형은 이 게임의 정체성인데 성장이 없다(보상 카드 몇 장뿐). 이 질문에 Yes면 로드맵 전체가 처형을 중심으로 정렬된다.</p>
+    <div class="threads">
+      <div class="thread"><div class="t">Thread ①</div><h3>처형 리메이크</h3><p>쿨은 실측상 장식(0초 대기) · 공용 카드 절반이 빈 선택지 → 교체와 성장 축</p></div>
+      <div class="thread"><div class="t">Thread ②</div><h3>회피의 배움과 보상</h3><p>딱맞춤 회피는 "못 하면 죽고 하면 무피해" — 연습 구간과 성공 보상이 없다</p></div>
+      <div class="thread"><div class="t">Thread ③</div><h3>성장 체감 순서</h3><p>스탯 카드는 이미 코드에 있다(잠금 상태) — 켜는 '시점'이 문제</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 3. 근거: QA 실측 ===== -->
+  <section class="slide" data-t="QA 실측">
+    <div class="kicker">02 · 근거 — 봇 시뮬레이션 실측 (48런)</div>
+    <h2><span class="num">📊</span>숫자가 말해주는 다섯 가지</h2>
+    <div class="stats">
+      <div class="stat"><div class="big">0초</div><div class="lab"><b>처형 쿨 대기</b> — 21런 전부. 처치 환급(10/10)이 쿨을 지워버림 = 쿨은 장식</div></div>
+      <div class="stat"><div class="big red">2종</div><div class="lab"><b>죽은 무기</b> — 도끼 1.7% · 육각 오라 1.3% (딜 기여, 3% 미만)</div></div>
+      <div class="stat"><div class="big gold">5~7분</div><div class="lab"><b>죽음의 벽</b> — 사망 대부분이 이 구간. 중간보스 도약을 못 피하면 전멸</div></div>
+      <div class="stat"><div class="big">×2 역설</div><div class="lab"><b>적을 2배 늘리면 더 쉬워짐</b> — 잡몹 물량 = 위협이 아니라 경험치 공급</div></div>
+      <div class="stat"><div class="big red">341</div><div class="lab"><b>최대 동시 적</b> — 상한 없음 (뱀서 300 · 브로테이토 100 제한 참고)</div></div>
+    </div>
+    <p class="dim" style="margin-top:1.2rem;">봇: 치고 빠지기 + 처형 + 딱맞춤 회피 자동 플레이 · 같은 시드면 같은 판 재현 · <b>QA/bot</b> 도구로 언제든 재검증 가능</p>
+  </section>
+
+  <!-- ===== 4. 세부① 처형 쿨 & 공용 카드 (Q7+Q1) ===== -->
+  <section class="slide" data-t="① 쿨·공용 카드">
+    <div class="kicker">03 · 세부 — 처형 쿨과 공용 카드</div>
+    <h2><span class="num">①</span>공용 카드 4장 중 2장이 빈 선택지다</h2>
+    <div class="bars">
+      <div class="bar"><span>반경 +45</span><div class="fill" style="width:88%">살아있는 선택 — 처형 범위 175 기준 26% 성장</div></div>
+      <div class="bar"><span>연계 대상 +1</span><div class="fill" style="width:78%">살아있는 선택 — 한 번에 2마리 처형</div></div>
+      <div class="bar"><span>환급 +3초</span><div class="fill" style="width:14%; background:var(--red); color:#fff;">죽은 선택 — 쿨 대기 0초인데 환급을 더?</div></div>
+      <div class="bar"><span>쿨 -15%</span><div class="fill" style="width:12%; background:var(--red); color:#fff;">죽은 선택 — 같은 이유</div></div>
+    </div>
+    <div class="quote teal">"새 공용 효과를 '추가'하기 전에, 쿨 계열 2장을 '교체'하는 게 먼저다"</div>
+    <p class="dim">권고: 처치 환급 10→<b>3~5</b>로 낮춰 쿨을 진짜 자원으로 살리고(수치만 바꾸면 됨 · 봇 실측상 환급 0이어도 생존 지장 없음), 공용 카드는 <b>처형 순간의 부가 효과</b> 축으로 — 예: 처형 파동(밀치기) · 주변 빙결 · 보석 끌어오기. 백로그의 라이트닝/리프/펄스 초안이 이 자리.</p>
+  </section>
+
+  <!-- ===== 5. 세부② 처형의 상과 벌 (Q2) ===== -->
+  <section class="slide" data-t="② 상과 벌">
+    <div class="kicker">04 · 세부 — 처형의 목적</div>
+    <h2><span class="num">②</span>벌은 확실한데, 상이 없다</h2>
+    <div class="vs">
+      <div class="side a">
+        <h3><span class="tag o">작동함</span> 벌 — 안 하면 죽는다</h3>
+        <p>처형 거부 봇 <b class="red">0/3 생존</b> (6~8분 사망) · 전염 엘리트 변이 발동 · 격노 가속 · 보석 청소기 — 로스터 4종이 "처형 안 하면 손해"를 잘 만듦</p>
+      </div>
+      <div class="mid">VS</div>
+      <div class="side b">
+        <h3><span class="tag x">약함</span> 상 — 해도 이득이 없다</h3>
+        <p>처형 5젬 vs 방치 3젬 — 실측: 같은 시간대 <b>레벨 차이 0</b>. 처형을 열심히 해도 성장이 안 빨라짐. 쿨 환급도 장식이라 보상 축이 통째로 빔</p>
+      </div>
+    </div>
+    <div class="quote">"처형은 지금 '벌 회피 버튼'이다 — '보상 버튼'으로 만들어야 코어답다"</div>
+    <div class="chips">
+      <span class="chip"><span class="i">◆</span>엘리트 보석을 처형 때만 크게 (방치 시 쭉정이)</span>
+      <span class="chip"><span class="i">◆</span>처형 횟수 = 성장 재화 (다음 슬라이드)</span>
+    </div>
+  </section>
+
+  <!-- ===== 6. 세부③ 처형 성장 축 (Q6) ===== -->
+  <section class="slide" data-t="③ 처형 성장">
+    <div class="kicker">05 · 세부 — 처형 성장 축 (핵심 제안)</div>
+    <h2><span class="num">③</span>처형 레벨: 범위·횟수가 크는 만큼, 엘리트도 더 온다</h2>
+    <div class="flow">
+      <span class="step hot">처형 실행<small>횟수 누적</small></span><span class="arr">→</span>
+      <span class="step">처형 레벨 ↑<small>보상 카드 통합</small></span><span class="arr">→</span>
+      <span class="step">범위 175→+45씩<small>대상 1→2→3</small></span><span class="arr">→</span>
+      <span class="step hot">웨이브가 반응<small>엘리트 물결 2~3 → 4~5</small></span><span class="arr">→</span>
+      <span class="step gold" style="border-color:var(--gold); color:var(--gold);">여러 마리 연쇄 처형<small>강해지는 손맛</small></span>
+    </div>
+    <p class="dim" style="margin-top:1.2rem;">재료는 이미 다 있다 — 반경+45·연계+1 카드(스택형), 웨이브 밴드의 엘리트 상한(0→4, 데이터로 조절). 없는 건 <b>"성장이 보이는 통합 레벨"</b>과 <b>"내 처형 역량에 반응하는 엘리트 공급"</b> 둘뿐.</p>
+    <ul class="clean">
+      <li><b>공급 동조가 핵심</b> — 대상 +1을 찍어도 동시에 비틀대는(그로기) 엘리트가 1마리면 쓸 데가 없다. 처형 레벨이 오르면 물결 크기·동시 그로기 기회를 함께 올린다.</li>
+      <li><b>검증 준비 완료</b> — 봇에 "동시 그로기 수 분포" 지표를 붙이면 연계 처형이 실제로 쓰이는지 숫자로 확인 가능.</li>
+    </ul>
+  </section>
+
+  <!-- ===== 7. 세부④ 저스트회피 (Q3) ===== -->
+  <section class="slide" data-t="④ 딱맞춤 회피">
+    <div class="kicker">06 · 세부 — 딱맞춤 회피(저스트 회피)</div>
+    <h2><span class="num">④</span>구조는 좋다 — 배움의 사다리가 없을 뿐</h2>
+    <div class="stats">
+      <div class="stat"><div class="big red">전멸</div><div class="lab">회피 못 하는 봇 — 전 유형이 5~7분 벽에서 사망</div></div>
+      <div class="stat"><div class="big">피해 0</div><div class="lab">회피 하는 봇 — 도약 피해를 한 대도 안 맞고 통과</div></div>
+      <div class="stat"><div class="big gold">첫 시험 = 5분</div><div class="lab">그 전 일반 도약(반경 120)은 걸어서도 피해짐 → 배울 이유가 없음</div></div>
+    </div>
+    <div class="arc">
+      <span class="step">2~4분<small>연습 — 일반 엘리트 도약 빈도 ↑</small></span><span class="arr">→</span>
+      <span class="step">5분 중간보스<small>시험 — 반경 240, 못 피하면 34 피해</small></span><span class="arr">→</span>
+      <span class="step hot">성공 보상<small>회피 성공 → 처형 자원 충전</small></span>
+    </div>
+    <p class="dim" style="margin-top:1rem;">"못 하면 죽고 하면 무피해" 이분법 자체는 의도대로(무지성 이동은 죽는다). 고칠 건 <b>순서</b> — 시험 전에 연습을, 성공엔 처형과 이어지는 보상을. 가장자리 스침은 절반 피해로 낙차 완화. <b>손맛(타이밍 창·타격감)은 봇이 못 재니 실플레이 체크로.</b></p>
+  </section>
+
+  <!-- ===== 8. 세부⑤ PC 스탯 (Q4) ===== -->
+  <section class="slide" data-t="⑤ 스탯 카드">
+    <div class="kicker">07 · 세부 — 캐릭터 스탯</div>
+    <h2><span class="num">⑤</span>스탯은 "만들기"가 아니라 "켜기" — 시점이 문제</h2>
+    <p class="dim">스탯 카드 15종은 이미 코드에 잠들어 있다(레벨업 미노출 상태). 스위치만 켜면 되는데, 지금 켜면 안 되는 이유:</p>
+    <div class="matrix">
+      <div class="cell bad"><b>지금 켜면</b><p>카드 풀 15종 → 30종 희석. 원하는 무기 뽑기가 2배 어려워짐. 봇 실측: 스탯 없이도 생존 성립 = 필요해서 켜는 게 아니라 그냥 늘리는 것</p></div>
+      <div class="cell good"><b>역할이 생기면 켠다</b><p>① 처형 스탯(범위·횟수)이 성장 축이 될 때 ② 뱀서식 진화 조건(무기+스탯 조합)을 붙일 때 — 그때 스탯은 '진화 열쇠'라는 목적을 가짐</p></div>
+      <div class="cell bad"><b>따로 풀 없이 섞으면</b><p>뱀서도 무기 6 + 패시브 6으로 풀을 분리 — 섞으면 둘 다 흐려짐</p></div>
+      <div class="cell good"><b>켤 때의 형태</b><p>무기 슬롯 6 / 스탯 슬롯 별도(예: 4) · 처형/생존 계열 위주 소수 정예로 시작</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 9. 세부⑥ 개발 순서 (Q5) ===== -->
+  <section class="slide" data-t="⑥ 로드맵">
+    <div class="kicker">08 · 세부 — 개발 순서 (로드맵)</div>
+    <h2><span class="num">⑥</span>v0.21 → v0.23 : 코어부터, 폭은 나중에</h2>
+    <table>
+      <tr><th>버전</th><th>테마</th><th>내용</th><th>봇 검증 지표</th></tr>
+      <tr><td><b class="red">v0.21</b></td><td><b>처형 성장</b></td><td>처형 레벨 통합(범위·대상 성장 가시화) · 처치 환급 10→3~5 · 공용 카드 쿨 계열 2장 → 부가 효과 카드로 교체</td><td>처형/분 · 쿨 대기 시간 &gt; 0 확인</td></tr>
+      <tr><td><b class="gold">v0.22</b></td><td><b>공급과 연습</b></td><td>엘리트 물결이 처형 레벨에 반응(공급 동조) · 2~4분 도약 연습 구간 · 회피 성공 → 처형 충전</td><td>동시 그로기 분포 · 연계 처형 사용률</td></tr>
+      <tr><td><b class="teal">v0.23</b></td><td><b>빌드 폭</b></td><td>죽은 무기 2종(도끼·육각 오라) 리워크 · 스탯 카드 켜기(별도 슬롯 + 진화 열쇠 실험)</td><td>무기 딜 기여 3% 이상 · 생존 편차</td></tr>
+    </table>
+    <p class="dim" style="margin-top:1rem;">순서 논리: 무기 성장은 이미 있다(레벨+진화). <b>코어(처형)에 성장이 없는 게 가장 큰 구멍</b>이라 그것부터. 3분·5분의 "봇 화력이 적 유입을 못 따라가는 구간"은 지우지 말고 <b>의도된 위기</b>로 남긴다 — 위기를 넘겨야 성장 체감이 생긴다. 각 버전 완료마다 봇 배치 1회로 수치 확인.</p>
+  </section>
+
+  <!-- ===== 10. 미해결 쟁점 ===== -->
+  <section class="slide" data-t="미해결 쟁점">
+    <div class="kicker">09 · 토론 계속 — 미해결 쟁점</div>
+    <h2>다음 갈림길</h2>
+    <div class="open">
+      <div class="q"><div class="lab">쟁점 A</div><h3>처형을 게이지식으로 갈아탈까?</h3><p>쿨 개념을 아예 버리고 "처치·회피 성공으로 게이지 충전 → 가득 차면 처형"(마나식). 회피→처형 루프와 궁합이 좋지만 리워크가 큼. v0.21은 환급 조정(작은 수정)으로 가고, 게이지는 별도 실험 빌드로.</p></div>
+      <div class="q"><div class="lab">쟁점 B</div><h3>압박(긴장감)은 언제 다시 올릴까?</h3><p>실측: 잡몹 2배 = 오히려 쉬워짐. 압박은 물량이 아니라 위협 품질(접촉 피해 · 도약 빈도 · 엘리트 비율)에서 온다. 처형 성장(v0.21~22)이 자리 잡은 뒤에 위협을 올려야 "성장 → 감당"의 균형이 맞음.</p></div>
+      <div class="q"><div class="lab">쟁점 C</div><h3>동시 적 상한 · 15분 보스 본편</h3><p>동시 적 341 실측 — 성능·난이도 관리용 상한(뱀서 300 방식) 도입 검토. 15분 보스 본편 전투(기둥 충돌·처형×3)는 처형 성장 완성 후가 순서.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 11. 결론 + 체크리스트 ===== -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">10 · 결론</div>
+    <h2>처형에 성장을 — 벌은 이미 충분하다</h2>
+    <div class="quote gold" style="border-color:var(--gold);">"v0.21~23은 처형 성장 → 공급·연습 → 빌드 폭 순서. 매 버전 봇 배치로 수치 검증."</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct"><b>v0.21 처형 성장</b> — 처형 레벨 통합(범위+45 스택·대상 1→2→3 가시화) + 처치 환급 10→3~5 + 공용 카드 쿨 계열 2장을 부가 효과 카드(파동·빙결·보석 끌기)로 교체</span></label>
+      <label><input type="checkbox"><span class="ct"><b>처형 보상 강화</b> — 엘리트 보석을 처형 시에만 온전히(방치 소멸 시 쭉정이) — "상" 축 신설</span></label>
+      <label><input type="checkbox"><span class="ct"><b>v0.22 공급 동조</b> — 엘리트 물결 크기가 처형 레벨에 반응 + 2~4분 일반 도약 연습 구간 + 회피 성공 → 처형 자원 충전</span></label>
+      <label><input type="checkbox"><span class="ct"><b>v0.23 빌드 폭</b> — 도끼·육각 오라 리워크(딜 기여 3% 이상 목표) + 스탯 카드 켜기(별도 슬롯, 진화 열쇠 실험)</span></label>
+      <label><input type="checkbox"><span class="ct"><b>봇 지표 추가</b> — 동시 그로기 수 분포 · 연계 처형 사용률 · 처형/분 지표를 QA 봇에 추가</span></label>
+      <label><input type="checkbox"><span class="ct"><b>실플레이 체크</b> — 딱맞춤 회피 손맛(타이밍 창·타격감)은 사람이 직접 — 중간보스 도약 3회 연속 회피가 "재밌는가"</span></label>
+      <label><input type="checkbox"><span class="ct"><b>보류 확정</b> — 게이지식 처형(실험 빌드) · 위협 품질 상향(v0.22 이후) · 동시 적 상한 · 15분 보스 본편</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 00</div>
+<div class="foot">QA 실측 로드맵 · v0.20.0 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 처형 연출을 더 화려하게 / 엘리트 색을 더 눈에 띄게..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
