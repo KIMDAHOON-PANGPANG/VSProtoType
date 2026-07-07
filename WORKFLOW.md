@@ -218,3 +218,5 @@ spawner(phase1·2·3) / xp / contactDamageScale
 | `build log/PATCH_LOG.txt` | 패치 내역 (내림차순) |
 | `WORKFLOW.md` | 이 문서 — 작업 규칙 (루트) |
 | `.claude/launch.json` | 로컬 미리보기 서버(`vslike`) 설정 |
+| `QA/bot/` | 밸런스 QA 봇 시뮬레이터 — 게임을 iframe 으로 띄워 자동 플레이·가속·지표 로그 (`qa_harness.html` 참고, 사용법은 `QA/bot/README.md`) |
+| `QA/bot/logs/` | QA 봇 런 로그·리포트 누적 (날짜-내용 명명) |

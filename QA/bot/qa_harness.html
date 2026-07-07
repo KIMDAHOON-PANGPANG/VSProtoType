@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>EXECUTE // Balance QA Bot Harness</title>
+<style>
+  :root{
+    --bg:#07090c; --panel:#0d1117; --panel2:#12181f; --line:#1e2833;
+    --teal:#1cf0d4; --crimson:#ff2b4e; --gold:#ffc63a; --blue:#3aa0ff;
+    --txt:#cfe3e0; --dim:#5f7a76; --mono:'Consolas','Courier New',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;overflow:hidden}
+  #app{display:grid;grid-template-columns:340px 1fr;grid-template-rows:100vh}
+
+  /* ── 좌측 컨트롤 패널 ── */
+  #ctrl{background:var(--panel);border-right:1px solid var(--line);padding:14px;overflow-y:auto}
+  #ctrl h1{font-size:15px;color:var(--teal);letter-spacing:2px;margin-bottom:2px}
+  #ctrl .sub{color:var(--dim);font-size:11px;margin-bottom:14px}
+  .sec{margin-bottom:14px}
+  .sec>label{display:block;color:var(--gold);font-size:11px;letter-spacing:1px;margin-bottom:6px}
+  .row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+  .row label{flex:1;color:var(--txt)}
+  input[type=number],input[type=text]{width:90px;background:var(--panel2);border:1px solid var(--line);color:var(--teal);padding:4px 6px;font-family:var(--mono);font-size:12px;border-radius:3px}
+  textarea{width:100%;height:90px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-family:var(--mono);font-size:11px;padding:6px;border-radius:3px;resize:vertical}
+  .scen{display:flex;gap:6px;align-items:flex-start;padding:5px 6px;border:1px solid var(--line);border-radius:4px;margin-bottom:4px;cursor:pointer;background:var(--panel2)}
+  .scen:hover{border-color:var(--teal)}
+  .scen input{margin-top:2px}
+  .scen b{color:var(--teal);font-size:12px}
+  .scen small{display:block;color:var(--dim);font-size:10px;line-height:1.5}
+  button{background:var(--panel2);border:1px solid var(--teal);color:var(--teal);padding:8px 12px;font-family:var(--mono);font-size:13px;letter-spacing:1px;border-radius:4px;cursor:pointer}
+  button:hover{background:var(--teal);color:#03110e}
+  button:disabled{opacity:.35;cursor:not-allowed}
+  button.warn{border-color:var(--crimson);color:var(--crimson)}
+  button.warn:hover{background:var(--crimson);color:#fff}
+  #runBtn{width:100%;padding:10px;font-size:14px;font-weight:bold}
+  #status{margin-top:10px;padding:8px;border:1px dashed var(--line);border-radius:4px;color:var(--dim);font-size:11px;line-height:1.6;white-space:pre-wrap}
+
+  /* ── 우측: 게임 뷰 + 결과 ── */
+  #main{display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+  /* 게임은 실제 1280×720 뷰포트로 돌리되(스폰 거리 = max(W,H)*0.6 이라 크기가 곧 밸런스),
+     화면에는 0.5 스케일로 축소 표시 */
+  #viewWrap{background:#000;border-bottom:1px solid var(--line);position:relative;height:372px;overflow:hidden}
+  #frameBox{position:absolute;left:50%;top:6px;width:1280px;height:720px;transform:translateX(-50%) scale(0.5);transform-origin:top center}
+  #gameFrame{width:1280px;height:720px;border:0;background:#000}
+  #liveHud{position:absolute;right:10px;top:8px;background:rgba(7,9,12,.85);border:1px solid var(--line);border-radius:4px;padding:8px 10px;font-size:11px;line-height:1.7;pointer-events:none;z-index:5;min-width:210px}
+  #liveHud b{color:var(--teal)}
+  #liveHud .r{color:var(--crimson)}
+  #liveHud .g{color:var(--gold)}
+  #results{overflow:auto;padding:12px}
+  #results h2{font-size:13px;color:var(--gold);letter-spacing:1px;margin:6px 0}
+  table{border-collapse:collapse;width:100%;font-size:11px;margin-bottom:12px}
+  th,td{border:1px solid var(--line);padding:4px 7px;text-align:right;white-space:nowrap}
+  th{background:var(--panel2);color:var(--teal);position:sticky;top:0}
+  td:first-child,th:first-child,td:nth-child(2),th:nth-child(2){text-align:left}
+  tr:hover td{background:#101820}
+  tr.dead td.res{color:var(--crimson);font-weight:bold}
+  tr.alive td.res{color:var(--teal);font-weight:bold}
+  .bar{display:inline-block;height:8px;background:var(--teal);vertical-align:middle;border-radius:2px}
+  #detail{background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:10px;margin-bottom:12px;display:none}
+  #detail h3{color:var(--teal);font-size:12px;margin-bottom:6px}
+  #detail canvas{background:#0a0e13;border:1px solid var(--line);border-radius:3px;display:block;margin-bottom:8px}
+  #detail .ev{max-height:170px;overflow:auto;font-size:10px;color:var(--dim);line-height:1.6}
+  #detail .ev .t{color:var(--blue)}
+  .btnrow{display:flex;gap:8px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="ctrl">
+    <h1>BALANCE QA BOT</h1>
+    <div class="sub">EXECUTE // index_26 (v0.20.0) 자동 플레이 시뮬레이터</div>
+
+    <div class="sec">
+      <label>실행 설정</label>
+      <div class="row"><label>가속 배율 (×)</label><input type="number" id="cfgSpeed" value="30" min="1" max="120"></div>
+      <div class="row"><label>런 길이 상한 (게임 초)</label><input type="number" id="cfgDur" value="900" min="30" max="1200"></div>
+      <div class="row"><label>시나리오당 반복 런</label><input type="number" id="cfgRuns" value="1" min="1" max="10"></div>
+      <div class="row"><label>시드 (0=랜덤)</label><input type="number" id="cfgSeed" value="1234"></div>
+      <div class="row"><label>게임 빌드</label><input type="text" id="cfgBuild" value="index_26.html" style="width:150px"></div>
+    </div>
+
+    <div class="sec">
+      <label>시나리오 (봇 프로파일)</label>
+      <div id="scenList"></div>
+    </div>
+
+    <div class="sec">
+      <label>밸런스 오버라이드 (JSON · BAL에 딥머지, 전 시나리오 공통)</label>
+      <textarea id="cfgOverride" placeholder='예: {"weapons":{"slash":{"dmg":8}}}'></textarea>
+    </div>
+
+    <button id="runBtn">▶ RUN BATCH</button>
+    <div class="btnrow" style="margin-top:8px">
+      <button id="stopBtn" class="warn" disabled>■ STOP</button>
+      <button id="exportBtn" disabled>⬇ JSON</button>
+      <button id="csvBtn" disabled>⬇ CSV</button>
+    </div>
+    <div id="status">대기 중.
+로컬 서버(포트 5607) 루트 기준 /QA/bot/qa_harness.html 로 열어야 합니다.</div>
+  </div>
+
+  <div id="main">
+    <div id="viewWrap">
+      <div id="frameBox"><iframe id="gameFrame"></iframe></div>
+      <div id="liveHud">런 대기</div>
+    </div>
+    <div id="results">
+      <h2>RUN RESULTS <small style="color:var(--dim)">(행 클릭 → 타임라인/이벤트 상세)</small></h2>
+      <table id="resTable"><thead></thead><tbody></tbody></table>
+      <div id="detail"></div>
+    </div>
+  </div>
+</div>
+
+<script src="qa_scenarios.js"></script>
+<script src="qa_report.js"></script>
+<script>
+/* =====================================================================
+   BATCH CONTROLLER — 시나리오 큐를 돌리며 iframe에 게임을 로드하고
+   qa_bot.js 를 주입, postMessage 로 결과를 수집한다.
+   자동화(헤드리스) 진입점: ?auto=1&speed=30&runs=1&seed=7&scenarios=a,b
+   완료 시 window.__QA.done=true, window.__QA.results 에 전체 로그.
+   ===================================================================== */
+const $=id=>document.getElementById(id);
+const frame=$('gameFrame');
+
+window.__QA={ running:false, done:false, results:[], queue:[], current:null };
+
+let BOT_SRC=null;
+async function loadBotSrc(){
+  if(BOT_SRC) return BOT_SRC;
+  const res=await fetch('qa_bot.js',{cache:'no-store'});
+  BOT_SRC=await res.text();
+  return BOT_SRC;
+}
+
+/* ── 시나리오 체크리스트 UI ── */
+function renderScenList(){
+  const box=$('scenList'); box.innerHTML='';
+  for(const s of QA_SCENARIOS){
+    const d=document.createElement('label'); d.className='scen';
+    d.innerHTML=`<input type="checkbox" data-id="${s.id}" ${s.default?'checked':''}>
+      <span><b>${s.name}</b><small>${s.desc}</small></span>`;
+    box.appendChild(d);
+  }
+}
+renderScenList();
+
+function selectedScenarios(){
+  return [...document.querySelectorAll('#scenList input:checked')]
+    .map(i=>QA_SCENARIOS.find(s=>s.id===i.dataset.id)).filter(Boolean);
+}
+
+/* ── 상태 표시 ── */
+function setStatus(t){ $('status').textContent=t; }
+function setLive(html){ $('liveHud').innerHTML=html; }
+
+/* ── 배치 실행 ── */
+let stopFlag=false, runTimer=null;
+
+async function runBatch(){
+  const scens=selectedScenarios();
+  if(!scens.length){ setStatus('시나리오를 1개 이상 선택하세요.'); return; }
+  let override=null;
+  const ovTxt=$('cfgOverride').value.trim();
+  if(ovTxt){
+    try{ override=JSON.parse(ovTxt); }
+    catch(e){ setStatus('밸런스 오버라이드 JSON 파싱 실패: '+e.message); return; }
+  }
+  const speed=+$('cfgSpeed').value||30, dur=+$('cfgDur').value||900,
+        runs=+$('cfgRuns').value||1, seedBase=+$('cfgSeed').value|0,
+        build=$('cfgBuild').value.trim()||'index_26.html';
+
+  const queue=[];
+  for(const s of scens) for(let r=0;r<runs;r++)
+    queue.push({ scenario:s, runIdx:r,
+      seed: seedBase===0 ? ((Math.random()*1e9)|0) : seedBase+r*7919,
+      speed, durationCap:dur, override, build });
+
+  window.__QA.running=true; window.__QA.done=false;
+  window.__QA.results=[]; window.__QA.queue=queue.map(q=>q.scenario.id);
+  stopFlag=false;
+  $('runBtn').disabled=true; $('stopBtn').disabled=false;
+  $('exportBtn').disabled=true; $('csvBtn').disabled=true;
+  clearResults();
+
+  await loadBotSrc();
+  for(let i=0;i<queue.length;i++){
+    if(stopFlag) break;
+    const job=queue[i];
+    setStatus(`실행 중 ${i+1}/${queue.length} — [${job.scenario.name}] seed=${job.seed} ×${job.speed}`);
+    const result=await runOne(job,i);
+    window.__QA.results.push(result);
+    addResultRow(result, window.__QA.results.length-1);
+  }
+  window.__QA.running=false; window.__QA.done=true;
+  $('runBtn').disabled=false; $('stopBtn').disabled=true;
+  $('exportBtn').disabled=!window.__QA.results.length;
+  $('csvBtn').disabled=!window.__QA.results.length;
+  setStatus(stopFlag?'중단됨.':`완료 — ${window.__QA.results.length}런. 표의 행을 클릭하면 상세가 열립니다.`);
+  setLive('배치 종료');
+  renderAggregate(window.__QA.results);
+}
+
+/* 1런 = iframe 리로드 → 봇 주입 → qa:end 대기 */
+function runOne(job,idx){
+  return new Promise(resolve=>{
+    let finished=false;
+    // 숨김 탭에선 봇이 풀스로틀로 돌므로 페이싱 추정 ×3 또는 최소 3분
+    const wallTimeout=Math.max(180000,(job.durationCap/job.speed)*1000*3+40000);
+
+    const onMsg=ev=>{
+      if(ev.source!==frame.contentWindow||!ev.data||!ev.data.qa) return;
+      const m=ev.data;
+      if(m.qa==='sample'){
+        const s=m.data;
+        setLive(`<b>[${job.scenario.name}]</b> run ${job.runIdx+1} seed ${job.seed}<br>`+
+          `t <b>${s.t}s</b> / ${job.durationCap}s · ×${job.speed}<br>`+
+          `HP <span class="${s.hp<s.maxHp*.25?'r':''}">${Math.round(s.hp)}/${s.maxHp}</span> · Lv <b>${s.level}</b><br>`+
+          `킬 ${s.kills} · 처형 <span class="r">${s.execs}</span> · 적 ${s.enemies}(엘리트 ${s.elites})<br>`+
+          `받은피해/분 <span class="g">${s.dtpm}</span> · 실FPS ${s.fps}`);
+      } else if(m.qa==='end'){
+        finished=true;
+        window.removeEventListener('message',onMsg);
+        clearTimeout(runTimer);
+        resolve({ job:{scenario:job.scenario.id, scenarioName:job.scenario.name,
+                       runIdx:job.runIdx, seed:job.seed, speed:job.speed,
+                       durationCap:job.durationCap, override:job.override, build:job.build},
+                  ...m.data });
+      } else if(m.qa==='fatal'){
+        finished=true;
+        window.removeEventListener('message',onMsg);
+        clearTimeout(runTimer);
+        resolve({ job:{scenario:job.scenario.id, scenarioName:job.scenario.name,
+                       runIdx:job.runIdx, seed:job.seed}, error:m.data });
+      }
+    };
+    window.addEventListener('message',onMsg);
+
+    runTimer=setTimeout(()=>{
+      if(finished) return;
+      window.removeEventListener('message',onMsg);
+      resolve({ job:{scenario:job.scenario.id, scenarioName:job.scenario.name,
+                     runIdx:job.runIdx, seed:job.seed}, error:'wall-clock timeout' });
+    }, wallTimeout);
+
+    frame.onload=()=>{
+      try{
+        const cw=frame.contentWindow;
+        cw.__QA_CONFIG={
+          profile: job.scenario.profile,
+          params: job.scenario.params||{},
+          seed: job.seed, speed: job.speed, durationCap: job.durationCap,
+          override: job.override, sampleEvery: 1,
+        };
+        const sc=cw.document.createElement('script');
+        sc.textContent=BOT_SRC;
+        cw.document.body.appendChild(sc);
+      }catch(e){
+        window.removeEventListener('message',onMsg);
+        clearTimeout(runTimer);
+        resolve({ job:{scenario:job.scenario.id, runIdx:job.runIdx, seed:job.seed},
+                  error:'inject failed: '+e.message });
+      }
+    };
+    frame.src='../../build/'+job.build+'?qa='+Date.now()+'_'+idx;
+  });
+}
+
+$('runBtn').onclick=runBatch;
+$('stopBtn').onclick=()=>{ stopFlag=true; setStatus('중단 요청 — 현재 런 종료 후 멈춤'); };
+$('exportBtn').onclick=()=>downloadJSON(window.__QA.results);
+$('csvBtn').onclick=()=>downloadCSV(window.__QA.results);
+
+/* ── 자동 모드 (?auto=1) — Claude/CI 가 headless 로 돌릴 때 ── */
+(function(){
+  const q=new URLSearchParams(location.search);
+  if(q.get('auto')!=='1') return;
+  if(q.get('speed')) $('cfgSpeed').value=q.get('speed');
+  if(q.get('dur')) $('cfgDur').value=q.get('dur');
+  if(q.get('runs')) $('cfgRuns').value=q.get('runs');
+  if(q.get('seed')) $('cfgSeed').value=q.get('seed');
+  if(q.get('build')) $('cfgBuild').value=q.get('build');
+  if(q.get('override')) $('cfgOverride').value=q.get('override');
+  if(q.get('scenarios')){
+    const want=q.get('scenarios').split(',');
+    document.querySelectorAll('#scenList input').forEach(i=>{ i.checked=want.includes(i.dataset.id); });
+  }
+  window.addEventListener('load',()=>setTimeout(runBatch,300));
+})();
+</script>
+</body>
+</html>

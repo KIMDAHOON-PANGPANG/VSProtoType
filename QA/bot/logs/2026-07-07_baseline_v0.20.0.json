@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "date": "2026-07-07",
+    "build": "build/index_26.html (v0.20.0)",
+    "tool": "QA/bot/qa_harness.html + qa_bot.js",
+    "batch": "7 시나리오 × 3 시드(1234/9153/17072), 900s 상한, 시드 결정적",
+    "legend": {
+      "s": "시나리오", "out": "capReached=상한 생존 | died=사망", "t": "생존 초",
+      "lv": "레벨", "kills": "처치", "ex": "처형 횟수",
+      "dtpm": "받은피해/분", "tc": "접촉 피해 누계", "th": "단발(도약 등) 피해 누계",
+      "nd": "빈사(HP<25%) 진입 횟수", "low": "HP 저점 %", "dps": "가한 DPS",
+      "top": "딜 지분 1위 무기", "gs": "그로기 발생", "gr": "그로기 만료→기상", "gf": "그로기 만료→소멸",
+      "jd": "저스트회피 성공", "starve": "그로기 있는데 처형 쿨로 못 한 누적 초",
+      "spread": "전염 변이된 잡몹 수", "maxE": "최대 동시 적 수"
+    },
+    "note": "승리 조건(endGame(true))이 v0.20 미구현이라 900s 도달=생존 처리. 동일 시드+배속이면 재현 가능."
+  },
+  "runs": [
+    {"s":"standard","seed":1234,"out":"capReached","t":900,"lv":18,"kills":3935,"ex":279,"dtpm":1.4,"tc":21,"th":0,"nd":0,"low":79,"dps":194.3,"top":"scythe 41%","gs":313,"gr":29,"gf":5,"jd":2,"starve":0,"spread":1,"maxE":69},
+    {"s":"standard","seed":9153,"out":"capReached","t":900,"lv":18,"kills":3900,"ex":267,"dtpm":1.9,"tc":29,"th":0,"nd":0,"low":71,"dps":169,"top":"scythe 42%","gs":301,"gr":29,"gf":5,"jd":6,"starve":0,"spread":11,"maxE":84},
+    {"s":"standard","seed":17072,"out":"died","t":337,"lv":12,"kills":803,"ex":44,"dtpm":17.8,"tc":100,"th":0,"nd":1,"low":14,"dps":56.5,"top":"slash 26%","gs":57,"gr":13,"gf":0,"jd":6,"starve":0,"spread":0,"maxE":49},
+    {"s":"noexec","seed":1234,"out":"died","t":420,"lv":13,"kills":1038,"ex":0,"dtpm":14.3,"tc":32,"th":68,"nd":1,"low":2,"dps":88.4,"top":"pulse 32%","gs":109,"gr":59,"gf":49,"jd":9,"starve":0,"spread":3,"maxE":46},
+    {"s":"noexec","seed":9153,"out":"died","t":434,"lv":13,"kills":1133,"ex":0,"dtpm":13.8,"tc":23,"th":77,"nd":1,"low":9,"dps":96.4,"top":"scythe 55%","gs":110,"gr":60,"gf":49,"jd":12,"starve":0,"spread":4,"maxE":46},
+    {"s":"noexec","seed":17072,"out":"died","t":341,"lv":11,"kills":785,"ex":0,"dtpm":17.6,"tc":55,"th":45,"nd":1,"low":11,"dps":55.6,"top":"slash 55%","gs":51,"gr":26,"gf":25,"jd":6,"starve":0,"spread":7,"maxE":95},
+    {"s":"greedy","seed":1234,"out":"capReached","t":900,"lv":18,"kills":3936,"ex":296,"dtpm":5.9,"tc":30,"th":58,"nd":1,"low":12,"dps":195.9,"top":"pulse 50%","gs":348,"gr":45,"gf":7,"jd":3,"starve":0,"spread":14,"maxE":68},
+    {"s":"greedy","seed":9153,"out":"capReached","t":900,"lv":18,"kills":3916,"ex":271,"dtpm":1.9,"tc":28,"th":0,"nd":0,"low":72,"dps":151.3,"top":"scythe 43%","gs":312,"gr":35,"gf":5,"jd":5,"starve":0,"spread":2,"maxE":67},
+    {"s":"greedy","seed":17072,"out":"died","t":320,"lv":13,"kills":759,"ex":49,"dtpm":18.7,"tc":79,"th":21,"nd":1,"low":21,"dps":62.8,"top":"soulorb 47%","gs":68,"gr":14,"gf":5,"jd":3,"starve":0,"spread":0,"maxE":46},
+    {"s":"coward","seed":1234,"out":"died","t":305,"lv":11,"kills":724,"ex":51,"dtpm":19.6,"tc":0,"th":100,"nd":0,"low":28,"dps":71.1,"top":"scythe 58%","gs":62,"gr":8,"gf":3,"jd":8,"starve":0,"spread":0,"maxE":48},
+    {"s":"coward","seed":9153,"out":"died","t":831,"lv":14,"kills":3174,"ex":106,"dtpm":7.2,"tc":57,"th":43,"nd":1,"low":19,"dps":137.3,"top":"frostspear 23%","gs":244,"gr":87,"gf":50,"jd":21,"starve":0,"spread":11,"maxE":78},
+    {"s":"coward","seed":17072,"out":"died","t":402,"lv":13,"kills":1028,"ex":78,"dtpm":14.9,"tc":23,"th":77,"nd":1,"low":19,"dps":70.8,"top":"slash 21%","gs":101,"gr":16,"gf":7,"jd":21,"starve":0,"spread":0,"maxE":48},
+    {"s":"afk","seed":1234,"out":"died","t":123,"lv":5,"kills":168,"ex":0,"dtpm":48.5,"tc":52,"th":48,"nd":1,"low":2,"dps":31.7,"top":"scythe 80%","gs":12,"gr":6,"gf":6,"jd":0,"starve":0,"spread":0,"maxE":48},
+    {"s":"afk","seed":9153,"out":"died","t":96,"lv":5,"kills":124,"ex":0,"dtpm":62.3,"tc":76,"th":24,"nd":1,"low":6,"dps":25.1,"top":"slash 35%","gs":6,"gr":3,"gf":3,"jd":0,"starve":0,"spread":0,"maxE":16},
+    {"s":"afk","seed":17072,"out":"died","t":77,"lv":5,"kills":97,"ex":0,"dtpm":76.9,"tc":100,"th":0,"nd":1,"low":0,"dps":22,"top":"slash 60%","gs":3,"gr":1,"gf":1,"jd":0,"starve":0,"spread":0,"maxE":15},
+    {"s":"slashonly","seed":1234,"out":"capReached","t":900,"lv":19,"kills":3967,"ex":335,"dtpm":2.8,"tc":42,"th":0,"nd":0,"low":58,"dps":156.6,"top":"slash 46%","gs":345,"gr":10,"gf":0,"jd":2,"starve":0,"spread":3,"maxE":82},
+    {"s":"slashonly","seed":9153,"out":"died","t":342,"lv":13,"kills":836,"ex":59,"dtpm":17.5,"tc":71,"th":29,"nd":0,"low":29,"dps":63.2,"top":"slash 60%","gs":66,"gr":5,"gf":2,"jd":5,"starve":0,"spread":0,"maxE":51},
+    {"s":"slashonly","seed":17072,"out":"capReached","t":900,"lv":16,"kills":2955,"ex":52,"dtpm":1.2,"tc":18,"th":0,"nd":0,"low":82,"dps":112.8,"top":"slash 57%","gs":54,"gr":2,"gf":0,"jd":4,"starve":0,"spread":0,"maxE":347},
+    {"s":"noslash","seed":1234,"out":"capReached","t":900,"lv":18,"kills":3919,"ex":284,"dtpm":0.9,"tc":14,"th":0,"nd":0,"low":86,"dps":200.1,"top":"scythe 50%","gs":322,"gr":33,"gf":5,"jd":2,"starve":0,"spread":8,"maxE":75},
+    {"s":"noslash","seed":9153,"out":"died","t":358,"lv":13,"kills":870,"ex":50,"dtpm":16.8,"tc":42,"th":58,"nd":1,"low":3,"dps":81.8,"top":"scythe 45%","gs":67,"gr":11,"gf":6,"jd":7,"starve":0,"spread":1,"maxE":42},
+    {"s":"noslash","seed":17072,"out":"died","t":337,"lv":12,"kills":803,"ex":44,"dtpm":17.8,"tc":100,"th":0,"nd":1,"low":14,"dps":56.5,"top":"slash 26%","gs":57,"gr":13,"gf":0,"jd":6,"starve":0,"spread":0,"maxE":49}
+  ]
+}

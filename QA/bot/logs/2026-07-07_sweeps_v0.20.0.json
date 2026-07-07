@@ -1,0 +1,28 @@
+{
+  "_meta": {
+    "date": "2026-07-07",
+    "build": "build/index_26.html (v0.20.0)",
+    "baselineRef": "2026-07-07_baseline_v0.20.0.json 의 standard 3런 (2/3 생존, starve 전부 0)",
+    "profile": "standard (kiter, 처형+수집, cardStrategy balanced), 시드 1234/9153/17072, 900s 상한"
+  },
+  "sweep1_slash_nerf": {
+    "override": {"weapons": {"slash": {"damage": 10, "interval": 0.5}}},
+    "question": "QA_01 #1·#2 — 베기가 너무 강하고 빠른가? 너프하면 어떻게 되나",
+    "runs": [
+      {"seed":1234,"out":"died","t":652,"lv":16,"kills":2104,"ex":114,"dtpm":9.2,"low":2,"dps":99.4,"top":"soulorb 33%","slashDmg":4502,"totalDmg":64904},
+      {"seed":9153,"out":"died","t":428,"lv":14,"kills":1126,"ex":78,"dtpm":14,"low":1,"dps":83.7,"top":"tide 38%","slashDmg":10566,"totalDmg":35847},
+      {"seed":17072,"out":"died","t":364,"lv":13,"kills":887,"ex":49,"dtpm":16.5,"low":11,"dps":72,"top":"slash 20%","slashDmg":5294,"totalDmg":26239}
+    ],
+    "finding": "생존률 2/3 → 0/3. 베기 딜 지분은 원래 낮지만(균형픽 시 1위 아님) 초반 클리어 속도가 베기에 의존 — 단독 너프는 게임을 무너뜨림. 너프하려면 초반 대체 딜(다른 무기 초기치)이나 템포 커브 완화가 같이 가야 함."
+  },
+  "sweep2_exec_refund_zero": {
+    "override": {"execution": {"refundPerKill": 0}},
+    "question": "QA_01 #15 — 처형 공용 쿨(10s)이 refund 10 때문에 사실상 무의미한가",
+    "runs": [
+      {"seed":1234,"out":"capReached","t":900,"lv":18,"ex":227,"gs":312,"gr":64,"gf":20,"starve":75.7,"dtpm":5.9,"low":11},
+      {"seed":9153,"out":"capReached","t":900,"lv":17,"ex":102,"gs":298,"gr":121,"gf":74,"starve":301.9,"dtpm":4.5,"low":33},
+      {"seed":17072,"out":"died","t":874,"lv":18,"ex":219,"gs":260,"gr":34,"gf":7,"starve":29.6,"dtpm":6.9,"low":2}
+    ],
+    "finding": "기본값(refund 10/10)에선 21런 전부 기아 0초 = 쿨 노브 완전 사망 상태. refund 0으로 바꾸면 기아 30~302초/처형 -20~-60%·그로기 기상/소멸 급증 — 그런데도 생존엔 큰 지장 없음. 처형 페이싱을 조이고 싶으면 refund가 실질 레버 (예: refund 3~5로 부분 환급)."
+  }
+}
