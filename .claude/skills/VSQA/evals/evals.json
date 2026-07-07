@@ -1,0 +1,24 @@
+{
+  "skill_name": "VSQA",
+  "_note": "테스트 프롬프트 초안 — 실행 시 리포에 로그/세션 파일이 실제로 생성되고 로컬 서버(5607)가 필요함. 돌리려면 사용자 승인 후 순차 실행 권장.",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "index_26 기준으로 TQA 회귀 돌려줘. 지난번 로그랑 비교해서 이상 있는지 알려줘.",
+      "expected_output": "vslike 서버 기동 → 하네스 자동 모드(build=index_26.html, 기준 시드 1234, 기본 시나리오)로 배치 실행 → window.__QA 요약 추출 → QA/TQA/bot/logs/의 직전 로그(v3)와 시나리오별 생존/딜지분/처형 비교 표 + 진단 플래그 + 새 로그 저장.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "FQA 세션 돌려줘. 이번엔 압박이 부족한지 위주로 보고 싶어.",
+      "expected_output": "FUN_CRITERIA.md 읽기 → TQA 배치(압박 관련 지표 중심, 필요시 A/B) → QA/FQA/sessions/001_날짜_압박/판정시트.md 생성(판단 요소 5~8개, 사람 언어+근거 수치+F-ID+실플레이 가이드) → 플레이 URL 안내 후 판정 대기(멈춤). 판정 없이 밸런스를 바꾸지 않음.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "아까 시트 봤는데 1번은 재밌었고 2번은 별로야. 처형이 너무 헐렁해서 긴장감이 없어. 반영해줘.",
+      "expected_output": "판정을 해당 세션 시트에 기입 → FUN_CRITERIA.md 갱신(F-02 처형 기준 확정/범위 조정, 히스토리 기록) → 처형 관련 밸런스 튜닝(WORKFLOW 규칙 준수: gameBalance.json+FALLBACK 동기 또는 새 index_N) → TQA 배치로 목표 범위 검증 → 다음 판정 예고.",
+      "files": []
+    }
+  ]
+}
