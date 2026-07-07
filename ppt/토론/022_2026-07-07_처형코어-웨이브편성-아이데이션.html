@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>처형 코어 웨이브 편성 아이데이션 · EXECUTE Survivors</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --teal2:#9ffff2;
+    --good:#5fe39a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    overflow:hidden; letter-spacing:-0.01em;
+  }
+  #deck{position:fixed; inset:0;}
+  .slide{
+    position:absolute; inset:0; display:none;
+    flex-direction:column; justify-content:center;
+    padding:6vh 8vw; opacity:0; transition:opacity .35s ease;
+  }
+  .slide.active{display:flex; opacity:1;}
+  .kicker{font-size:.8rem; letter-spacing:.22em; color:var(--teal); text-transform:uppercase; margin-bottom:1.1rem; font-weight:700;}
+  h1{font-size:clamp(1.8rem,4.6vw,3.4rem); line-height:1.12; font-weight:800; margin-bottom:1rem;}
+  h2{font-size:clamp(1.4rem,3.2vw,2.3rem); line-height:1.18; font-weight:800; margin-bottom:1.4rem;}
+  h2 .num{color:var(--gold); font-variant-numeric:tabular-nums; margin-right:.5rem;}
+  p,li{font-size:clamp(.95rem,1.45vw,1.18rem); line-height:1.6; color:var(--ink);}
+  .dim{color:var(--dim);}
+  b,strong{color:#fff;}
+  em{font-style:normal; color:var(--gold);}
+  .teal{color:var(--teal);} .blue{color:var(--blue);} .red{color:var(--red);} .gold{color:var(--gold);} .good{color:var(--good);}
+
+  .title-wrap{max-width:920px;}
+  .badge{display:inline-block; padding:.3em .8em; border:1px solid var(--line); border-radius:999px;
+    font-size:.72rem; letter-spacing:.18em; color:var(--dim); margin-bottom:1.8rem;}
+  .title-meta{margin-top:2rem; display:flex; gap:2.4rem; flex-wrap:wrap; color:var(--dim); font-size:.9rem;}
+  .title-meta b{color:var(--teal); font-weight:700;}
+
+  .lead{font-size:clamp(1.05rem,1.8vw,1.45rem); line-height:1.55; max-width:60ch; color:var(--ink);}
+  .quote{border-left:3px solid var(--gold); padding:.6rem 0 .6rem 1.2rem; margin:1.4rem 0;
+    font-size:clamp(1.05rem,1.9vw,1.5rem); font-weight:700; line-height:1.4;}
+  .quote.teal{border-color:var(--teal);}
+  .quote.red{border-color:var(--red);}
+  ul.clean{list-style:none; display:flex; flex-direction:column; gap:.8rem; margin-top:.4rem;}
+  ul.clean li{position:relative; padding-left:1.5rem;}
+  ul.clean li::before{content:"▸"; position:absolute; left:0; color:var(--teal);}
+  .threads{display:flex; gap:1rem; margin-top:1.8rem; flex-wrap:wrap;}
+  .thread{flex:1 1 200px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .thread .t{font-size:.74rem; letter-spacing:.16em; color:var(--gold); text-transform:uppercase;}
+  .thread h3{font-size:1.08rem; margin:.45rem 0 .35rem; font-weight:700;}
+  .thread p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:1.4rem 2.6rem; align-items:start; margin-top:.6rem;}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.2rem 1.3rem;}
+  .card.bad{border-color:rgba(255,43,78,.35);}
+  .card.good{border-color:rgba(95,227,154,.35);}
+  .card h3{font-size:1rem; font-weight:800; margin-bottom:.5rem; display:flex; align-items:center; gap:.5rem;}
+  .card p{font-size:.92rem; color:var(--dim); line-height:1.5;}
+  .tag{display:inline-block; font-size:.7rem; letter-spacing:.1em; padding:.15em .55em; border-radius:5px; font-weight:700;}
+  .tag.x{background:rgba(255,43,78,.14); color:var(--red);}
+  .tag.o{background:rgba(95,227,154,.14); color:var(--good);}
+
+  table{border-collapse:collapse; width:100%; margin-top:.4rem; font-size:.92rem;}
+  th,td{text-align:left; padding:.7rem .9rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  th{color:var(--dim); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700;}
+
+  .spikes{display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; margin-top:1.4rem;}
+  .spike{display:flex; gap:.9rem; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem 1.1rem;}
+  .spike .n{flex:0 0 2rem; height:2rem; border-radius:8px; background:var(--teal); color:#04201c; font-weight:800;
+    display:grid; place-items:center; font-size:1rem;}
+  .spike .b{font-size:.92rem; line-height:1.45;}
+  .spike .b b{color:#fff;} .spike .b span{color:var(--dim); font-size:.84rem;}
+
+  .open{display:flex; gap:1.4rem; margin-top:1rem; flex-wrap:wrap;}
+  .open .q{flex:1 1 320px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.4rem 1.5rem;}
+  .open .q .lab{font-size:.78rem; letter-spacing:.14em; color:var(--gold); font-weight:800;}
+  .open .q h3{font-size:1.15rem; margin:.55rem 0 .6rem; font-weight:800; line-height:1.3;}
+  .open .q p{font-size:.9rem; color:var(--dim); line-height:1.5;}
+
+  .flow{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:1rem;}
+  .flow .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800; font-size:.9rem; text-align:center;}
+  .flow .step.hot{border-color:var(--teal); color:var(--teal); box-shadow:0 0 14px rgba(28,240,212,.15);}
+  .flow .step.bad{border-color:rgba(255,43,78,.4); color:var(--red);}
+  .flow .step small{display:block; color:var(--dim); font-weight:600; font-size:.7rem; margin-top:.15rem;}
+  .flow .arr{color:var(--dim); font-weight:900; font-size:1.1rem;}
+  .arc{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-top:.9rem;}
+  .arc .step{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:.55rem .9rem; font-weight:800;}
+  .arc .step small{display:block; color:var(--faint); font-weight:600; font-size:.68rem; margin-top:.1rem;}
+  .arc .arr{color:var(--dim); font-weight:900;}
+  .vs{display:grid; grid-template-columns:1fr auto 1fr; gap:1rem; align-items:stretch; margin-top:.9rem;}
+  .vs .side{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.2rem;}
+  .vs .side.a{border-color:rgba(58,160,255,.4);} .vs .side.b{border-color:rgba(28,240,212,.45);}
+  .vs .side h3{font-size:1rem; font-weight:800; margin-bottom:.4rem;}
+  .vs .side p{font-size:.86rem; color:var(--dim); line-height:1.45;}
+  .vs .mid{display:grid; place-items:center; font-weight:900; color:var(--red); font-size:1.1rem;}
+  .stats{display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;}
+  .stat{flex:1 1 150px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem;}
+  .stat .big{font-size:2.2rem; font-weight:900; color:var(--teal); line-height:1;}
+  .stat .lab{font-size:.82rem; color:var(--dim); margin-top:.35rem; line-height:1.4;}
+  .chips{display:flex; gap:.55rem; flex-wrap:wrap; margin-top:.9rem;}
+  .chip{background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:.42rem .95rem; font-weight:700; font-size:.88rem;}
+  .chip .i{color:var(--teal); margin-right:.35rem;}
+
+  .checklist{display:flex; flex-direction:column; gap:.55rem; margin-top:1.2rem; max-width:780px;}
+  .checklist label{display:flex; align-items:flex-start; gap:.7rem; cursor:pointer;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:.7rem .9rem; transition:.15s;}
+  .checklist label:hover{border-color:var(--teal);}
+  .checklist input{appearance:none; -webkit-appearance:none; width:1.2rem; height:1.2rem; flex:0 0 auto;
+    margin-top:.05rem; border:2px solid var(--dim); border-radius:5px; cursor:pointer; position:relative; transition:.15s;}
+  .checklist input:checked{background:var(--teal); border-color:var(--teal);}
+  .checklist input:checked::after{content:"✓"; position:absolute; inset:0; display:grid; place-items:center;
+    color:#04201c; font-size:.85rem; font-weight:900;}
+  .checklist .ct{font-size:.95rem; line-height:1.45; color:var(--ink);}
+  .checklist input:checked ~ .ct{color:var(--faint); text-decoration:line-through;}
+
+  #bar{position:fixed; left:0; top:0; height:3px; background:var(--teal); width:0; transition:width .35s; z-index:30;}
+  #nav{position:fixed; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:.5rem; align-items:center; z-index:30;}
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--line); cursor:pointer; transition:.2s; border:none;}
+  .dot.active{background:var(--teal); width:22px; border-radius:4px;}
+  #count{position:fixed; bottom:20px; right:26px; color:var(--dim); font-size:.8rem; font-variant-numeric:tabular-nums; z-index:30;}
+  #count b{color:var(--ink);}
+  .foot{position:fixed; bottom:20px; left:26px; color:var(--faint); font-size:.74rem; letter-spacing:.08em; z-index:30;}
+  .hint{position:fixed; top:18px; right:26px; color:var(--faint); font-size:.72rem; z-index:30;}
+  .arrow{position:fixed; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--line);
+    font-size:2.2rem; cursor:pointer; padding:1rem; z-index:30; transition:.2s;}
+  .arrow:hover{color:var(--teal);}
+  #prev{left:8px;} #next{right:8px;}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div class="hint">← → 또는 스페이스로 이동</div>
+
+<div id="deck">
+
+  <!-- ===== 1. 표지 ===== -->
+  <section class="slide" data-t="표지">
+    <div class="title-wrap">
+      <span class="badge">EXECUTE // SURVIVORS · EXECUTION CORE</span>
+      <div class="kicker">기획 토론 · 아이데이션 (v0.21 실플레이 피드백)</div>
+      <h1>처형이 코어가 되는<br><span class="red">자코·엘리트 배치</span></h1>
+      <p class="lead dim">"아슬아슬하게 피하면서 처형" — 이 그림이 안 나오는 이유는 물량이 아니라 <b>그로기 엘리트의 위치</b>다. 그로기를 위험의 한가운데에 두는 편성 4안.</p>
+      <div class="title-meta">
+        <div>기반 빌드 · <b>v0.21.0 (index_27)</b></div>
+        <div>날짜 · <b>2026-07-07</b></div>
+        <div>근거 · <b>실플레이 피드백 + 봇 15런 + 덱 019·021</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 2. 아젠다 ===== -->
+  <section class="slide" data-t="아젠다">
+    <div class="kicker">01 · 토론 아젠다</div>
+    <h2>그로기 엘리트를 '위험의 한가운데'에 두려면?</h2>
+    <div class="quote">"처형이 코어라면, 웨이브는 처형의 무대여야 한다 — 자코는 배경이 아니라 처형의 장애물이다"</div>
+    <div class="threads">
+      <div class="thread"><div class="t">Thread ①</div><h3>공간의 문제</h3><p>그로기가 안전지대에 눕는다 → 공짜 우클릭. 그로기를 자코 무리 '안'에 눕히면?</p></div>
+      <div class="thread"><div class="t">Thread ②</div><h3>수량의 문제</h3><p>엘리트 솔로 등장(초반 상한 0→1→2) → 동시 그로기 0 → 멀티 처형 무의미</p></div>
+      <div class="thread"><div class="t">Thread ③</div><h3>순간의 문제</h3><p>"죽이자마자 우클릭" 반사 — 처형 버튼에 판단·타이밍이 없다</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 3. 진단 ===== -->
+  <section class="slide" data-t="진단">
+    <div class="kicker">02 · 진단 — 지금 루프가 이렇다</div>
+    <h2>엘리트 솔로 → 즉시 처형 → 무긴장</h2>
+    <div class="flow">
+      <span class="step">자코 농사<small>편하게 레벨업</small></span><span class="arr">→</span>
+      <span class="step bad">엘리트 1마리<small>초반 동시 상한 0→1→2</small></span><span class="arr">→</span>
+      <span class="step bad">죽이자마자 우클릭<small>쿨 환급 = 항상 준비됨</small></span><span class="arr">→</span>
+      <span class="step bad">위기감 없음<small>그로기가 안전지대에 눕는다</small></span><span class="arr">→</span>
+      <span class="step">멀티 처형 늦게 유효<small>동시 그로기가 5분+ 에야</small></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="big red">0 → 1 → 2</div><div class="lab">0~5분 엘리트 동시 상한 — 첫 5분(런의 학습 구간)이 통째로 '솔로 처형 반복'</div></div>
+      <div class="stat"><div class="big red">즉답</div><div class="lab">처치 환급 10/10 = 처형이 항상 준비 → 누를지 말지의 '판단'이 없음</div></div>
+      <div class="stat"><div class="big gold">2장</div><div class="lab">공용 카드 중 환급·쿨 2장 여전히 노출 — 덱 021에서 교체 결정했으나 미이행</div></div>
+    </div>
+  </section>
+
+  <!-- ===== 4. 아이디어 ① 호위 편성 ===== -->
+  <section class="slide" data-t="① 호위 편성">
+    <div class="kicker">03 · 아이디어 ① (핵심 권고)</div>
+    <h2><span class="num">①</span>호위 편성 — 엘리트는 혼자 다니지 않는다</h2>
+    <div class="vs">
+      <div class="side a">
+        <h3><span class="tag x">지금</span> 그로기 = 공짜 보상</h3>
+        <p>엘리트가 쓰러지면 주변이 비어 있다. 걸어가서 우클릭 — 리스크 0. 자코는 처형과 무관한 배경.</p>
+      </div>
+      <div class="mid">VS</div>
+      <div class="side b">
+        <h3><span class="tag o">제안</span> 그로기 = 무리 한가운데의 보상</h3>
+        <p>엘리트마다 자코 호위 12~18기가 붙어 다닌다. 엘리트가 쓰러져도 호위는 그 자리를 지킨다 → <b>처형하려면 무리 속으로 파고들어야</b> 한다.</p>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip"><span class="i">◆</span>접촉 피해를 뚫는 진입 = "아슬아슬하게 피하면서 처형"</span>
+      <span class="chip"><span class="i">◆</span>처형 대시(무적)가 진입기+탈출기가 됨</span>
+      <span class="chip"><span class="i">◆</span>자코 = 엘리트의 갑옷 — 배치에 의미 부여</span>
+    </div>
+    <p class="dim" style="margin-top:1rem;">구현: 엘리트 스폰 시 호위 자코를 링으로 동반 스폰(타입별 수 데이터화) · 호위는 엘리트를 느슨히 따라다니다 그로기 시 시체 곁을 지킴. 봇 지표: <b>처형 순간 반경 120 내 자코 수</b>(인파이팅 지수).</p>
+  </section>
+
+  <!-- ===== 5. 아이디어 ② 동시 그로기 ===== -->
+  <section class="slide" data-t="② 동시 그로기">
+    <div class="kicker">04 · 아이디어 ②</div>
+    <h2><span class="num">②</span>솔로 삭제 — 엘리트는 2~3마리 세트가 기본</h2>
+    <div class="flow">
+      <span class="step">듀오/트리오 스폰<small>1분부터 · HP는 나눠서(각 ×0.6)</small></span><span class="arr">→</span>
+      <span class="step">시차 그로기<small>한 마리 쓰러짐 · 남은 놈이 도약으로 방해</small></span><span class="arr">→</span>
+      <span class="step hot">선택의 순간<small>지금 들어가? 도약 보고 들어가?</small></span><span class="arr">→</span>
+      <span class="step hot">동시 그로기<small>멀티 처형 촤자작 — 1분부터 유효</small></span>
+    </div>
+    <ul class="clean" style="margin-top:1.2rem;">
+      <li><b>총 체력은 동일</b> — 2마리 ×0.6 = 처치 시간 비슷, 긴장만 2배. 난이도가 아니라 <b>문법</b>을 바꾸는 것.</li>
+      <li>남은 엘리트의 도약이 <b>처형 방해기</b>가 된다 (QA_01 #5 "처형을 방해하는 요소" 그대로).</li>
+      <li>멀티 처형 업그레이드가 첫 보상부터 가치 있음 — "그제서야 씀" 문제 해소.</li>
+    </ul>
+  </section>
+
+  <!-- ===== 6. 아이디어 ③ 농사/축제 리듬 ===== -->
+  <section class="slide" data-t="③ 농사·축제">
+    <div class="kicker">05 · 아이디어 ③</div>
+    <h2><span class="num">③</span>평시엔 농사, 웨이브엔 처형 축제</h2>
+    <p class="dim">엘리트를 상시 흘려보내지 말고(트리클), <b>러시 자코 웨이브에 묶어서</b> 투입한다 — 처형은 항상 혼돈 속에서 일어난다.</p>
+    <div class="arc">
+      <span class="step">농사 30~40초<small>자코만 · 엘리트 0~1 · 레벨업/이동</small></span><span class="arr">→</span>
+      <span class="step hot" style="border-color:var(--red); color:var(--red);">축제 15~25초<small>러시 자코 홍수 + 엘리트 2~3 동시</small></span><span class="arr">→</span>
+      <span class="step">보상·숨 고르기<small>처형 보상 오브젝트 · 다음 웨이브 예고</small></span><span class="arr">→</span>
+      <span class="step">반복<small>점점 짧은 농사 · 점점 큰 축제</small></span>
+    </div>
+    <ul class="clean" style="margin-top:1.2rem;">
+      <li>기준 F-01 "강화 웨이브 때마다 아슬아슬" 과 정확히 같은 리듬 — 위기의 '때'가 읽히게 된다.</li>
+      <li><b>수치만으로 가능</b>: 웨이브 슬롯에 엘리트 동반(eliteN)을 전 슬롯 필수화 + 평시 동시 상한을 낮춤(1). 공급의 무게중심을 상시(밴드) → 파도(스케줄)로 이동.</li>
+      <li>매직서바이벌의 "특수 웨이브 = 스폰 급상승" 문법(QA_01 #11)의 처형 버전.</li>
+    </ul>
+  </section>
+
+  <!-- ===== 7. 아이디어 ④ 처형 순간의 게임화 ===== -->
+  <section class="slide" data-t="④ 처형 순간">
+    <div class="kicker">06 · 아이디어 ④ — "죽이자마자 우클릭" 반사 끊기</div>
+    <h2><span class="num">④</span>처형 버튼에 타이밍 게임을 넣는다</h2>
+    <div class="cols">
+      <div class="card good"><h3><span class="tag o">막타 처형</span> 늦게 딸수록 달콤하게</h3>
+        <p>그로기 잔여 <b>0.8초 이내</b> 처형 = <b>"완벽 처형"</b> — 보석 2배 + 강화 파동. 일찍 따면 안전하지만 평범. 끝까지 버티면 부활 위험 + 호위 압박 속에서 최대 보상 — <b>위기감이 스스로 생긴다</b>.</p></div>
+      <div class="card good"><h3><span class="tag o">쓰러지는 연출</span> 그로기 첫 0.4초 처형 잠금</h3>
+        <p>쓰러지는 동안은 우클릭이 안 먹힌다 — "죽이자마자 우클릭" 무의식 제거 + 처형 전에 주변을 한 번 보게 만든다.</p></div>
+      <div class="card bad"><h3><span class="tag x">이행 누락</span> 공용 카드 교체 (덱 021 결정)</h3>
+        <p>환급 +3s · 쿨 -15% — 쿨 대기 0초라 여전히 빈 선택지("찍고 싶지 않음" 재확인). <b>처형 파동(밀치기) / 처형 빙결 / 보석 흡수</b>로 교체.</p></div>
+      <div class="card"><h3>🎯 저스트회피 연계와의 합</h3>
+        <p>v0.21의 "회피 → 처형 찬스"에 막타 보너스가 겹치면: 회피 성공 → 즉시 그로기 → <b>버틸까 바로 딸까</b> — 순간마다 판단이 생긴다.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 8. 종합 권고 ===== -->
+  <section class="slide" data-t="종합 권고">
+    <div class="kicker">07 · 종합 — 무엇부터</div>
+    <h2>권고 조합: ③+② 는 수치로 지금, ①+④ 는 v0.22 코드로</h2>
+    <table>
+      <tr><th>순서</th><th>안</th><th>비용</th><th>기대 효과</th></tr>
+      <tr><td><b class="red">1</b></td><td><b>③ 농사/축제 리듬</b> + <b>② 듀오 기본</b></td><td>수치만 (스케줄·밴드·HP)</td><td>동시 그로기 1분부터 · 위기의 '때'가 읽힘 · 멀티 처형 즉시 유효</td></tr>
+      <tr><td><b class="gold">2</b></td><td><b>① 호위 편성</b></td><td>코드 1건 (동반 스폰+추종)</td><td>"아슬아슬하게 피하며 처형" 직격 — 처형의 공간적 리스크</td></tr>
+      <tr><td><b class="teal">3</b></td><td><b>④ 막타 처형 + 카드 교체</b></td><td>코드 소규모</td><td>버튼에 판단·타이밍 — 반사 클릭 제거</td></tr>
+    </table>
+    <div class="chips">
+      <span class="chip"><span class="i">📏</span>봇 지표 추가: 동시 그로기 분포 · 처형 시 주변 자코 수 · 막타 처형 비율</span>
+      <span class="chip"><span class="i">⚠</span>주의: ①+③ 동시 적용 시 초반 난이도 급등 — 호위 수·러시 물량은 봇으로 캘리브레이션</span>
+    </div>
+  </section>
+
+  <!-- ===== 9. 미해결 쟁점 ===== -->
+  <section class="slide" data-t="미해결 쟁점">
+    <div class="kicker">08 · 토론 계속 — 미해결 쟁점</div>
+    <h2>다음 갈림길</h2>
+    <div class="open">
+      <div class="q"><div class="lab">쟁점 A</div><h3>처형 쿨 환급, 이대로 둘까?</h3><p>"항상 준비된 처형"이 반사 클릭의 뿌리. 막타 보너스(④)로 판단을 만들지, 환급 자체를 3~5로 줄여 자원감을 줄지 — ④를 먼저 시험하고 부족하면 환급 축소가 순서.</p></div>
+      <div class="q"><div class="lab">쟁점 B</div><h3>호위가 도발(거미)·광역과 충돌?</h3><p>호위 무리는 도발 미끼·광역 무기의 밥이 될 수 있음 — 호위는 도발 면역으로 할지, 그것도 카운터 빌드로 인정할지.</p></div>
+      <div class="q"><div class="lab">쟁점 C</div><h3>회피 난도(F-03 보류)와의 합</h3><p>호위 속 인파이팅이 들어오면 회피 쿨(1.3s)의 가치가 급등 — 회피 쿨 상향 A/B는 ① 적용 후에 해야 정확.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 10. 결론 + 체크리스트 ===== -->
+  <section class="slide" data-t="결론">
+    <div class="kicker">09 · 결론</div>
+    <h2>처형의 재미 = 그로기의 위치 × 동시성 × 타이밍</h2>
+    <div class="quote gold" style="border-color:var(--gold);">"엘리트 솔로 등장을 없애고, 그로기를 자코 무리 한가운데에 눕혀라 — 그때 우클릭은 판단이 된다"</div>
+    <div class="checklist">
+      <label><input type="checkbox"><span class="ct"><b>③+② 수치 적용 (v0.21.x)</b> — 웨이브 슬롯 전부에 엘리트 동반(eliteN 2~3) · 평시 동시 상한 1로 · 엘리트 HP ×0.6 분할 · 물결 2~3 기본</span></label>
+      <label><input type="checkbox"><span class="ct"><b>① 호위 편성 (v0.22)</b> — 엘리트 스폰 시 자코 호위 12~18기 동반(타입별 데이터) · 그로기 시 시체 곁 유지</span></label>
+      <label><input type="checkbox"><span class="ct"><b>④ 막타 처형 (v0.22)</b> — 그로기 잔여 0.8s 이내 처형 = 완벽 처형(보석 2배+파동) · 그로기 첫 0.4s 처형 잠금</span></label>
+      <label><input type="checkbox"><span class="ct"><b>공용 카드 교체</b> — 환급+3s·쿨-15% 를 처형 파동/빙결/보석 흡수로 (덱 021 결정 이행)</span></label>
+      <label><input type="checkbox"><span class="ct"><b>봇 지표 3종 추가</b> — 동시 그로기 분포 · 처형 순간 주변 자코 수 · 막타 처형 비율</span></label>
+      <label><input type="checkbox"><span class="ct"><b>적용 후 FQA 세션 002</b> — "축제 때 아슬아슬한가 · 무리 속 처형이 재밌는가" 판정</span></label>
+    </div>
+  </section>
+
+</div>
+
+<button class="arrow" id="prev">‹</button>
+<button class="arrow" id="next">›</button>
+<div id="nav"></div>
+<div id="count"><b>01</b> / 00</div>
+<div class="foot">처형 코어 웨이브 편성 · v0.21.0 기반</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const nav=document.getElementById('nav');
+  const bar=document.getElementById('bar');
+  const count=document.getElementById('count');
+  let i=0;
+  slides.forEach((s,idx)=>{
+    const d=document.createElement('button'); d.className='dot';
+    d.title=s.dataset.t||('Slide '+(idx+1));
+    d.onclick=()=>go(idx); nav.appendChild(d);
+  });
+  const dots=[...nav.children];
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,idx)=>s.classList.toggle('active',idx===i));
+    dots.forEach((d,idx)=>d.classList.toggle('active',idx===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    count.innerHTML='<b>'+String(i+1).padStart(2,'0')+'</b> / '+String(slides.length).padStart(2,'0');
+  }
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.getElementById('prev').onclick=()=>go(i-1);
+  addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    if(e.key==='Home')go(0); if(e.key==='End')go(slides.length-1);
+  });
+  go(0);
+</script>
+
+<!-- ===== 체크 항목 → Claude 프롬프트 (VSDebate 공통 블록 · 덱 맨 끝 고정) ===== -->
+<style>
+  .mk-btn{position:fixed; top:16px; left:22px; z-index:35; background:var(--teal); color:#04201c;
+    border:none; border-radius:999px; padding:.5rem 1rem; font-size:.8rem; font-weight:800; cursor:pointer;
+    box-shadow:0 4px 16px rgba(28,240,212,.25); transition:.15s; font-family:inherit;}
+  .mk-btn:hover{transform:translateY(-1px); box-shadow:0 6px 22px rgba(28,240,212,.45);}
+  .pm-overlay{position:fixed; inset:0; z-index:50; background:rgba(5,7,12,.82);
+    display:grid; place-items:center; padding:5vh 6vw;}
+  .pm-overlay.hidden{display:none;}
+  .pm-box{width:min(760px,100%); max-height:88vh; overflow:auto; background:var(--panel);
+    border:1px solid var(--line); border-radius:16px; padding:1.4rem 1.6rem; box-shadow:0 24px 60px rgba(0,0,0,.55);}
+  .pm-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem;}
+  .pm-head b{font-size:1.12rem; color:#fff;}
+  .pm-head .x{background:none; border:none; color:var(--dim); font-size:1.25rem; cursor:pointer; line-height:1;}
+  .pm-head .x:hover{color:#fff;}
+  .pm-sub{font-size:.84rem; color:var(--dim); margin-bottom:.8rem;}
+  #pmText{width:100%; min-height:240px; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:.9rem 1rem; font-family:"Cascadia Code",Consolas,monospace; font-size:.85rem;
+    line-height:1.55; resize:vertical; white-space:pre-wrap;}
+  .pm-actions{display:flex; align-items:center; gap:1rem; margin-top:.9rem;}
+  .pm-actions .copy{background:var(--teal); color:#04201c; border:none; border-radius:8px; padding:.55rem 1.1rem;
+    font-weight:800; cursor:pointer; font-family:inherit; font-size:.86rem;}
+  .pm-actions .msg{color:var(--good); font-size:.85rem; font-weight:700;}
+</style>
+<button class="mk-btn" id="makePrompt">📋 체크 항목 → 프롬프트</button>
+<div class="pm-overlay hidden" id="promptModal">
+  <div class="pm-box">
+    <div class="pm-head"><b>Claude 요청 프롬프트</b><button class="x" id="pmClose" aria-label="닫기">✕</button></div>
+    <p class="pm-sub">결론 체크리스트에서 ✓ 체크한 항목 + 아래 '기타'를 합쳐 프롬프트를 만듭니다. 복사해서 Claude에게 붙여넣으세요.</p>
+    <label class="pm-flabel" for="pmExtra" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.2rem 0 .35rem;">기타 · 자유 요청 (메모처럼 적으면 프롬프트에 다듬어 합쳐집니다)</label>
+    <textarea id="pmExtra" spellcheck="false" placeholder="예: 호위는 녹색 계열로 / 막타 보너스 연출은 화려하게..." style="width:100%;min-height:62px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:.65rem .9rem;font-family:inherit;font-size:.9rem;line-height:1.5;resize:vertical;"></textarea>
+    <label class="pm-flabel" style="display:block;font-size:.78rem;color:var(--dim);font-weight:700;margin:.7rem 0 .35rem;">생성된 프롬프트</label>
+    <textarea id="pmText" readonly spellcheck="false"></textarea>
+    <div class="pm-actions"><button class="copy" id="pmCopy">📋 복사</button><span class="msg" id="pmMsg"></span></div>
+  </div>
+</div>
+<script>
+  (function(){
+    var btn=document.getElementById('makePrompt'),
+        modal=document.getElementById('promptModal'),
+        ta=document.getElementById('pmText'),
+        extra=document.getElementById('pmExtra'),
+        msg=document.getElementById('pmMsg');
+    function gather(){
+      return [].slice.call(document.querySelectorAll('.checklist input:checked')).map(function(c){
+        var ct=c.closest('label').querySelector('.ct'); return (ct?ct.innerText:'').trim();
+      }).filter(Boolean);
+    }
+    function build(){
+      var items=gather();
+      var ex=((extra&&extra.value)||'').trim();
+      var topic=(document.title||'').replace(/\s*·.*$/,'').trim();
+      if(!items.length && !ex){
+        return '(체크된 항목이 없습니다.\n결론 체크리스트에서 항목을 체크하거나, 위 \'기타\'에 요청을 적어주세요.)';
+      }
+      var box=document.querySelector('.checklist'), slide=box?box.closest('.slide'):null,
+          q=slide?slide.querySelector('.quote'):null,
+          decision=q?q.innerText.trim().replace(/\s+/g,' '):'';
+      var p='# '+topic+'\n';
+      if(decision) p+='\n결정/방향: '+decision+'\n';
+      if(items.length){ p+='\n아래 체크한 항목을 진행해줘:\n'+items.map(function(t,i){return (i+1)+'. '+t;}).join('\n'); }
+      if(ex){ p+='\n\n## 기타 (추가 요청 · 거친 메모)\n'+ex; }
+      p+='\n\n각 항목을 어떻게 반영할지 간단히 제안하고, 코드/데이터(gameBalance.json·index_*.html 등) 변경이 필요하면 실제로 적용까지 해줘.';
+      if(ex){ p+='\n그리고 "기타"는 내 거친 메모이니, 의도를 파악해 프롬프트답게 문장을 한 번 다듬어서 반영해줘.'; }
+      return p;
+    }
+    function render(){ ta.value=build(); }
+    function open(){ render(); msg.textContent=''; modal.classList.remove('hidden'); ta.scrollTop=0; }
+    if(extra) extra.addEventListener('input',function(){ render(); msg.textContent=''; });
+    function close(){ modal.classList.add('hidden'); }
+    btn.addEventListener('click',open);
+    document.getElementById('pmClose').addEventListener('click',close);
+    modal.addEventListener('click',function(e){ if(e.target===modal) close(); });
+    document.getElementById('pmCopy').addEventListener('click',function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0,999999);
+      var done=function(){ msg.textContent='복사됨 ✓'; };
+      var fail=function(){ msg.textContent='복사 실패 — 직접 선택해 복사하세요'; };
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(ta.value).then(done,function(){ try{document.execCommand('copy')?done():fail();}catch(e){fail();} });
+      } else { try{document.execCommand('copy')?done():fail();}catch(e){fail();} }
+    });
+    addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  })();
+</script>
+</body>
+</html>
