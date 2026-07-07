@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<!--
+  VSQA · FQA 판정시트 — 세션 001 (기준선)
+  사용법: 더블클릭으로 열기 → 항목마다 ⭕/❌/➖ + 메모 → 맨 아래 [판정 프롬프트 복사] → Claude 채팅에 붙여넣기.
+  입력은 이 브라우저에 자동 저장된다(localStorage).
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FQA 판정시트 · 세션 001 기준선</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --panel2:#141926; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --good:#5fe39a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:radial-gradient(1100px 500px at 75% -10%, rgba(28,240,212,.06), transparent 60%), var(--bg);
+    color:var(--ink); font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    letter-spacing:-.01em; padding:4vh 6vw 140px;}
+  .wrap{max-width:900px; margin:0 auto;}
+  .brand{font-size:.72rem; letter-spacing:.2em; color:var(--teal); font-weight:800; text-transform:uppercase;}
+  h1{font-size:clamp(1.5rem,3.6vw,2.3rem); font-weight:800; margin:.4rem 0 .3rem;}
+  .meta{color:var(--dim); font-size:.9rem; display:flex; gap:1.6rem; flex-wrap:wrap; margin-bottom:1rem;}
+  .meta b{color:var(--teal);}
+  .changed{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--gold);
+    border-radius:10px; padding:.9rem 1.1rem; margin:1rem 0 1.6rem; font-size:.9rem; color:var(--dim); line-height:1.7;}
+  .changed b{color:var(--gold); display:block; font-size:.76rem; letter-spacing:.14em; margin-bottom:.3rem;}
+  .howto{font-size:.84rem; color:var(--faint); margin-bottom:1.6rem; line-height:1.6;}
+  .howto em{font-style:normal; color:var(--teal);}
+
+  .item{background:linear-gradient(160deg,var(--panel2),var(--panel)); border:1px solid var(--line);
+    border-radius:14px; padding:1.2rem 1.3rem; margin-bottom:1rem;}
+  .item .top{display:flex; gap:.7rem; align-items:baseline; flex-wrap:wrap;}
+  .item .no{flex:0 0 auto; font-weight:900; color:var(--teal); font-variant-numeric:tabular-nums;}
+  .item h2{font-size:1.06rem; font-weight:800; line-height:1.4; flex:1; min-width:200px;}
+  .item .crit{font-size:.72rem; font-weight:800; color:var(--gold); border:1px solid rgba(255,210,63,.35);
+    background:rgba(255,210,63,.08); border-radius:6px; padding:.15em .5em; white-space:nowrap;}
+  .item .basis{margin-top:.55rem; font-size:.84rem; color:var(--dim); line-height:1.55;}
+  .item .basis b{color:var(--ink);}
+  .item .guide{margin-top:.45rem; font-size:.82rem; color:var(--faint);}
+  .item .guide::before{content:"🎮 "; }
+  .verdict{display:flex; gap:.5rem; margin-top:.9rem; flex-wrap:wrap;}
+  .vbtn{border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:999px;
+    padding:.45rem 1.05rem; font-size:.9rem; font-weight:800; cursor:pointer; font-family:inherit; transition:.13s;}
+  .vbtn:hover{border-color:var(--dim); color:var(--ink);}
+  .vbtn.on-o{background:rgba(95,227,154,.16); border-color:var(--good); color:var(--good);}
+  .vbtn.on-x{background:rgba(255,43,78,.14); border-color:var(--red); color:var(--red);}
+  .vbtn.on-m{background:rgba(139,151,173,.14); border-color:var(--dim); color:var(--ink);}
+  .memo{width:100%; margin-top:.7rem; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:9px; padding:.6rem .8rem; font-family:inherit; font-size:.88rem; line-height:1.5; resize:vertical; min-height:44px;}
+  .memo:focus{outline:none; border-color:var(--teal);}
+
+  .free{margin-top:1.6rem;}
+  .free b{display:block; font-size:.8rem; letter-spacing:.14em; color:var(--gold); margin-bottom:.4rem;}
+  .free textarea{min-height:80px;}
+  .free .hint{font-size:.78rem; color:var(--faint); margin-top:.3rem;}
+
+  .dock{position:fixed; left:0; right:0; bottom:0; background:rgba(10,12,18,.92); backdrop-filter:blur(8px);
+    border-top:1px solid var(--line); padding:.9rem 6vw; display:flex; gap:1rem; align-items:center; z-index:20;}
+  .dock .stat{font-size:.82rem; color:var(--dim); flex:1;}
+  .dock .stat b{color:var(--teal);}
+  .copy{background:var(--teal); color:#04201c; border:none; border-radius:10px; padding:.75rem 1.4rem;
+    font-weight:900; font-size:.95rem; cursor:pointer; font-family:inherit; box-shadow:0 4px 18px rgba(28,240,212,.3);}
+  .copy:hover{transform:translateY(-1px);}
+  .reset{background:none; border:1px solid var(--line); color:var(--faint); border-radius:10px; padding:.7rem 1rem;
+    font-size:.8rem; cursor:pointer; font-family:inherit;}
+  .msg{font-size:.85rem; color:var(--good); font-weight:800; min-width:90px;}
+
+  .pv-overlay{position:fixed; inset:0; z-index:40; background:rgba(5,7,12,.84); display:grid; place-items:center; padding:5vh 6vw;}
+  .pv-overlay.hidden{display:none;}
+  .pv-box{width:min(720px,100%); max-height:85vh; overflow:auto; background:var(--panel); border:1px solid var(--line);
+    border-radius:14px; padding:1.3rem 1.5rem;}
+  .pv-box b{font-size:1.05rem;}
+  .pv-box textarea{width:100%; min-height:260px; margin-top:.8rem; background:var(--bg); color:var(--ink);
+    border:1px solid var(--line); border-radius:10px; padding:.9rem 1rem;
+    font-family:"Cascadia Code",Consolas,monospace; font-size:.84rem; line-height:1.55; resize:vertical;}
+  .pv-actions{display:flex; gap:.8rem; margin-top:.8rem; align-items:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">EXECUTE // SURVIVORS · FQA</div>
+  <h1 id="title"></h1>
+  <div class="meta" id="meta"></div>
+  <div class="changed" id="changed"></div>
+  <p class="howto">각 항목을 실제로 플레이하며 느껴보고 <em>⭕ 재밌다 / ❌ 재미없다 / ➖ 모르겠다</em> 를 고른 뒤 메모를 남겨주세요 (한 줄이면 충분, 거칠어도 됨).
+  입력은 자동 저장됩니다. 끝나면 맨 아래 <em>[판정 프롬프트 복사]</em> → Claude 채팅에 붙여넣기.</p>
+
+  <div id="items"></div>
+
+  <div class="free">
+    <b>새로 발견한 재미 / 노잼 (자유 기입)</b>
+    <textarea class="memo" id="freeText" placeholder="표에 없는 것도 자유롭게 — 재밌던 순간, 짜증났던 순간, 아이디어..."></textarea>
+    <div class="hint" id="freeHint"></div>
+  </div>
+</div>
+
+<div class="dock">
+  <div class="stat" id="stat">판정 0 / 0</div>
+  <span class="msg" id="msg"></span>
+  <button class="reset" id="resetBtn">입력 초기화</button>
+  <button class="copy" id="copyBtn">📋 판정 프롬프트 복사</button>
+</div>
+
+<div class="pv-overlay hidden" id="pv">
+  <div class="pv-box">
+    <b>Claude 에게 보낼 판정 프롬프트</b>
+    <textarea id="pvText" readonly spellcheck="false"></textarea>
+    <div class="pv-actions">
+      <button class="copy" id="pvCopy">📋 복사</button>
+      <span class="msg" id="pvMsg"></span>
+      <button class="reset" id="pvClose" style="margin-left:auto;">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= 데이터 (세션 001) ================= */
+const SESSION = {
+  n: "001",
+  date: "2026-07-07",
+  build: "v0.20.0 / index_26.html",
+  theme: "기준선 — 재미 기준 F-01~04 확정",
+  changed: [
+    "첫 세션 — 밸런스 변경 없음 (현재 상태 그대로 판정하는 기준선 측정)",
+    "근거 배치: 오늘 21런 (7시나리오 × 3시드 × 900초 상한 · 로그: QA/TQA/bot/logs/2026-07-07_v3_research-metrics_v0.20.0.json)",
+  ],
+};
+const ITEMS = [
+  { id:1, title:"중반 이후(4~8분) 잘 크고 있을 때, 게임이 '한가하다'고 느껴지나요? 아슬아슬한 순간이 매 판 있어야 한다고 보시나요?",
+    basis:"봇 실측 — 생존 런은 분당 최대체력의 1~6%만 맞고, 빈사(HP 25% 이하) 진입이 0~1회. HP 저점 56~86%로 여유로움",
+    crit:"F-01", guide:"4~8분 구간을 도망 위주로 플레이 — '위험했다' 싶은 순간이 몇 번 오는지 세보기" },
+  { id:2, title:"시작 후 2~3분은 일부러 공격 템포를 느리게(×1.55) 해서 도망 다니게 만든 구간입니다. 이 구간이 '스릴'인가요, '답답함'인가요?",
+    basis:"템포 커브 설계값 — 1~2분 공격 주기 ×1.55 감속 후 3.5분 정상화. 봇도 이 구간엔 킬이 적음(0~1분 53킬 → 2~3분 184킬)",
+    crit:"F-01", guide:"새 판 시작 → 3분까지만 두 번 플레이" },
+  { id:3, title:"처형(RMB)이 '특별한 순간'으로 느껴지나요, 아니면 잡일처럼 연타하게 되나요?",
+    basis:"봇 실측 — 900초 생존 런에서 처형 241~335회 = 분당 16~22회. 쿨(10초)은 처치 환급 때문에 사실상 없음(전 런 쿨 대기 0초)",
+    crit:"F-02", guide:"5분 정도 플레이하며 RMB를 얼마나 자주·아무 생각 없이 누르는지 체감" },
+  { id:4, title:"처형을 열심히 했을 때 '이득 봤다'는 느낌이 있나요? (보상 체감)",
+    basis:"봇 실측 — 처형을 아예 안 한 봇도 같은 시간대 레벨이 동일(보석 5개 vs 3개 차이가 성장에 무의미). 처형의 이득은 사실상 '안 하면 위험해짐'뿐",
+    crit:"F-02", guide:"한 판은 처형 위주로, 한 판은 처형을 아껴서 — 성장 차이가 체감되는지" },
+  { id:5, title:"중간보스(5분)의 광역 도약을 딱맞춤 회피(스페이스)로 피했을 때 '내가 잘했다'는 손맛이 있나요? 보상(슬로모)이 충분한가요?",
+    basis:"봇 실측 — 이 도약은 회피 말고는 답이 없음(회피 못 하는 봇은 전 유형이 5~7분에 사망, 회피하면 도약 피해 0). 성공 보상은 슬로모+스태거뿐",
+    crit:"F-03", guide:"5분 중간보스전에서 도약 3회 이상 회피 시도 — 성공/실패 순간의 기분 기록" },
+  { id:6, title:"3분·5분쯤 '밀린다'는 위기감이 오나요? 그리고 그 뒤 빌드가 크면서 '뒤집었다'는 순간이 있나요?",
+    basis:"봇 실측 — 3분·5분에 화력이 적 유입을 못 따라가는 구간이 실재(분당 클리어율 1 미만). 대부분의 사망도 5~7분에 집중",
+    crit:"F-04", guide:"한 판을 8분 이상 끌고 가며 '제일 위험했던 분'과 '내가 세졌다고 느낀 분'을 기억해두기" },
+  { id:7, title:"되찾는 도끼·육각 오라를 찍어보면 체감상으로도 존재감이 없나요?",
+    basis:"봇 실측 — 도끼는 보유 6런 평균 딜 지분 1.7%, 육각 오라는 9런 평균 1.3% (3% 미만 = 죽은 무기 후보). 수치로는 장식 수준",
+    crit:"신규 후보", guide:"레벨업 카드에서 도끼/육각 오라를 일부러 찍고 2~3분 사용 — 화면에서 일하는 게 보이는지" },
+];
+const FREE_HINT = "플레이 빌드: Launch 패널 vslike 서버 켜고 → http://localhost:5607/build/index_26.html (더블클릭 실행도 가능)";
+/* ==================================================================== */
+
+const LS = "fqa_"+SESSION.n;
+const state = JSON.parse(localStorage.getItem(LS)||"{}");
+state.v = state.v||{}; state.m = state.m||{}; state.free = state.free||"";
+
+document.getElementById("title").textContent = "판정시트 · 세션 "+SESSION.n+" — "+SESSION.theme;
+document.getElementById("meta").innerHTML =
+  "<span>날짜 · <b>"+SESSION.date+"</b></span><span>빌드 · <b>"+SESSION.build+"</b></span><span>항목 · <b>"+ITEMS.length+"개</b></span>";
+document.getElementById("changed").innerHTML =
+  "<b>이번 세션에서 바꾼 것</b>"+SESSION.changed.map(c=>"· "+c).join("<br>");
+document.getElementById("freeHint").textContent = FREE_HINT;
+
+const V = [["o","⭕ 재밌다"],["x","❌ 재미없다"],["m","➖ 모르겠다"]];
+const box = document.getElementById("items");
+ITEMS.forEach(it=>{
+  const d=document.createElement("div"); d.className="item";
+  d.innerHTML =
+    '<div class="top"><span class="no">'+it.id+'</span><h2>'+it.title+'</h2><span class="crit">'+(it.crit||"신규")+'</span></div>'+
+    '<div class="basis">근거: '+it.basis+'</div>'+
+    (it.guide?'<div class="guide">'+it.guide+'</div>':'')+
+    '<div class="verdict">'+V.map(v=>'<button class="vbtn" data-i="'+it.id+'" data-v="'+v[0]+'">'+v[1]+'</button>').join("")+'</div>'+
+    '<textarea class="memo" data-i="'+it.id+'" placeholder="이유 한 줄 (선택)"></textarea>';
+  box.appendChild(d);
+});
+
+function sync(){
+  document.querySelectorAll(".vbtn").forEach(b=>{
+    const on = state.v[b.dataset.i]===b.dataset.v;
+    b.className = "vbtn"+(on?" on-"+b.dataset.v:"");
+  });
+  document.querySelectorAll(".memo[data-i]").forEach(t=>{ if(t.value!==(state.m[t.dataset.i]||"")) t.value=state.m[t.dataset.i]||""; });
+  const ft=document.getElementById("freeText"); if(ft.value!==state.free) ft.value=state.free;
+  const done=Object.keys(state.v).length;
+  document.getElementById("stat").innerHTML = "판정 <b>"+done+"</b> / "+ITEMS.length+(state.free?" · 자유의견 ✓":"");
+}
+function save(){ localStorage.setItem(LS, JSON.stringify(state)); sync(); }
+
+document.addEventListener("click", e=>{
+  const b=e.target.closest(".vbtn"); if(!b) return;
+  state.v[b.dataset.i] = (state.v[b.dataset.i]===b.dataset.v)? undefined : b.dataset.v;
+  if(state.v[b.dataset.i]===undefined) delete state.v[b.dataset.i];
+  save();
+});
+document.addEventListener("input", e=>{
+  if(e.target.matches(".memo[data-i]")){ state.m[e.target.dataset.i]=e.target.value; save(); }
+  if(e.target.id==="freeText"){ state.free=e.target.value; save(); }
+});
+document.getElementById("resetBtn").onclick=()=>{ if(confirm("입력을 모두 지울까요?")){ localStorage.removeItem(LS); location.reload(); } };
+
+function buildPrompt(){
+  const mark={o:"⭕",x:"❌",m:"➖"};
+  let p="/vsfqa 세션 "+SESSION.n+" 판정 ("+SESSION.theme+", "+SESSION.build+"):\n";
+  ITEMS.forEach(it=>{
+    const v=state.v[it.id], m=(state.m[it.id]||"").trim();
+    if(!v&&!m) return;
+    p+=it.id+". ["+(v?mark[v]:"미판정")+"] "+it.title+(m?" — "+m:"")+"\n";
+  });
+  const f=(state.free||"").trim();
+  if(f) p+="\n기타(자유 의견): "+f+"\n";
+  p+="\n위 판정을 판정기록에 저장하고, FUN_CRITERIA.md 기준 승격/갱신 → 필요한 밸런스 재조정 → TQA 검증까지 진행해줘. 기타 의견은 거친 메모니 의도를 해석해서 반영해줘.";
+  return p;
+}
+const pv=document.getElementById("pv"), pvText=document.getElementById("pvText");
+document.getElementById("copyBtn").onclick=()=>{
+  if(!Object.keys(state.v).length && !(state.free||"").trim()){ alert("판정하거나 자유 의견을 적어주세요."); return; }
+  pvText.value=buildPrompt(); document.getElementById("pvMsg").textContent=""; pv.classList.remove("hidden");
+};
+document.getElementById("pvClose").onclick=()=>pv.classList.add("hidden");
+pv.addEventListener("click",e=>{ if(e.target===pv) pv.classList.add("hidden"); });
+document.getElementById("pvCopy").onclick=()=>{
+  pvText.focus(); pvText.select(); pvText.setSelectionRange(0,999999);
+  const ok=()=>document.getElementById("pvMsg").textContent="복사됨 ✓";
+  const no=()=>document.getElementById("pvMsg").textContent="복사 실패 — 직접 선택해 복사하세요";
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(pvText.value).then(ok, ()=>{try{document.execCommand("copy")?ok():no();}catch(e){no();}});
+  else{ try{document.execCommand("copy")?ok():no();}catch(e){no();} }
+};
+sync();
+</script>
+</body>
+</html>
