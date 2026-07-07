@@ -4,7 +4,7 @@
     "build": "build/index_26.html (v0.20.0)",
     "botVersion": "리서치 반영판 — 분당 곡선(minutes)·클리어율·TTK근사·spawnMult·focus 전략·자동 진단",
     "batch": "7 시나리오 × 3 시드(1234/9153/17072), 900s 상한",
-    "researchRef": "QA/research/2026-07-07_뱀서라이크_4대게임_밸런스_리서치.md",
+    "researchRef": "Research/2026-07-07_뱀서라이크_4대게임_밸런스_리서치.md",
     "legend": {
       "stuck": "분당 DPS < 적 HP 유입 인 '적체' 분(유입>300 필터). 파워커브 교차 실패 지점",
       "나머지": "2026-07-07_baseline_v0.20.0.json legend 와 동일"

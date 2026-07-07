@@ -155,7 +155,7 @@ function renderDiagnosis(results){
   const sm=Object.entries(stuck).filter(([,c])=>c>=2).sort((a,b)=>+a[0]-+b[0]).map(([m,c])=>`${m}분(${c}런)`);
   if(sm.length) flags.push(`⚖ <b>DPS &lt; HP유입 적체</b> — ${sm.join(' · ')} : 파워커브가 유입을 못 따라가는 구간 (역전 판타지 설계 시 교차점 후보)`);
 
-  let html='<h2>BALANCE DIAGNOSIS <small style="color:var(--dim)">(트리거: 지배빌드 ·죽은무기 ·사망클러스터 ·밀도캡 ·파워커브 — QA/research 리서치 기준)</small></h2>';
+  let html='<h2>BALANCE DIAGNOSIS <small style="color:var(--dim)">(트리거: 지배빌드 ·죽은무기 ·사망클러스터 ·밀도캡 ·파워커브 — Research/ 리서치 기준)</small></h2>';
   html+= flags.length ? '<div class="diagbox">'+flags.join('<br>')+'</div>'
                       : '<div class="diagbox ok">플래그 없음 — 트리거 기준 이상치 미검출</div>';
   const old=document.getElementById('diag'); if(old) old.remove();

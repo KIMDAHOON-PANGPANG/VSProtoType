@@ -99,7 +99,7 @@
       <button id="csvBtn" disabled>⬇ CSV</button>
     </div>
     <div id="status">대기 중.
-로컬 서버(포트 5607) 루트 기준 /QA/bot/qa_harness.html 로 열어야 합니다.</div>
+로컬 서버(포트 5607) 루트 기준 /QA/TQA/bot/qa_harness.html 로 열어야 합니다.</div>
   </div>
 
   <div id="main">
@@ -276,7 +276,7 @@ function runOne(job,idx){
                   error:'inject failed: '+e.message });
       }
     };
-    frame.src='../../build/'+job.build+'?qa='+Date.now()+'_'+idx;
+    frame.src='../../../build/'+job.build+'?qa='+Date.now()+'_'+idx;
   });
 }
 

@@ -218,5 +218,6 @@ spawner(phase1·2·3) / xp / contactDamageScale
 | `build log/PATCH_LOG.txt` | 패치 내역 (내림차순) |
 | `WORKFLOW.md` | 이 문서 — 작업 규칙 (루트) |
 | `.claude/launch.json` | 로컬 미리보기 서버(`vslike`) 설정 |
-| `QA/bot/` | 밸런스 QA 봇 시뮬레이터 — 게임을 iframe 으로 띄워 자동 플레이·가속·지표 로그 (`qa_harness.html` 참고, 사용법은 `QA/bot/README.md`) |
-| `QA/bot/logs/` | QA 봇 런 로그·리포트 누적 (날짜-내용 명명) |
+| `QA/TQA/` | **기술 QA** — 스펙·수치 검증. `bot/` = 밸런스 QA 봇 시뮬레이터(자동 플레이·가속·지표·진단), `bot/logs/` = 배치 로그 누적 (개요: `QA/TQA/README.md`) |
+| `QA/FQA/` | **재미 QA** — 사람이 판정하는 재미 루프. `FUN_CRITERIA.md`(재미 기준 원장·단일 소스) + `sessions/`(판정 시트). 루프 규칙: `QA/FQA/README.md` |
+| `Research/` | 리서치 자료 보관소 (md 누적, 인덱스: `Research/README.md`) |

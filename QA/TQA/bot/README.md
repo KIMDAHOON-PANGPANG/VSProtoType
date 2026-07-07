@@ -10,10 +10,10 @@
    python -m http.server 5607
    ```
    (Claude Launch 패널의 `vslike` 서버와 동일)
-2. 브라우저에서 열기: `http://localhost:5607/QA/bot/qa_harness.html`
+2. 브라우저에서 열기: `http://localhost:5607/QA/TQA/bot/qa_harness.html`
 3. 좌측에서 시나리오 체크 → **RUN BATCH**
 4. 결과 표의 행을 클릭하면 HP/적수/피해 타임라인 + 무기 딜 지분 + 이벤트 로그 상세.
-5. **⬇ JSON / ⬇ CSV** 로 로그 다운로드. 로그 보관은 `QA/bot/logs/` 권장.
+5. **⬇ JSON / ⬇ CSV** 로 로그 다운로드. 로그 보관은 `QA/TQA/bot/logs/` 권장.
 
 ## 자동(헤드리스) 모드
 
@@ -21,7 +21,7 @@ URL 파라미터로 배치를 자동 시작하고, 끝나면 `window.__QA.done==
 전체 로그는 `window.__QA.results` 에 남는다 (CI/Claude 자동화용).
 
 ```
-/QA/bot/qa_harness.html?auto=1&scenarios=standard,noexec,afk&speed=30&dur=900&runs=1&seed=1234
+/QA/TQA/bot/qa_harness.html?auto=1&scenarios=standard,noexec,afk&speed=30&dur=900&runs=1&seed=1234
   &build=index_26.html
   &override={"weapons":{"slash":{"damage":10}}}   ← URL 인코딩 필요
 ```
@@ -56,7 +56,7 @@ URL 파라미터로 배치를 자동 시작하고, 끝나면 `window.__QA.done==
 
 ## 자동 밸런스 진단 (배치 완료 시 상단 패널)
 
-`QA/research/2026-07-07_뱀서라이크_4대게임_밸런스_리서치.md` 의 변경 트리거를 구현:
+`Research/2026-07-07_뱀서라이크_4대게임_밸런스_리서치.md` 의 변경 트리거를 구현:
 
 | 플래그 | 기준 | 근거 |
 |---|---|---|
