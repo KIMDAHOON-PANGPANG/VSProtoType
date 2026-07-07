@@ -63,6 +63,8 @@
   #detail .ev{max-height:170px;overflow:auto;font-size:10px;color:var(--dim);line-height:1.6}
   #detail .ev .t{color:var(--blue)}
   .btnrow{display:flex;gap:8px;margin-bottom:10px}
+  .diagbox{border:1px solid var(--crimson);border-radius:4px;padding:10px;margin-bottom:12px;font-size:12px;line-height:2;background:rgba(255,43,78,.05)}
+  .diagbox.ok{border-color:var(--teal);color:var(--dim);background:rgba(28,240,212,.04)}
 </style>
 </head>
 <body>
@@ -172,11 +174,20 @@ async function runBatch(){
         runs=+$('cfgRuns').value||1, seedBase=+$('cfgSeed').value|0,
         build=$('cfgBuild').value.trim()||'index_26.html';
 
+  // 배치 공통 오버라이드 + 시나리오 자체 override 딥머지 (시나리오 쪽 우선)
+  function mergeOv(a,b){
+    if(!a) return b||null; if(!b) return a;
+    const o=JSON.parse(JSON.stringify(a));
+    (function m(d,s){ for(const k in s){
+      if(s[k]&&typeof s[k]==='object'&&!Array.isArray(s[k])&&d[k]&&typeof d[k]==='object') m(d[k],s[k]);
+      else d[k]=s[k]; } })(o,b);
+    return o;
+  }
   const queue=[];
   for(const s of scens) for(let r=0;r<runs;r++)
     queue.push({ scenario:s, runIdx:r,
       seed: seedBase===0 ? ((Math.random()*1e9)|0) : seedBase+r*7919,
-      speed, durationCap:dur, override, build });
+      speed, durationCap:dur, override:mergeOv(override, s.override), build });
 
   window.__QA.running=true; window.__QA.done=false;
   window.__QA.results=[]; window.__QA.queue=queue.map(q=>q.scenario.id);
@@ -201,6 +212,7 @@ async function runBatch(){
   setStatus(stopFlag?'중단됨.':`완료 — ${window.__QA.results.length}런. 표의 행을 클릭하면 상세가 열립니다.`);
   setLive('배치 종료');
   renderAggregate(window.__QA.results);
+  renderDiagnosis(window.__QA.results);   // 리서치 트리거 기반 자동 밸런스 진단
 }
 
 /* 1런 = iframe 리로드 → 봇 주입 → qa:end 대기 */

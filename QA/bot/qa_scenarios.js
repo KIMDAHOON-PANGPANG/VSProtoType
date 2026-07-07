@@ -36,13 +36,23 @@ const QA_SCENARIOS=[
   },
   {
     id:'slashonly', name:'베기 원툴 봇', default:false,
-    profile:'kiter', params:{execute:true, cardStrategy:'slashOnly', greed:0.5},
-    desc:'레벨업 카드에서 베기 강화만 선택(없으면 스킵) → 베기 단독 캐리력 측정 (QA#1·#2).',
+    profile:'kiter', params:{execute:true, cardStrategy:'focus', focusWeapon:'slash', greed:0.5},
+    desc:'레벨업 카드에서 베기 강화만 선택(없으면 리롤→스킵) → 베기 단독 캐리력 측정 (QA#1·#2).',
   },
   {
     id:'noslash', name:'베기 배제 봇', default:false,
     profile:'kiter', params:{execute:true, cardStrategy:'noSlash', greed:0.5},
     desc:'베기 강화 카드를 절대 안 집음 → 베기 없이도 성립하는지, 딜 지분 재분배 확인 (QA#1).',
+  },
+  {
+    id:'pressure2x', name:'밀도 스트레스 ×2', default:true,
+    profile:'kiter', params:{execute:true, cardStrategy:'balanced', greed:0.5, spawnMult:2},
+    desc:'스폰 밴드 캡×2·간격÷2 (VS Curse 방식) → 압박 부족(QA#16)이 버짓 문제인지 검증. 동시 적 수·밀도 캡 필요성 확인.',
+  },
+  {
+    id:'scythefocus', name:'낫 원툴 봇', default:false,
+    profile:'kiter', params:{execute:true, cardStrategy:'focus', focusWeapon:'scythe', greed:0.5},
+    desc:'딜 지분 1위(40~58%)로 실측된 낫의 원툴 캐리력 스캔 → 1티어/지배 빌드 여부 판정. focusWeapon 파라미터로 임의 무기 스캔 가능.',
   },
 ];
 if(typeof module!=='undefined') module.exports={QA_SCENARIOS};

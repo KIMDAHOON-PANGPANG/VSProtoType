@@ -55,7 +55,9 @@ const _render = window.render, _hud = window.updateHUD;
 window.render   = function(){ if(renderGate) _render(); };
 window.updateHUD= function(){ if(renderGate) _hud(); };
 
-/* ── 5. 밸런스 오버라이드 — boot() 의 늦은 fetch 가 덮어쓰지 못하게 applyBalance 래핑 ── */
+/* ── 5. 밸런스 오버라이드 — boot() 의 늦은 fetch 가 덮어쓰지 못하게 applyBalance 래핑.
+   스폰 예산 배율(spawnMult/eliteMult)도 여기서 처리 — VS 의 Curse 공식
+   (실효 스폰간격 = interval / totalCurse)을 본떠 캡 ×m · 간격 ÷m 로 적용. ── */
 function deepMerge(dst,src){
   for(const k in src){
     if(src[k]&&typeof src[k]==='object'&&!Array.isArray(src[k])&&dst[k]&&typeof dst[k]==='object') deepMerge(dst[k],src[k]);
@@ -63,12 +65,29 @@ function deepMerge(dst,src){
   }
   return dst;
 }
-const _applyBalance = window.applyBalance;
-if(CFG.override){
-  window.applyBalance = function(b){ deepMerge(b, CFG.override); _applyBalance(b); };
-  // 주입 시점에 이미 JSON 이 적용돼 있을 수도(레이스 양쪽 커버)
-  deepMerge(BAL, CFG.override); _applyBalance(BAL);
+function applyQATweaks(b){
+  if(b.__qaTweaked) return b;                       // 같은 객체 이중 적용 방지
+  if(CFG.override) deepMerge(b, CFG.override);
+  const P0=CFG.params||{}, sm=+P0.spawnMult||1, em=+P0.eliteMult||1;
+  if((sm!==1||em!==1) && b.spawner && Array.isArray(b.spawner.bands)){
+    for(const band of b.spawner.bands){
+      if(!band||typeof band!=='object') continue;
+      if(sm!==1){
+        if(band.fodderCap!=null) band.fodderCap=Math.round(band.fodderCap*sm);
+        if(band.fodderInterval>0) band.fodderInterval=band.fodderInterval/sm;
+      }
+      if(em!==1){
+        if(band.eliteMax!=null) band.eliteMax=Math.round(band.eliteMax*em);
+        if(band.eliteIntervalSec>0) band.eliteIntervalSec=band.eliteIntervalSec/em;
+      }
+    }
+  }
+  try{ Object.defineProperty(b,'__qaTweaked',{value:true,enumerable:false}); }catch(e){ b.__qaTweaked=true; }
+  return b;
 }
+const _applyBalance = window.applyBalance;
+window.applyBalance = function(b){ _applyBalance(applyQATweaks(b)); };
+window.applyBalance(BAL);   // 주입 시점에 이미 로드돼 있는 밸런스(폴백/JSON)에도 즉시 반영
 
 /* ── 6. 지표 수집 훅 ── */
 const M = {
@@ -78,6 +97,7 @@ const M = {
   nearDeath:0, hpLowest:1, execStarved:0,   // 그로기 있는데 쿨이라 처형 못 한 누적 초 (QA#15)
   maxEnemies:0, spreaderConverts:0,
   samples:[], events:[],
+  mBuckets:[],                              // 분당 밸런스 곡선 버킷 (리서치: DPS vs HP유입 교차점)
   lastSampleT:-1, lastKills:0, lastTakenMark:0, lastDealtMark:0, nearArmed:true,
 };
 function ev(type,detail){ M.events.push({t:+G.time.toFixed(1), type, detail}); }
@@ -224,7 +244,11 @@ function thinkExecute(){
   if(G.execSeq) ev('처형 시작', 'targets='+G.execSeq.targets.length);
 }
 
-/* 레벨업/처형보상 모달 — DOM 카드 클릭 (실플레이와 동일 경로) */
+/* 레벨업/처형보상 모달 — DOM 카드 클릭 (실플레이와 동일 경로).
+   카드 이름 → UPGRADES id 역맵으로 무기 식별 (focus:<무기id> 전략 일반화 —
+   리서치의 'viable 빌드 폭' 측정: 무기별 원툴 캐리력 스캔용). */
+const upNameToId = {};
+if(typeof UPGRADES!=='undefined') for(const u of UPGRADES){ if(u&&u.weapon) upNameToId[u.name]=u.id; }
 function domCards(){ return [...document.querySelectorAll('#cardrow .upcard')]; }
 function cardName(c){ const n=c.querySelector('.up-name'); return n?n.textContent:'?'; }
 function thinkModal(){
@@ -237,14 +261,17 @@ function thinkModal(){
     return;
   }
   const names = cards.map(cardName);
-  const isSlash = n=>/베기|참격|slash/i.test(n);
+  const ids = names.map(n=>upNameToId[n]||null);
+  const strat = prm.cardStrategy;
+  const focusId = strat==='slashOnly' ? 'w_slash'
+                : strat==='focus'     ? 'w_'+(prm.focusWeapon||'slash') : null;
   let idx = -1;
-  if(prm.cardStrategy==='slashOnly'){
-    idx = names.findIndex(isSlash);
+  if(focusId){
+    idx = ids.findIndex(id=>id===focusId);
     if(idx<0 && G.rerolls>0){ rerollLevelUp(); return; }   // 다음 think 에서 재평가
-    if(idx<0 && G.skips>0){ ev('카드 스킵','베기 없음'); skipLevelUp(); return; }
-  } else if(prm.cardStrategy==='noSlash'){
-    const pool = names.map((n,i)=>isSlash(n)?-1:i).filter(i=>i>=0);
+    if(idx<0 && G.skips>0){ ev('카드 스킵', focusId.replace(/^w_/,'')+' 없음'); skipLevelUp(); return; }
+  } else if(strat==='noSlash'){
+    const pool = ids.map((id,i)=>id==='w_slash'?-1:i).filter(i=>i>=0);
     if(pool.length) idx = pool[Math.floor(Math.random()*pool.length)];
   }
   if(idx<0) idx = Math.floor(Math.random()*cards.length);
@@ -257,26 +284,35 @@ const PROFILES = {
   afk(){ for(const k of KEYSET) keys[k]=false; },
 };
 
-/* ── 8. 샘플링 ── */
+/* ── 8. 샘플링 (1 게임초) + 분당 버킷 — 리서치 권고: 분별 (DPS, 적 HP 유입량,
+   화면 밀도, 킬, 레벨) 곡선과 그 교차점이 밸런스의 핵심 데이터포인트 ── */
 function sample(){
-  const p=G.player, t=Math.floor(G.time);
+  const p=G.player, t=Math.floor(G.time), minute=Math.floor(t/60);
+  const B = M.mBuckets[minute] || (M.mBuckets[minute]={dealt:0,taken:0,influx:0,spawns:0,kills:0,densitySum:0,densityN:0,hpLow:1,level:1});
   let elites=0, alive=0;
-  for(const e of G.enemies){ if(e.state==='alive'||e.state==='groggy'){ alive++; if(e.kind==='elite')elites++; } }
+  for(const e of G.enemies){
+    if(!e.__qaSeen){ e.__qaSeen=true; B.influx+=(e.maxHp||e.hp||0); B.spawns++; }   // 적 HP 유입량 (스폰 시점 HP, hpMult 반영)
+    if(e.state==='alive'||e.state==='groggy'){ alive++; if(e.kind==='elite')elites++; }
+  }
   M.maxEnemies = Math.max(M.maxEnemies, alive);
   const hpPct = p ? p.hp/p.maxHp : 0;
   M.hpLowest = Math.min(M.hpLowest, hpPct);
   if(M.nearArmed && hpPct < 0.25){ M.nearDeath++; M.nearArmed=false; ev('빈사', 'hp '+Math.round(hpPct*100)+'%'); }
   if(!M.nearArmed && hpPct > 0.4) M.nearArmed=true;
+  const dealtDelta=M.dmgDealt-M.lastDealtMark, takenDelta=M.dmgTaken-M.lastTakenMark, killDelta=G.kills-M.lastKills;
+  B.dealt+=dealtDelta; B.taken+=takenDelta; B.kills+=killDelta;
+  B.densitySum+=alive; B.densityN++;
+  B.hpLow=Math.min(B.hpLow,hpPct); B.level=G.level;
   const s = {
     t, hp:p?+p.hp.toFixed(1):0, maxHp:p?p.maxHp:0, shield:p?Math.round(p.shield):0,
     level:G.level, kills:G.kills, execs:G.executions,
     enemies:alive, elites, gems:G.gems.length,
-    dmgTakenDelta:+(M.dmgTaken-M.lastTakenMark).toFixed(1),
-    dmgDealtDelta:+(M.dmgDealt-M.lastDealtMark).toFixed(1),
+    dmgTakenDelta:+takenDelta.toFixed(1),
+    dmgDealtDelta:+dealtDelta.toFixed(1),
     dtpm: t>2 ? +(M.dmgTaken/(t/60)).toFixed(1) : 0,
     execCd:+G.exec.cd.toFixed(1), fps: realFps,
   };
-  M.lastTakenMark=M.dmgTaken; M.lastDealtMark=M.dmgDealt;
+  M.lastTakenMark=M.dmgTaken; M.lastDealtMark=M.dmgDealt; M.lastKills=G.kills;
   M.samples.push(s);
   // 숨김 탭 풀스로틀 시 postMessage 홍수 방지 — 10초마다만 라이브 샘플 전송
   if(document.visibilityState==='visible' || s.t%10===0) post('sample', s);
@@ -288,7 +324,23 @@ function finish(outcome){
   if(finished) return; finished=true;
   const p=G.player, t=Math.max(1,G.time);
   const wd=Object.entries(M.byWeapon).sort((a,b)=>b[1]-a[1]);
+  // 분당 밸런스 곡선: dps=가한딜/초, influx=적 HP 유입, clearRatio=dps÷유입률(<1 이면 적체),
+  // ttk = Little's law 근사(평균 동시 적 수 ÷ 초당 킬)
+  const minutes = M.mBuckets.map((b,i)=>{
+    if(!b||!b.densityN) return null;
+    const sec=b.densityN, density=b.densitySum/sec, kps=b.kills/sec;
+    return {
+      m:i, dps:+(b.dealt/sec).toFixed(1), influx:Math.round(b.influx), spawns:b.spawns,
+      clearRatio: b.influx>0 ? +(b.dealt/b.influx).toFixed(2) : null,
+      kills:b.kills, density:+density.toFixed(1),
+      ttk: kps>0 ? +(density/kps).toFixed(2) : null,
+      taken:+b.taken.toFixed(1), hpLowPct:Math.round(b.hpLow*100), level:b.level,
+    };
+  }).filter(Boolean);
   const summary = {
+    minutes,
+    // DPS 가 적 HP 유입을 못 따라간 '적체' 분 (유입 300 미만 초반 노이즈 제외)
+    stuckMinutes: minutes.filter(x=>x.clearRatio!=null&&x.clearRatio<1&&x.influx>300).map(x=>x.m),
     outcome, time:Math.floor(G.time), level:G.level, kills:G.kills, executions:G.executions,
     maxHp:p?p.maxHp:0,
     dmgTaken:+M.dmgTaken.toFixed(0), dmgTakenPerMin:+(M.dmgTaken/(t/60)).toFixed(1),

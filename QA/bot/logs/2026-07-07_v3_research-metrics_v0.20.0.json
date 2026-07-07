@@ -1,0 +1,42 @@
+{
+  "_meta": {
+    "date": "2026-07-07",
+    "build": "build/index_26.html (v0.20.0)",
+    "botVersion": "리서치 반영판 — 분당 곡선(minutes)·클리어율·TTK근사·spawnMult·focus 전략·자동 진단",
+    "batch": "7 시나리오 × 3 시드(1234/9153/17072), 900s 상한",
+    "researchRef": "QA/research/2026-07-07_뱀서라이크_4대게임_밸런스_리서치.md",
+    "legend": {
+      "stuck": "분당 DPS < 적 HP 유입 인 '적체' 분(유입>300 필터). 파워커브 교차 실패 지점",
+      "나머지": "2026-07-07_baseline_v0.20.0.json legend 와 동일"
+    }
+  },
+  "diagnosis": [
+    "🔻 죽은 무기 의심 — axe: 보유 6런 평균 딜 지분 1.7% < 3% [트리거 b]",
+    "🔻 죽은 무기 의심 — hexaura: 보유 9런 평균 딜 지분 1.3% < 3% [트리거 b]",
+    "👥 밀도 경고 — 최대 동시 적 341마리, 본 게임은 캡 없음 (VS 300/500, 브로테이토 100 참조)",
+    "⚖ DPS<HP유입 적체 — 3분(2런) · 5분(2런)"
+  ],
+  "runs": [
+    {"s":"standard","seed":1234,"out":"capReached","t":900,"lv":18,"kills":3898,"ex":241,"dtpm":2.7,"nd":0,"low":59,"dps":143.6,"top":"scythe 37%","jd":2,"spread":3,"maxE":75,"stuck":""},
+    {"s":"standard","seed":9153,"out":"capReached","t":900,"lv":18,"kills":3903,"ex":245,"dtpm":5.8,"nd":1,"low":13,"dps":153.5,"top":"scythe 38%","jd":7,"spread":0,"maxE":75,"stuck":""},
+    {"s":"standard","seed":17072,"out":"died","t":417,"lv":14,"kills":1081,"ex":94,"dtpm":14.4,"nd":1,"low":7,"dps":75.6,"top":"darkwave 23%","jd":2,"spread":5,"maxE":45,"stuck":""},
+    {"s":"noexec","seed":1234,"out":"died","t":499,"lv":13,"kills":1379,"ex":0,"dtpm":12,"nd":1,"low":12,"dps":90.7,"top":"scythe 43%","jd":19,"spread":5,"maxE":48,"stuck":""},
+    {"s":"noexec","seed":9153,"out":"died","t":385,"lv":12,"kills":938,"ex":0,"dtpm":15.6,"nd":1,"low":21,"dps":75.4,"top":"scythe 46%","jd":8,"spread":0,"maxE":39,"stuck":""},
+    {"s":"noexec","seed":17072,"out":"died","t":349,"lv":12,"kills":819,"ex":0,"dtpm":17.2,"nd":1,"low":20,"dps":66.7,"top":"scythe 40%","jd":4,"spread":4,"maxE":47,"stuck":""},
+    {"s":"greedy","seed":1234,"out":"capReached","t":900,"lv":18,"kills":3964,"ex":314,"dtpm":2.9,"nd":0,"low":57,"dps":172,"top":"pulse 29%","jd":4,"spread":3,"maxE":69,"stuck":""},
+    {"s":"greedy","seed":9153,"out":"died","t":501,"lv":15,"kills":1472,"ex":126,"dtpm":12,"nd":1,"low":24,"dps":96.8,"top":"scythe 23%","jd":5,"spread":2,"maxE":45,"stuck":""},
+    {"s":"greedy","seed":17072,"out":"died","t":226,"lv":11,"kills":536,"ex":28,"dtpm":26.5,"nd":1,"low":2,"dps":56.9,"top":"slash 51%","jd":2,"spread":0,"maxE":47,"stuck":""},
+    {"s":"afk","seed":1234,"out":"died","t":87,"lv":4,"kills":109,"ex":0,"dtpm":69,"nd":1,"low":12,"dps":29,"top":"scythe 81%","jd":0,"spread":0,"maxE":16,"stuck":""},
+    {"s":"afk","seed":9153,"out":"died","t":97,"lv":5,"kills":126,"ex":0,"dtpm":61.4,"nd":1,"low":4,"dps":24.2,"top":"slash 36%","jd":0,"spread":0,"maxE":16,"stuck":""},
+    {"s":"afk","seed":17072,"out":"died","t":99,"lv":5,"kills":129,"ex":0,"dtpm":60.2,"nd":1,"low":22,"dps":28.5,"top":"scythe 54%","jd":0,"spread":0,"maxE":15,"stuck":""},
+    {"s":"slashonly","seed":1234,"out":"capReached","t":900,"lv":17,"kills":3462,"ex":134,"dtpm":3.8,"nd":0,"low":43,"dps":134.7,"top":"slash 74%","jd":7,"spread":2,"maxE":280,"stuck":"3/5/6"},
+    {"s":"slashonly","seed":9153,"out":"capReached","t":900,"lv":18,"kills":3916,"ex":275,"dtpm":1.8,"nd":0,"low":73,"dps":143.8,"top":"scythe 42%","jd":7,"spread":3,"maxE":84,"stuck":""},
+    {"s":"slashonly","seed":17072,"out":"capReached","t":900,"lv":16,"kills":3139,"ex":77,"dtpm":1.2,"nd":0,"low":82,"dps":109.8,"top":"slash 57%","jd":5,"spread":0,"maxE":341,"stuck":"2/3/5/7"},
+    {"s":"pressure2x","seed":1234,"out":"capReached","t":900,"lv":19,"kills":7468,"ex":204,"dtpm":1.1,"nd":0,"low":83,"dps":300.3,"top":"tide 24%","jd":8,"spread":1,"maxE":151,"stuck":""},
+    {"s":"pressure2x","seed":9153,"out":"capReached","t":900,"lv":19,"kills":7496,"ex":259,"dtpm":5.8,"nd":1,"low":13,"dps":324.1,"top":"pulse 33%","jd":6,"spread":4,"maxE":130,"stuck":""},
+    {"s":"pressure2x","seed":17072,"out":"died","t":808,"lv":18,"kills":5988,"ex":183,"dtpm":7.4,"nd":1,"low":1,"dps":240.6,"top":"tide 23%","jd":5,"spread":7,"maxE":124,"stuck":""},
+    {"s":"scythefocus","seed":1234,"out":"capReached","t":900,"lv":18,"kills":3909,"ex":261,"dtpm":5.5,"nd":1,"low":18,"dps":149.6,"top":"slash 35%","jd":10,"spread":0,"maxE":88,"stuck":""},
+    {"s":"scythefocus","seed":9153,"out":"capReached","t":900,"lv":18,"kills":3905,"ex":264,"dtpm":2.9,"nd":0,"low":56,"dps":158.1,"top":"slash 39%","jd":4,"spread":5,"maxE":78,"stuck":""},
+    {"s":"scythefocus","seed":17072,"out":"died","t":348,"lv":12,"kills":754,"ex":20,"dtpm":17.2,"nd":0,"low":25,"dps":60.8,"top":"slash 62%","jd":6,"spread":2,"maxE":160,"stuck":""}
+  ]
+}
