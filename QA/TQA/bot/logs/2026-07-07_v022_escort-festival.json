@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "date": "2026-07-07",
+    "build": "build/index_28.html (v0.22.0 — Escort & Festival, 덱 022 이행)",
+    "batch": "5 시나리오 × 3 시드(1234/9153/17072), 900s 상한 — v0.21(2026-07-07_v021) 대비",
+    "changes": "호위 편성(자코 12~16 동반·그로기 시체 곁 유지) · 엘리트 HP 50→30(듀오 분할) · 평시 eliteMax 1 + 전 강화 슬롯 eliteN 2~3(축제) · 공용 처형 카드 개편(파동·빙결·흡수)",
+    "newMetrics": "g2=동시 그로기 2기+ 시간%(gmax=최대 동시) · crowd=처형 순간 반경120 자코 평균(인파이팅) · late=막타(그로기 잔여≤0.8s) 처형 %"
+  },
+  "diagnosis": [
+    "⏱ 사망 클러스터 — 사망 8건 중 4건(50%)이 303~372s (5분 벽 유지)",
+    "밀도·죽은무기·지배·적체 플래그 없음 — 호위 밀도(maxE 최대 170)는 캡 경고선(300) 아래"
+  ],
+  "comparison_v021_to_v022": {
+    "standard 생존": "1/3 → 3/3 — 주의: 엘리트 HP 분할 + 축제 물량 = 봇에겐 XP 공급(lv 17~19 → 19~20, 킬 4.5k → 7~7.8k). 사람 체감은 호위·듀오 때문에 다를 수 있음 → 세션 002 판정 포인트",
+    "동시 그로기": "gmax 2~6 · 2기+ 시간 최대 7%(noexec) — 듀오 공급 작동, 봇은 즉시 처형이라 겹침이 짧음",
+    "인파이팅(crowd)": "0~0.9 — 봇은 무리 '밖'에서 버튼을 누르고 대시가 무리 안으로 들어감(측정은 누르는 순간 기준). 사람 체감 판정 필요",
+    "막타(late)": "2~11.5% — 봇은 그로기 즉시 처형(막타 보너스 미구현 상태의 기준선)",
+    "afk 바닥": "71~84s → 103~112s (엘리트 HP 분할로 소폭 완화)",
+    "noexec": "0/3 유지 (354~470s) — 처형 거부 벌 유지"
+  },
+  "runs": [
+    {"s":"standard","seed":1234,"out":"capReached","t":900,"lv":20,"kills":6948,"ex":198,"dtpm":2.5,"nd":0,"low":62,"top":"tide 46%","jd":2,"gs":250,"maxE":104,"g2":1.9,"gmax":3,"crowd":0.4,"late":5.1},
+    {"s":"standard","seed":9153,"out":"capReached","t":900,"lv":20,"kills":7788,"ex":248,"dtpm":2.8,"nd":0,"low":58,"top":"pulse 23%","jd":1,"gs":294,"maxE":104,"g2":0.3,"gmax":2,"crowd":0.1,"late":2},
+    {"s":"standard","seed":17072,"out":"capReached","t":900,"lv":19,"kills":6976,"ex":196,"dtpm":6.1,"nd":1,"low":9,"top":"pulse 25%","jd":4,"gs":247,"maxE":107,"g2":1.6,"gmax":2,"crowd":0.2,"late":6.1},
+    {"s":"noexec","seed":1234,"out":"died","t":372,"lv":13,"kills":1335,"ex":0,"dtpm":16.1,"nd":1,"low":17,"top":"scythe 27%","jd":6,"gs":85,"maxE":81,"g2":7,"gmax":5},
+    {"s":"noexec","seed":9153,"out":"died","t":470,"lv":14,"kills":1784,"ex":0,"dtpm":12.8,"nd":1,"low":4,"top":"scythe 42%","jd":8,"gs":91,"maxE":89,"g2":5.1,"gmax":6},
+    {"s":"noexec","seed":17072,"out":"died","t":354,"lv":13,"kills":1276,"ex":0,"dtpm":16.9,"nd":1,"low":2,"top":"tide 24%","jd":5,"gs":63,"maxE":81,"g2":2.8,"gmax":3},
+    {"s":"greedy","seed":1234,"out":"died","t":303,"lv":15,"kills":1557,"ex":51,"dtpm":19.8,"nd":1,"low":14,"top":"tide 27%","jd":1,"gs":70,"maxE":79,"g2":1.3,"gmax":2,"crowd":0.9,"late":3.9},
+    {"s":"greedy","seed":9153,"out":"capReached","t":900,"lv":20,"kills":7597,"ex":251,"dtpm":3.2,"nd":0,"low":52,"top":"pulse 29%","jd":5,"gs":292,"maxE":133,"g2":0.3,"gmax":3,"crowd":0,"late":2.8},
+    {"s":"greedy","seed":17072,"out":"capReached","t":900,"lv":20,"kills":7578,"ex":241,"dtpm":5.1,"nd":1,"low":23,"top":"scythe 28%","jd":4,"gs":269,"maxE":104,"g2":0,"gmax":1,"crowd":0.1,"late":3.3},
+    {"s":"afk","seed":1234,"out":"died","t":111,"lv":5,"kills":249,"ex":0,"dtpm":53.7,"nd":1,"low":12,"top":"soulorb 36%","jd":0,"gs":13,"maxE":37,"g2":2.7,"gmax":2},
+    {"s":"afk","seed":9153,"out":"died","t":103,"lv":6,"kills":224,"ex":0,"dtpm":58.2,"nd":1,"low":20,"top":"soulorb 52%","jd":0,"gs":15,"maxE":38,"g2":3.9,"gmax":4},
+    {"s":"afk","seed":17072,"out":"died","t":112,"lv":6,"kills":254,"ex":0,"dtpm":53.2,"nd":1,"low":16,"top":"pulse 52%","jd":0,"gs":12,"maxE":34,"g2":1.8,"gmax":2},
+    {"s":"pressure2x","seed":1234,"out":"capReached","t":900,"lv":21,"kills":10939,"ex":193,"dtpm":5.1,"nd":1,"low":24,"top":"scythe 30%","jd":2,"gs":254,"maxE":170,"g2":1.8,"gmax":4,"crowd":0.1,"late":9.3},
+    {"s":"pressure2x","seed":9153,"out":"died","t":323,"lv":14,"kills":1941,"ex":26,"dtpm":18.6,"nd":1,"low":4,"top":"tide 33%","jd":1,"gs":41,"maxE":113,"g2":0,"gmax":1,"crowd":0.5,"late":11.5},
+    {"s":"pressure2x","seed":17072,"out":"capReached","t":900,"lv":21,"kills":11285,"ex":208,"dtpm":3.2,"nd":0,"low":52,"top":"pulse 28%","jd":3,"gs":245,"maxE":166,"g2":0.1,"gmax":2,"crowd":0.3,"late":2.4}
+  ]
+}

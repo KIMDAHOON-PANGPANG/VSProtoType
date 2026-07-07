@@ -1,6 +1,6 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.21.0",
+  "_version": "0.22.0",
 
   "player": {
     "radius": 16,
@@ -91,7 +91,7 @@
     },
     "elite": {
       "radius": 26,
-      "hp": 50,
+      "hp": 30,
       "speed": 58,
       "damage": 20,
       "gemsOnFade": 3,
@@ -121,7 +121,9 @@
       "berserker": { "rageTime": 9, "speedMax": 1.9, "dmgMax": 1.8 },
       "spreader": { "auraR": 240, "chance": 0.5, "maxConverts": 4 },
       "_comment": "v0.18~19 타입 노브 — vacuum: gemRange 내 젬 추적·흡수(dashMult=가속) / berserker: rageTime초에 걸쳐 속도 ×speedMax·접촉피해 ×dmgMax / spreader(전염): 첫 그로기 미처형(부활) 순간 auraR 내 잡몹이 각각 chance 확률로 리프 엘리트 변이(최대 maxConverts). v0.21(S001 #4): 방치 비용 전면 상향 — vacuum 사거리·가속↑, berserker 격노 12→9초, spreader 확률 0.4→0.5·최대 4기."
-    }
+    },
+    "escort": { "enabled": true, "countDefault": 12, "counts": { "knight": 14, "vacuum": 12, "berserker": 12, "spreader": 16 }, "ringR": 64, "biteR": 70, "orbitSpin": 0.4,
+      "_comment": "v0.22 (덱 022 ①): 호위 편성 — 엘리트는 혼자 다니지 않는다. 스폰 시 자코 호위가 링(ringR)으로 동반, 엘리트가 그로기여도 시체 곁을 지킨다 → 처형하려면 무리 속으로 파고들어야 함(인파이팅). biteR=이 거리 안이면 호위도 플레이어를 문다 · orbitSpin=대형 회전 속도. 변이 탄생(보석 엘리트화·전염)은 호위 없음." }
   },
 
   "stage": {
@@ -134,14 +136,14 @@
     "bands": [
       { "untilMin": 1,  "fodderCap": 60,  "fodderInterval": 1.0,  "eliteMax": 0, "eliteIntervalSec": 0   },
       { "untilMin": 3,  "fodderCap": 100, "fodderInterval": 0.7,  "eliteMax": 1, "eliteIntervalSec": 8.0 },
-      { "untilMin": 5,  "fodderCap": 160, "fodderInterval": 0.5,  "eliteMax": 2, "eliteIntervalSec": 5.0 },
-      { "untilMin": 7,  "fodderCap": 220, "fodderInterval": 0.35, "eliteMax": 3, "eliteIntervalSec": 3.0 },
-      { "untilMin": 10, "fodderCap": 280, "fodderInterval": 0.3,  "eliteMax": 4, "eliteIntervalSec": 2.2 },
-      { "untilMin": 13, "fodderCap": 380, "fodderInterval": 0.24, "eliteMax": 5, "eliteIntervalSec": 1.8 },
-      { "untilMin": 15, "fodderCap": 440, "fodderInterval": 0.2,  "eliteMax": 5, "eliteIntervalSec": 1.4 }
+      { "untilMin": 5,  "fodderCap": 160, "fodderInterval": 0.5,  "eliteMax": 1, "eliteIntervalSec": 6.0 },
+      { "untilMin": 7,  "fodderCap": 220, "fodderInterval": 0.35, "eliteMax": 1, "eliteIntervalSec": 5.0 },
+      { "untilMin": 10, "fodderCap": 280, "fodderInterval": 0.3,  "eliteMax": 1, "eliteIntervalSec": 4.0 },
+      { "untilMin": 13, "fodderCap": 380, "fodderInterval": 0.24, "eliteMax": 1, "eliteIntervalSec": 3.5 },
+      { "untilMin": 15, "fodderCap": 440, "fodderInterval": 0.2,  "eliteMax": 1, "eliteIntervalSec": 3.0 }
     ],
     "eliteMode": "wave",
-    "eliteWave": { "sizeMin": 2, "sizeMax": 4, "lullSec": 10 },
+    "eliteWave": { "sizeMin": 2, "sizeMax": 3, "lullSec": 10 },
     "eliteRoster": ["knight", "vacuum", "berserker", "spreader"],
     "_rosterComment": "v0.18~19: 물결마다 직전과 다른 타입 로테이션('매번 바뀐다'). knight=도약 패링 / vacuum=보석 청소기(젬 흡수로 성장 방해) / berserker=오래두면 격노(방치 시 가속·강타) / spreader=전염(첫 그로기 미처형 시 주변 잡몹을 확률적으로 리프 엘리트로 변이 → 처형 강제).",
     "rushSpeedMult": 2.0,
@@ -195,18 +197,18 @@
   },
 
   "waveSchedule": [
-    { "atMin": 1,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 2.2, "durationSec": 18 } },
-    { "atMin": 2,  "kind": "reinforce", "type": "fodder",                            "params": { "mult": 4.5, "durationSec": 25, "burst": 32 } },
-    { "atMin": 3,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 2.8, "durationSec": 20, "burst": 12 } },
+    { "atMin": 1,  "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 2.2, "durationSec": 18, "eliteN": 2 } },
+    { "atMin": 2,  "kind": "reinforce", "type": "both",                              "eliteType": "random", "params": { "mult": 4.5, "durationSec": 25, "burst": 32, "eliteN": 2 } },
+    { "atMin": 3,  "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 2.8, "durationSec": 20, "burst": 12, "eliteN": 2 } },
     { "atMin": 4,  "kind": "event",     "type": "elitebloom", "reward": "exclusive", "params": { "mode": "fixed", "count": 3, "chance": 0.35, "auraR": 220, "offset": 260, "lifeSec": 20 } },
     { "atMin": 5,  "kind": "midboss",   "type": "bull_calf",  "reward": "exclusive" },
     { "atMin": 7,  "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 2.8, "durationSec": 20, "eliteN": 3 } },
     { "atMin": 8,  "kind": "event",     "type": "cage",       "reward": "common",    "eliteType": "random", "params": { "radius": 430, "durationSec": 60 } },
-    { "atMin": 9,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 3.0, "durationSec": 20, "burst": 16 } },
+    { "atMin": 9,  "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 3.0, "durationSec": 20, "burst": 16, "eliteN": 3 } },
     { "atMin": 10, "kind": "event",     "type": "jelly",      "reward": "exclusive", "params": { "count": 14, "radiusMin": 190, "radiusMax": 340, "periodSec": 6, "durationSec": 30, "hp": 60, "damage": 10, "speed": 170, "radius": 14 } },
     { "atMin": 11, "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 3.2, "durationSec": 20, "eliteN": 3 } },
     { "atMin": 12, "kind": "event",     "type": "tankline",   "reward": "common",    "params": { "count": 7, "spacing": 72, "hpMult": 8, "durationSec": 45, "offset": 300, "radius": 20 } },
-    { "atMin": 13, "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 3.4, "durationSec": 25, "burst": 20 } },
+    { "atMin": 13, "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 3.4, "durationSec": 25, "burst": 20, "eliteN": 3 } },
     { "atMin": 14, "kind": "reinforce", "type": "both",                              "eliteType": "random", "params": { "mult": 3.8, "durationSec": 30, "eliteN": 4 } },
     { "atMin": 15, "kind": "boss",      "type": "bull" }
   ],
@@ -229,6 +231,12 @@
     "magnetSpeedMin": 140,
     "magnetSpeedMax": 640,
     "gemLife": 18
+  },
+
+  "punishFx": {
+    "wave": { "radius": 170, "perRadius": 30, "dmg": 26, "perDmg": 10, "knockback": 260 },
+    "freeze": { "radius": 200, "dur": 2.0, "perDur": 0.7 },
+    "_comment": "v0.22 (덱 021·022 이행): 공용 처형 카드 부가 효과 — 처형한 '자리'에서 발동(무리 속 처형일수록 보상↑). wave=충격파(중첩당 반경/피해 증가·잡몹 밀치기) / freeze=주변 빙결(중첩당 지속 증가). 흡수(magnet)는 수치 없음(전체 보석 끌기)."
   },
 
   "contact": {

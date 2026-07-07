@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<!--
+  VSQA · FQA 판정시트 — 세션 002 (호위·축제, v0.22)
+  사용법: 더블클릭으로 열기 → 항목마다 ⭕/❌/➖ + 메모 → 맨 아래 [판정 프롬프트 복사] → Claude 채팅에 붙여넣기.
+  입력은 이 브라우저에 자동 저장된다(localStorage).
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FQA 판정시트 · 세션 002 호위·축제</title>
+<style>
+  :root{
+    --bg:#0a0c12; --panel:#11151f; --panel2:#141926; --line:#1f2738;
+    --ink:#e8edf6; --dim:#8b97ad; --faint:#5a6478;
+    --gold:#ffd23f; --blue:#3aa0ff; --red:#ff2b4e; --teal:#1cf0d4; --good:#5fe39a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:radial-gradient(1100px 500px at 75% -10%, rgba(28,240,212,.06), transparent 60%), var(--bg);
+    color:var(--ink); font-family:"Pretendard","Segoe UI",-apple-system,system-ui,"Malgun Gothic",sans-serif;
+    letter-spacing:-.01em; padding:4vh 6vw 140px;}
+  .wrap{max-width:900px; margin:0 auto;}
+  .brand{font-size:.72rem; letter-spacing:.2em; color:var(--teal); font-weight:800; text-transform:uppercase;}
+  h1{font-size:clamp(1.5rem,3.6vw,2.3rem); font-weight:800; margin:.4rem 0 .3rem;}
+  .meta{color:var(--dim); font-size:.9rem; display:flex; gap:1.6rem; flex-wrap:wrap; margin-bottom:1rem;}
+  .meta b{color:var(--teal);}
+  .changed{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--gold);
+    border-radius:10px; padding:.9rem 1.1rem; margin:1rem 0 1.6rem; font-size:.9rem; color:var(--dim); line-height:1.7;}
+  .changed b{color:var(--gold); display:block; font-size:.76rem; letter-spacing:.14em; margin-bottom:.3rem;}
+  .howto{font-size:.84rem; color:var(--faint); margin-bottom:1.6rem; line-height:1.6;}
+  .howto em{font-style:normal; color:var(--teal);}
+
+  .item{background:linear-gradient(160deg,var(--panel2),var(--panel)); border:1px solid var(--line);
+    border-radius:14px; padding:1.2rem 1.3rem; margin-bottom:1rem;}
+  .item .top{display:flex; gap:.7rem; align-items:baseline; flex-wrap:wrap;}
+  .item .no{flex:0 0 auto; font-weight:900; color:var(--teal); font-variant-numeric:tabular-nums;}
+  .item h2{font-size:1.06rem; font-weight:800; line-height:1.4; flex:1; min-width:200px;}
+  .item .crit{font-size:.72rem; font-weight:800; color:var(--gold); border:1px solid rgba(255,210,63,.35);
+    background:rgba(255,210,63,.08); border-radius:6px; padding:.15em .5em; white-space:nowrap;}
+  .item .basis{margin-top:.55rem; font-size:.84rem; color:var(--dim); line-height:1.55;}
+  .item .basis b{color:var(--ink);}
+  .item .guide{margin-top:.45rem; font-size:.82rem; color:var(--faint);}
+  .item .guide::before{content:"🎮 "; }
+  .verdict{display:flex; gap:.5rem; margin-top:.9rem; flex-wrap:wrap;}
+  .vbtn{border:1px solid var(--line); background:var(--panel); color:var(--dim); border-radius:999px;
+    padding:.45rem 1.05rem; font-size:.9rem; font-weight:800; cursor:pointer; font-family:inherit; transition:.13s;}
+  .vbtn:hover{border-color:var(--dim); color:var(--ink);}
+  .vbtn.on-o{background:rgba(95,227,154,.16); border-color:var(--good); color:var(--good);}
+  .vbtn.on-x{background:rgba(255,43,78,.14); border-color:var(--red); color:var(--red);}
+  .vbtn.on-m{background:rgba(139,151,173,.14); border-color:var(--dim); color:var(--ink);}
+  .memo{width:100%; margin-top:.7rem; background:var(--bg); color:var(--ink); border:1px solid var(--line);
+    border-radius:9px; padding:.6rem .8rem; font-family:inherit; font-size:.88rem; line-height:1.5; resize:vertical; min-height:44px;}
+  .memo:focus{outline:none; border-color:var(--teal);}
+
+  .free{margin-top:1.6rem;}
+  .free b{display:block; font-size:.8rem; letter-spacing:.14em; color:var(--gold); margin-bottom:.4rem;}
+  .free textarea{min-height:80px;}
+  .free .hint{font-size:.78rem; color:var(--faint); margin-top:.3rem;}
+
+  .dock{position:fixed; left:0; right:0; bottom:0; background:rgba(10,12,18,.92); backdrop-filter:blur(8px);
+    border-top:1px solid var(--line); padding:.9rem 6vw; display:flex; gap:1rem; align-items:center; z-index:20;}
+  .dock .stat{font-size:.82rem; color:var(--dim); flex:1;}
+  .dock .stat b{color:var(--teal);}
+  .copy{background:var(--teal); color:#04201c; border:none; border-radius:10px; padding:.75rem 1.4rem;
+    font-weight:900; font-size:.95rem; cursor:pointer; font-family:inherit; box-shadow:0 4px 18px rgba(28,240,212,.3);}
+  .copy:hover{transform:translateY(-1px);}
+  .reset{background:none; border:1px solid var(--line); color:var(--faint); border-radius:10px; padding:.7rem 1rem;
+    font-size:.8rem; cursor:pointer; font-family:inherit;}
+  .msg{font-size:.85rem; color:var(--good); font-weight:800; min-width:90px;}
+
+  .pv-overlay{position:fixed; inset:0; z-index:40; background:rgba(5,7,12,.84); display:grid; place-items:center; padding:5vh 6vw;}
+  .pv-overlay.hidden{display:none;}
+  .pv-box{width:min(720px,100%); max-height:85vh; overflow:auto; background:var(--panel); border:1px solid var(--line);
+    border-radius:14px; padding:1.3rem 1.5rem;}
+  .pv-box b{font-size:1.05rem;}
+  .pv-box textarea{width:100%; min-height:260px; margin-top:.8rem; background:var(--bg); color:var(--ink);
+    border:1px solid var(--line); border-radius:10px; padding:.9rem 1rem;
+    font-family:"Cascadia Code",Consolas,monospace; font-size:.84rem; line-height:1.55; resize:vertical;}
+  .pv-actions{display:flex; gap:.8rem; margin-top:.8rem; align-items:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">EXECUTE // SURVIVORS · FQA</div>
+  <h1 id="title"></h1>
+  <div class="meta" id="meta"></div>
+  <div class="changed" id="changed"></div>
+  <p class="howto">각 항목을 실제로 플레이하며 느껴보고 <em>⭕ 재밌다 / ❌ 재미없다 / ➖ 모르겠다</em> 를 고른 뒤 메모를 남겨주세요 (한 줄이면 충분, 거칠어도 됨).
+  입력은 자동 저장됩니다. 끝나면 맨 아래 <em>[판정 프롬프트 복사]</em> → Claude 채팅에 붙여넣기.</p>
+
+  <div id="items"></div>
+
+  <div class="free">
+    <b>새로 발견한 재미 / 노잼 (자유 기입)</b>
+    <textarea class="memo" id="freeText" placeholder="표에 없는 것도 자유롭게 — 재밌던 순간, 짜증났던 순간, 아이디어..."></textarea>
+    <div class="hint" id="freeHint"></div>
+  </div>
+</div>
+
+<div class="dock">
+  <div class="stat" id="stat">판정 0 / 0</div>
+  <span class="msg" id="msg"></span>
+  <button class="reset" id="resetBtn">입력 초기화</button>
+  <button class="copy" id="copyBtn">📋 판정 프롬프트 복사</button>
+</div>
+
+<div class="pv-overlay hidden" id="pv">
+  <div class="pv-box">
+    <b>Claude 에게 보낼 판정 프롬프트</b>
+    <textarea id="pvText" readonly spellcheck="false"></textarea>
+    <div class="pv-actions">
+      <button class="copy" id="pvCopy">📋 복사</button>
+      <span class="msg" id="pvMsg"></span>
+      <button class="reset" id="pvClose" style="margin-left:auto;">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= 데이터 (세션 001) ================= */
+const SESSION = {
+  n: "002",
+  date: "2026-07-07",
+  build: "v0.22.0 / index_28.html",
+  theme: "호위·축제 — 무리 속 처형이 재밌는가",
+  changed: [
+    "S001 판정 + 덱 022 반영 2연속 버전업: [v0.21] 초반 감속 철회 · 강화 웨이브 위협화 · 저스트회피→처형 찬스 · 도끼 은퇴+튕기는 축구공",
+    "[v0.22] 엘리트 호위 편성(자코 12~16 동반 · 그로기 시체 곁 유지) · 엘리트 솔로 삭제(HP ×0.6 · 축제마다 2~3마리 동시) · 평시 농사/웨이브 축제 리듬 · 공용 처형 카드 개편(환급·쿨 삭제 → 💥파동 ❄빙결 🧲흡수)",
+    "근거 배치: v0.22 15런 (로그: QA/TQA/bot/logs/2026-07-07_v022_escort-festival.json)",
+  ],
+};
+const ITEMS = [
+  { id:1, title:"1분부터 오는 '축제'(러시 자코 + 엘리트 2마리 동시) — 이제 강화 웨이브가 아슬아슬한가요? 농사→축제로 리듬이 바뀌는 게 읽히나요?",
+    basis:"S001 #1 ❌(한가함) 반영 — 전 강화 슬롯에 엘리트 2~3 동반 + 러시 물량. 평시 엘리트는 최대 1마리로 줄임",
+    crit:"F-01", guide:"새 판 시작 → 1·2·3분 축제 세 번을 연달아 겪어보기 — 위기의 '때'가 읽히는지" },
+  { id:2, title:"호위 12~16마리가 지키는 그로기 엘리트 — 무리 속으로 파고들어 처형하는 맛이 '아슬아슬하게 피하면서 처형'인가요?",
+    basis:"덱 022 ① — 엘리트가 쓰러져도 호위는 시체 곁을 지킵니다. 접촉딜(3/틱)을 뚫는 진입 판단이 생기는지가 핵심",
+    crit:"F-05", guide:"그로기가 뜨면 바로 안 들어가고 한 박자 관찰 — '들어갈까 말까' 고민이 생기는지" },
+  { id:3, title:"엘리트 2마리 세트 — 하나가 쓰러지고 남은 놈이 도약으로 방해할 때 '지금 들어가?' 판단이 생기나요?",
+    basis:"덱 022 ② — 솔로 삭제, HP는 절반(50→30)으로 나눠 총 처치 시간은 비슷. 봇 실측: 동시 그로기 최대 2~3(즉시 처형 기준)",
+    crit:"F-02", guide:"축제 때 엘리트 하나만 먼저 그로기 내보기 — 남은 놈의 도약을 보며 처형 타이밍 재기" },
+  { id:4, title:"'연계 처형(+1)'을 찍으면 동시 그로기 2마리를 촤자작 — 멀티 처형이 이제 초중반부터 유효한가요?",
+    basis:"S001 #3 '너무 늦게 멀티 처형' 반영 — 1분부터 듀오 공급. 봇도 동시 그로기 2기+ 상태가 기록됨",
+    crit:"F-02", guide:"첫 처형 보상에서 연계 처형을 찍고, 축제 때 2마리 동시 그로기 → 한 번에 처형해보기" },
+  { id:5, title:"새 공용 처형 카드 3종(💥파동 ❄빙결 🧲흡수) — 이제 '찍고 싶은' 카드인가요? 무리 속 처형과 시너지가 느껴지나요?",
+    basis:"S001 '환급 쿨 카드 찍기 싫음' 반영 — 죽은 2장 삭제, 처형한 '자리'에서 터지는 효과 3장 신설(호위 무리 속 처형일수록 이득)",
+    crit:"F-07", guide:"파동/빙결을 하나씩 찍고 호위 무리 한가운데서 처형 — 터지는 맛 확인" },
+  { id:6, title:"전체 난이도 — 이 판은 쉬운가요 어려운가요? (봇은 표준 3/3 생존으로 '쉬워짐' 신호)",
+    basis:"봇 실측 주의 — 엘리트 HP 분할+축제 물량이 봇에겐 XP 공급(레벨 19~20, 킬 7천+). 사람은 호위·듀오 압박 때문에 다르게 느낄 수 있어 판정 필요",
+    crit:"F-01", guide:"평소처럼 한 판 풀로 — 사망하면 몇 분에·무엇 때문에 죽었는지 기록" },
+  { id:7, title:"호위 때문에 '엘리트 방치'가 이제 확실히 아픈가요? (무리가 통째로 굴러다님)",
+    basis:"F-06(방치 비용) — 엘리트+호위 무리를 안 잡으면 화면에 위험 덩어리가 계속 커집니다",
+    crit:"F-06", guide:"축제 하나를 일부러 안 잡고 도망만 — 다음 축제와 겹칠 때의 압박 체감" },
+];
+const FREE_HINT = "플레이 빌드: Launch 패널 vslike 서버 켜고 → http://localhost:5607/build/index_28.html (더블클릭 실행도 가능)";
+/* ==================================================================== */
+
+const LS = "fqa_"+SESSION.n;
+const state = JSON.parse(localStorage.getItem(LS)||"{}");
+state.v = state.v||{}; state.m = state.m||{}; state.free = state.free||"";
+
+document.getElementById("title").textContent = "판정시트 · 세션 "+SESSION.n+" — "+SESSION.theme;
+document.getElementById("meta").innerHTML =
+  "<span>날짜 · <b>"+SESSION.date+"</b></span><span>빌드 · <b>"+SESSION.build+"</b></span><span>항목 · <b>"+ITEMS.length+"개</b></span>";
+document.getElementById("changed").innerHTML =
+  "<b>이번 세션에서 바꾼 것</b>"+SESSION.changed.map(c=>"· "+c).join("<br>");
+document.getElementById("freeHint").textContent = FREE_HINT;
+
+const V = [["o","⭕ 재밌다"],["x","❌ 재미없다"],["m","➖ 모르겠다"]];
+const box = document.getElementById("items");
+ITEMS.forEach(it=>{
+  const d=document.createElement("div"); d.className="item";
+  d.innerHTML =
+    '<div class="top"><span class="no">'+it.id+'</span><h2>'+it.title+'</h2><span class="crit">'+(it.crit||"신규")+'</span></div>'+
+    '<div class="basis">근거: '+it.basis+'</div>'+
+    (it.guide?'<div class="guide">'+it.guide+'</div>':'')+
+    '<div class="verdict">'+V.map(v=>'<button class="vbtn" data-i="'+it.id+'" data-v="'+v[0]+'">'+v[1]+'</button>').join("")+'</div>'+
+    '<textarea class="memo" data-i="'+it.id+'" placeholder="이유 한 줄 (선택)"></textarea>';
+  box.appendChild(d);
+});
+
+function sync(){
+  document.querySelectorAll(".vbtn").forEach(b=>{
+    const on = state.v[b.dataset.i]===b.dataset.v;
+    b.className = "vbtn"+(on?" on-"+b.dataset.v:"");
+  });
+  document.querySelectorAll(".memo[data-i]").forEach(t=>{ if(t.value!==(state.m[t.dataset.i]||"")) t.value=state.m[t.dataset.i]||""; });
+  const ft=document.getElementById("freeText"); if(ft.value!==state.free) ft.value=state.free;
+  const done=Object.keys(state.v).length;
+  document.getElementById("stat").innerHTML = "판정 <b>"+done+"</b> / "+ITEMS.length+(state.free?" · 자유의견 ✓":"");
+}
+function save(){ localStorage.setItem(LS, JSON.stringify(state)); sync(); }
+
+document.addEventListener("click", e=>{
+  const b=e.target.closest(".vbtn"); if(!b) return;
+  state.v[b.dataset.i] = (state.v[b.dataset.i]===b.dataset.v)? undefined : b.dataset.v;
+  if(state.v[b.dataset.i]===undefined) delete state.v[b.dataset.i];
+  save();
+});
+document.addEventListener("input", e=>{
+  if(e.target.matches(".memo[data-i]")){ state.m[e.target.dataset.i]=e.target.value; save(); }
+  if(e.target.id==="freeText"){ state.free=e.target.value; save(); }
+});
+document.getElementById("resetBtn").onclick=()=>{ if(confirm("입력을 모두 지울까요?")){ localStorage.removeItem(LS); location.reload(); } };
+
+function buildPrompt(){
+  const mark={o:"⭕",x:"❌",m:"➖"};
+  let p="/vsfqa 세션 "+SESSION.n+" 판정 ("+SESSION.theme+", "+SESSION.build+"):\n";
+  ITEMS.forEach(it=>{
+    const v=state.v[it.id], m=(state.m[it.id]||"").trim();
+    if(!v&&!m) return;
+    p+=it.id+". ["+(v?mark[v]:"미판정")+"] "+it.title+(m?" — "+m:"")+"\n";
+  });
+  const f=(state.free||"").trim();
+  if(f) p+="\n기타(자유 의견): "+f+"\n";
+  p+="\n위 판정을 판정기록에 저장하고, FUN_CRITERIA.md 기준 승격/갱신 → 필요한 밸런스 재조정 → TQA 검증까지 진행해줘. 기타 의견은 거친 메모니 의도를 해석해서 반영해줘.";
+  return p;
+}
+const pv=document.getElementById("pv"), pvText=document.getElementById("pvText");
+document.getElementById("copyBtn").onclick=()=>{
+  if(!Object.keys(state.v).length && !(state.free||"").trim()){ alert("판정하거나 자유 의견을 적어주세요."); return; }
+  pvText.value=buildPrompt(); document.getElementById("pvMsg").textContent=""; pv.classList.remove("hidden");
+};
+document.getElementById("pvClose").onclick=()=>pv.classList.add("hidden");
+pv.addEventListener("click",e=>{ if(e.target===pv) pv.classList.add("hidden"); });
+document.getElementById("pvCopy").onclick=()=>{
+  pvText.focus(); pvText.select(); pvText.setSelectionRange(0,999999);
+  const ok=()=>document.getElementById("pvMsg").textContent="복사됨 ✓";
+  const no=()=>document.getElementById("pvMsg").textContent="복사 실패 — 직접 선택해 복사하세요";
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(pvText.value).then(ok, ()=>{try{document.execCommand("copy")?ok():no();}catch(e){no();}});
+  else{ try{document.execCommand("copy")?ok():no();}catch(e){no();} }
+};
+sync();
+</script>
+</body>
+</html>

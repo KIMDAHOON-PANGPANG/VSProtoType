@@ -98,6 +98,9 @@ const M = {
   maxEnemies:0, spreaderConverts:0,
   samples:[], events:[],
   mBuckets:[],                              // 분당 밸런스 곡선 버킷 (리서치: DPS vs HP유입 교차점)
+  groggyHist:{},                            // v0.22 (덱 022): 동시 그로기 수 히스토그램 (초 단위 샘플)
+  execCrowd:[],                             // 처형 순간 반경 120 내 자코 수 (인파이팅 지수)
+  execGroggyLeft:[],                        // 처형 순간 대상의 그로기 잔여 초 (막타 비율용)
   lastSampleT:-1, lastKills:0, lastTakenMark:0, lastDealtMark:0, nearArmed:true,
 };
 function ev(type,detail){ M.events.push({t:+G.time.toFixed(1), type, detail}); }
@@ -239,9 +242,15 @@ function thinkExecute(){
   if(!candidate) return;
   if(G.exec.cd>0.05){ M.execStarved += STEP; return; }    // QA#15: 쿨 때문에 못 함
   if(!prm.execute) return;                                 // no-exec 프로파일은 '기아 시간'만 기록
-  const before=G.executions;
   tryExecute();
-  if(G.execSeq) ev('처형 시작', 'targets='+G.execSeq.targets.length);
+  if(G.execSeq){
+    ev('처형 시작', 'targets='+G.execSeq.targets.length);
+    // v0.22 (덱 022) 지표: 처형 순간의 '무리 속' 정도 + 그로기 잔여(막타 비율)
+    let crowd=0;
+    for(const o of G.enemies){ if(o.kind==='fodder'&&o.state==='alive'&&Math.hypot(o.x-p.x,o.y-p.y)<120) crowd++; }
+    M.execCrowd.push(crowd);
+    for(const t of G.execSeq.targets){ if(typeof t.groggy==='number') M.execGroggyLeft.push(+t.groggy.toFixed(2)); }
+  }
 }
 
 /* 레벨업/처형보상 모달 — DOM 카드 클릭 (실플레이와 동일 경로).
@@ -289,11 +298,13 @@ const PROFILES = {
 function sample(){
   const p=G.player, t=Math.floor(G.time), minute=Math.floor(t/60);
   const B = M.mBuckets[minute] || (M.mBuckets[minute]={dealt:0,taken:0,influx:0,spawns:0,kills:0,densitySum:0,densityN:0,hpLow:1,level:1});
-  let elites=0, alive=0;
+  let elites=0, alive=0, groggies=0;
   for(const e of G.enemies){
     if(!e.__qaSeen){ e.__qaSeen=true; B.influx+=(e.maxHp||e.hp||0); B.spawns++; }   // 적 HP 유입량 (스폰 시점 HP, hpMult 반영)
     if(e.state==='alive'||e.state==='groggy'){ alive++; if(e.kind==='elite')elites++; }
+    if(e.state==='groggy') groggies++;
   }
+  M.groggyHist[groggies]=(M.groggyHist[groggies]||0)+1;   // v0.22: 동시 그로기 히스토그램(초당 1샘플)
   M.maxEnemies = Math.max(M.maxEnemies, alive);
   const hpPct = p ? p.hp/p.maxHp : 0;
   M.hpLowest = Math.min(M.hpLowest, hpPct);
@@ -351,6 +362,15 @@ function finish(outcome){
     groggyStarted:M.groggyStarted, revives:M.groggyRevived, groggyFaded:M.groggyFaded,
     justDodges:M.justDodges, execStarvedSec:+M.execStarved.toFixed(1),
     spreaderConverts:M.spreaderConverts, maxEnemies:M.maxEnemies,
+    // v0.22 (덱 022) 신규 지표 3종
+    groggyConc:(()=>{                                     // 동시 그로기: 히스토그램 + 2기 이상 시간 비율
+      const h=M.groggyHist, tot=Object.values(h).reduce((a,b)=>a+b,0)||1;
+      const ge2=Object.entries(h).filter(([k])=>+k>=2).reduce((a,[,v])=>a+v,0);
+      const mx=Math.max(0,...Object.keys(h).map(Number));
+      return { hist:h, max:mx, pct2plus:+(ge2/tot*100).toFixed(1) };
+    })(),
+    execCrowdAvg: M.execCrowd.length? +(M.execCrowd.reduce((a,b)=>a+b,0)/M.execCrowd.length).toFixed(1) : null,   // 처형 순간 평균 주변 자코(인파이팅)
+    lateExecPct: M.execGroggyLeft.length? +(M.execGroggyLeft.filter(v=>v<=0.8).length/M.execGroggyLeft.length*100).toFixed(1) : null,   // 막타(잔여≤0.8s) 처형 비율
     build: p? p.weapons.map(w=>w.id+':'+(w.evolved?'EVO':'Lv'+w.level)).join(' ') : '',
     profile:CFG.profile, params:prm, seed:CFG.seed,
   };
