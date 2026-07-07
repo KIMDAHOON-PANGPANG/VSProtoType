@@ -1,0 +1,44 @@
+{
+  "_meta": {
+    "date": "2026-07-07",
+    "build": "build/index_27.html (v0.21.0 — Rhythm & Bounce, FQA S001 반영)",
+    "batch": "5 시나리오 × 3 시드(1234/9153/17072), 900s 상한 — v0.20 기준선(2026-07-07_v3)과 회귀 비교",
+    "baselineRef": "2026-07-07_v3_research-metrics_v0.20.0.json",
+    "legend": "필드 의미는 baseline 로그 legend 와 동일. ball/hex = 해당 무기 누적 딜",
+    "changes": "tempo 초반 철회+후반 가속 · 강화웨이브 물량/burst/러시↑ · eliteMax 5 · 접촉딜 3/8 · JD→처형찬스(쿨환급+즉그로기) · 엘리트 방치비용↑ · axe 은퇴 → ball 신규 · hexaura 버프"
+  },
+  "diagnosis": [
+    "🔺 지배 의심 — standard·pressure2x 중앙 생존 ≥ 전체 중앙(335s)×2 (afk 71~84s 가 중앙값을 끌어내린 정보성 플래그)",
+    "⏱ 사망 클러스터 — 사망 11건 중 5건(45%)이 303~380s (5분 미드보스 벽 유지 — F-04 의도된 교차점)",
+    "⚖ 적체 — 5분(3런). v0.20의 3분 적체는 소멸(초반 템포 정상화 효과)",
+    "죽은 무기 플래그 없음 — ball·hexaura 딜 지분 회복 확인"
+  ],
+  "comparison_v020_to_v021": {
+    "standard 생존": "2/3 → 1/3 (사망런 dtpm 8.9~18.9 — 압박 실체화)",
+    "받은피해/분(생존런)": "1.4~5.8 → 3.1~5.9 · 사망런 13.6~31.1",
+    "afk 바닥": "77~123s → 71~84s",
+    "greedy 최악 런": "226s → 192s (dtpm 31 — 욕심 플레이 벌 강화)",
+    "그로기 발생(standard 생존런)": "301~323 → 411 (JD 즉그로기 + eliteMax↑)",
+    "처형(standard 생존런)": "267 → 332",
+    "3분 적체": "2런 → 0런 (해소)",
+    "ball 딜": "최대 56,488 (pressure2x 9153 — 딜지분 1위 21%)",
+    "hexaura 딜": "최대 35,057 (버프 전 죽은무기 1.3% → 회복)"
+  },
+  "runs": [
+    {"s":"standard","seed":1234,"out":"died","t":317,"lv":13,"kills":832,"ex":47,"dtpm":18.9,"nd":1,"low":10,"dps":69.5,"top":"tide 30%","jd":1,"gs":57,"spread":0,"maxE":49,"stuck":"5","ball":1364,"hex":3111},
+    {"s":"standard","seed":9153,"out":"capReached","t":900,"lv":19,"kills":4563,"ex":332,"dtpm":5.5,"nd":1,"low":18,"dps":213.8,"top":"pulse 39%","jd":6,"gs":411,"spread":14,"maxE":80,"stuck":"","ball":10449,"hex":0},
+    {"s":"standard","seed":17072,"out":"died","t":677,"lv":17,"kills":2594,"ex":174,"dtpm":8.9,"nd":1,"low":2,"dps":135.4,"top":"soulorb 40%","jd":3,"gs":234,"spread":10,"maxE":63,"stuck":"","ball":0,"hex":0},
+    {"s":"noexec","seed":1234,"out":"died","t":380,"lv":12,"kills":979,"ex":0,"dtpm":15.8,"nd":1,"low":3,"dps":76.8,"top":"slash 27%","jd":8,"gs":78,"spread":8,"maxE":51,"stuck":"","ball":0,"hex":2624},
+    {"s":"noexec","seed":9153,"out":"died","t":440,"lv":13,"kills":1294,"ex":0,"dtpm":13.6,"nd":1,"low":3,"dps":103.8,"top":"pulse 33%","jd":9,"gs":117,"spread":4,"maxE":57,"stuck":"","ball":0,"hex":5409},
+    {"s":"noexec","seed":17072,"out":"died","t":303,"lv":12,"kills":763,"ex":0,"dtpm":19.7,"nd":1,"low":15,"dps":63.7,"top":"slash 23%","jd":0,"gs":53,"spread":2,"maxE":58,"stuck":"5","ball":0,"hex":0},
+    {"s":"greedy","seed":1234,"out":"died","t":192,"lv":11,"kills":498,"ex":20,"dtpm":31.1,"nd":1,"low":1,"dps":74.2,"top":"tide 45%","jd":1,"gs":22,"spread":0,"maxE":52,"stuck":"","ball":1078,"hex":1638},
+    {"s":"greedy","seed":9153,"out":"capReached","t":900,"lv":19,"kills":4587,"ex":353,"dtpm":3.1,"nd":0,"low":54,"dps":212.1,"top":"soulorb 37%","jd":7,"gs":388,"spread":4,"maxE":82,"stuck":"","ball":0,"hex":8435},
+    {"s":"greedy","seed":17072,"out":"died","t":317,"lv":13,"kills":838,"ex":60,"dtpm":18.9,"nd":0,"low":33,"dps":70.8,"top":"soulorb 38%","jd":2,"gs":76,"spread":0,"maxE":52,"stuck":"5","ball":0,"hex":1611},
+    {"s":"afk","seed":1234,"out":"died","t":71,"lv":4,"kills":85,"ex":0,"dtpm":83.8,"nd":1,"low":2,"dps":20.8,"top":"soulorb 68%","jd":0,"gs":3,"spread":1,"maxE":14,"stuck":"","ball":0,"hex":0},
+    {"s":"afk","seed":9153,"out":"died","t":84,"lv":5,"kills":122,"ex":0,"dtpm":70.6,"nd":1,"low":11,"dps":31.1,"top":"scythe 82%","jd":0,"gs":5,"spread":0,"maxE":17,"stuck":"","ball":0,"hex":0},
+    {"s":"afk","seed":17072,"out":"died","t":78,"lv":5,"kills":110,"ex":0,"dtpm":76.6,"nd":1,"low":4,"dps":31.3,"top":"pulse 45%","jd":0,"gs":3,"spread":0,"maxE":17,"stuck":"","ball":286,"hex":270},
+    {"s":"pressure2x","seed":1234,"out":"capReached","t":900,"lv":20,"kills":8561,"ex":263,"dtpm":3.3,"nd":0,"low":51,"dps":400.4,"top":"pulse 49%","jd":2,"gs":334,"spread":33,"maxE":175,"stuck":"","ball":0,"hex":4753},
+    {"s":"pressure2x","seed":9153,"out":"capReached","t":900,"lv":20,"kills":8613,"ex":266,"dtpm":5.9,"nd":1,"low":11,"dps":300.4,"top":"ball 21%","jd":3,"gs":357,"spread":15,"maxE":180,"stuck":"","ball":56488,"hex":35057},
+    {"s":"pressure2x","seed":17072,"out":"died","t":335,"lv":14,"kills":1656,"ex":56,"dtpm":17.9,"nd":1,"low":5,"dps":126.6,"top":"soulorb 22%","jd":4,"gs":66,"spread":1,"maxE":72,"stuck":"","ball":3386,"hex":0}
+  ]
+}

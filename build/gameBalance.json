@@ -1,6 +1,6 @@
 {
   "_note": "EXECUTE 게임 밸런스 단일 소스. 최신 인덱스(index_N.html)가 http(로컬 서버)로 서빙될 때 이 파일을 우선 로드한다. file:// 더블클릭 실행 시에는 fetch가 막혀 인덱스 내부 FALLBACK_BALANCE 가 대신 쓰이므로, 값을 바꾸면 두 곳을 함께 맞춰주거나 로컬 서버로 실행할 것.",
-  "_version": "0.20.0",
+  "_version": "0.21.0",
 
   "player": {
     "radius": 16,
@@ -31,12 +31,13 @@
       "hitstop": 45,
       "slowDuration": 0.45,
       "slowScale": 0.16,
-      "staggerCharge": 55,
+      "staggerCharge": 110,
       "staggerPerDamage": 0.6,
       "weakpointMult": 2.0,
       "exhaustDuration": 1.6,
       "judgeRadiusMult": 1.6,
-      "_comment": "엘리트 도약을 무적창 안에 딱 맞춰 피하면 발동. hitstop=짧은 정지(ms,처형식 불릿타임 시작) / slowDuration·slowScale=정지 후 슬로우→원속도 복귀 / staggerCharge=비틀대기 충전 / staggerPerDamage=탈진 중 피격당 충전 / weakpointMult=탈진 중 받는 피해 배수 / exhaustDuration=탈진 지속 / judgeRadiusMult=저스트 판정 반경 배수."
+      "execCdRefund": true,
+      "_comment": "엘리트 도약을 무적창 안에 딱 맞춰 피하면 발동. hitstop=짧은 정지(ms,처형식 불릿타임 시작) / slowDuration·slowScale=정지 후 슬로우→원속도 복귀 / staggerCharge=비틀대기 충전 — v0.21(S001 #3·#5): 55→110, 일반 엘리트(staggerMax 100)는 저스트 회피 1회 = 즉시 그로기(처형 찬스), 중간보스(220)는 2회 / execCdRefund=성공 시 처형 쿨 즉시 환급(회피↔처형 연계) / staggerPerDamage=탈진 중 피격당 충전 / weakpointMult=탈진 중 받는 피해 배수 / exhaustDuration=탈진 지속 / judgeRadiusMult=저스트 판정 반경 배수."
     }
   },
 
@@ -98,8 +99,8 @@
       "gemValue": 2,
       "staggerMax": 100,
       "leap": {
-        "cooldownMin": 3.0,
-        "cooldownMax": 4.6,
+        "cooldownMin": 2.6,
+        "cooldownMax": 4.0,
         "initMin": 2.0,
         "initMax": 3.2,
         "windup": 0.78,
@@ -116,10 +117,10 @@
       }
     },
     "eliteTypes": {
-      "vacuum": { "gemRange": 600, "dashMult": 1.4 },
-      "berserker": { "rageTime": 12, "speedMax": 1.9, "dmgMax": 1.8 },
-      "spreader": { "auraR": 240, "chance": 0.4, "maxConverts": 3 },
-      "_comment": "v0.18~19 타입 노브 — vacuum: gemRange 내 젬 추적·흡수(dashMult=가속) / berserker: rageTime초에 걸쳐 속도 ×speedMax·접촉피해 ×dmgMax / spreader(전염): 첫 그로기 미처형(부활) 순간 auraR 내 잡몹이 각각 chance 확률로 리프 엘리트 변이(최대 maxConverts)."
+      "vacuum": { "gemRange": 700, "dashMult": 1.6 },
+      "berserker": { "rageTime": 9, "speedMax": 1.9, "dmgMax": 1.8 },
+      "spreader": { "auraR": 240, "chance": 0.5, "maxConverts": 4 },
+      "_comment": "v0.18~19 타입 노브 — vacuum: gemRange 내 젬 추적·흡수(dashMult=가속) / berserker: rageTime초에 걸쳐 속도 ×speedMax·접촉피해 ×dmgMax / spreader(전염): 첫 그로기 미처형(부활) 순간 auraR 내 잡몹이 각각 chance 확률로 리프 엘리트 변이(최대 maxConverts). v0.21(S001 #4): 방치 비용 전면 상향 — vacuum 사거리·가속↑, berserker 격노 12→9초, spreader 확률 0.4→0.5·최대 4기."
     }
   },
 
@@ -135,15 +136,15 @@
       { "untilMin": 3,  "fodderCap": 100, "fodderInterval": 0.7,  "eliteMax": 1, "eliteIntervalSec": 8.0 },
       { "untilMin": 5,  "fodderCap": 160, "fodderInterval": 0.5,  "eliteMax": 2, "eliteIntervalSec": 5.0 },
       { "untilMin": 7,  "fodderCap": 220, "fodderInterval": 0.35, "eliteMax": 3, "eliteIntervalSec": 3.0 },
-      { "untilMin": 10, "fodderCap": 280, "fodderInterval": 0.3,  "eliteMax": 3, "eliteIntervalSec": 2.5 },
-      { "untilMin": 13, "fodderCap": 340, "fodderInterval": 0.26, "eliteMax": 4, "eliteIntervalSec": 2.0 },
-      { "untilMin": 15, "fodderCap": 380, "fodderInterval": 0.22, "eliteMax": 4, "eliteIntervalSec": 1.6 }
+      { "untilMin": 10, "fodderCap": 280, "fodderInterval": 0.3,  "eliteMax": 4, "eliteIntervalSec": 2.2 },
+      { "untilMin": 13, "fodderCap": 380, "fodderInterval": 0.24, "eliteMax": 5, "eliteIntervalSec": 1.8 },
+      { "untilMin": 15, "fodderCap": 440, "fodderInterval": 0.2,  "eliteMax": 5, "eliteIntervalSec": 1.4 }
     ],
     "eliteMode": "wave",
-    "eliteWave": { "sizeMin": 2, "sizeMax": 3, "lullSec": 11 },
+    "eliteWave": { "sizeMin": 2, "sizeMax": 4, "lullSec": 10 },
     "eliteRoster": ["knight", "vacuum", "berserker", "spreader"],
     "_rosterComment": "v0.18~19: 물결마다 직전과 다른 타입 로테이션('매번 바뀐다'). knight=도약 패링 / vacuum=보석 청소기(젬 흡수로 성장 방해) / berserker=오래두면 격노(방치 시 가속·강타) / spreader=전염(첫 그로기 미처형 시 주변 잡몹을 확률적으로 리프 엘리트로 변이 → 처형 강제).",
-    "rushSpeedMult": 1.8,
+    "rushSpeedMult": 2.0,
     "_rushComment": "v0.19 (A): 강화(특수) 웨이브 스폰 잡몹의 이속 배수 기본값 — 슬롯 params.speedMult로 개별 오버라이드. 쿨타임(템포)이 벅찰 정도로 몰려오는 러시 압박(추후 공용 무기 빌드의 쿨감 스탯 가치를 세우는 장치).",
     "eliteRadiusMin": 220,
     "eliteRadiusMax": 360
@@ -159,14 +160,15 @@
 
   "tempo": {
     "points": [
-      { "atMin": 0,   "mult": 1.15 },
-      { "atMin": 1,   "mult": 1.55 },
-      { "atMin": 2,   "mult": 1.55 },
+      { "atMin": 0,   "mult": 1.1 },
+      { "atMin": 1,   "mult": 1.15 },
+      { "atMin": 2,   "mult": 1.1 },
       { "atMin": 3.5, "mult": 1.0 },
-      { "atMin": 8,   "mult": 0.95 },
-      { "atMin": 15,  "mult": 0.85 }
+      { "atMin": 8,   "mult": 0.9 },
+      { "atMin": 12,  "mult": 0.75 },
+      { "atMin": 15,  "mult": 0.65 }
     ],
-    "_comment": "v0.18 (4): 전역 공격 템포 커브 — 모든 무기 발사 간격·틱에 곱하는 배율(구간 선형 보간). 1~2분 ×1.55 = 스킬 쿨이 길어 카이팅해야 생존하는 구간 → 3.5분 정상화 → 후반 소폭 가속. weapons 수치는 그대로 두고 런타임 배율만."
+    "_comment": "v0.21 (S001 #2): 초반 ×1.55 대폭 감속 철회 — '답답함' 판정. 초반은 거의 정상 템포(1~2분 ×1.15), 대신 후반 가속(12분 ×0.75 → 15분 ×0.65)을 키워 빌드 완성 후 '다 쓸어버리는' 구간을 만든다(S001 #1). 전역 배율: 무기 발사 간격·틱 ×배율, 구간 선형 보간."
   },
 
   "midboss": {
@@ -193,19 +195,19 @@
   },
 
   "waveSchedule": [
-    { "atMin": 1,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 1.8, "durationSec": 15 } },
-    { "atMin": 2,  "kind": "reinforce", "type": "fodder",                            "params": { "mult": 4.0, "durationSec": 25, "burst": 24 } },
-    { "atMin": 3,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 2.2, "durationSec": 20 } },
+    { "atMin": 1,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 2.2, "durationSec": 18 } },
+    { "atMin": 2,  "kind": "reinforce", "type": "fodder",                            "params": { "mult": 4.5, "durationSec": 25, "burst": 32 } },
+    { "atMin": 3,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 2.8, "durationSec": 20, "burst": 12 } },
     { "atMin": 4,  "kind": "event",     "type": "elitebloom", "reward": "exclusive", "params": { "mode": "fixed", "count": 3, "chance": 0.35, "auraR": 220, "offset": 260, "lifeSec": 20 } },
     { "atMin": 5,  "kind": "midboss",   "type": "bull_calf",  "reward": "exclusive" },
-    { "atMin": 7,  "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 2.2, "durationSec": 20, "eliteN": 2 } },
+    { "atMin": 7,  "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 2.8, "durationSec": 20, "eliteN": 3 } },
     { "atMin": 8,  "kind": "event",     "type": "cage",       "reward": "common",    "eliteType": "random", "params": { "radius": 430, "durationSec": 60 } },
-    { "atMin": 9,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 2.4, "durationSec": 20 } },
+    { "atMin": 9,  "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 3.0, "durationSec": 20, "burst": 16 } },
     { "atMin": 10, "kind": "event",     "type": "jelly",      "reward": "exclusive", "params": { "count": 14, "radiusMin": 190, "radiusMax": 340, "periodSec": 6, "durationSec": 30, "hp": 60, "damage": 10, "speed": 170, "radius": 14 } },
-    { "atMin": 11, "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 2.6, "durationSec": 20, "eliteN": 2 } },
+    { "atMin": 11, "kind": "reinforce", "type": "both",       "reward": "common",    "eliteType": "random", "params": { "mult": 3.2, "durationSec": 20, "eliteN": 3 } },
     { "atMin": 12, "kind": "event",     "type": "tankline",   "reward": "common",    "params": { "count": 7, "spacing": 72, "hpMult": 8, "durationSec": 45, "offset": 300, "radius": 20 } },
-    { "atMin": 13, "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 2.8, "durationSec": 25 } },
-    { "atMin": 14, "kind": "reinforce", "type": "both",                              "eliteType": "random", "params": { "mult": 3.2, "durationSec": 30, "eliteN": 3 } },
+    { "atMin": 13, "kind": "reinforce", "type": "fodder",     "reward": "common",    "params": { "mult": 3.4, "durationSec": 25, "burst": 20 } },
+    { "atMin": 14, "kind": "reinforce", "type": "both",                              "eliteType": "random", "params": { "mult": 3.8, "durationSec": 30, "eliteN": 4 } },
     { "atMin": 15, "kind": "boss",      "type": "bull" }
   ],
   "_waveScheduleComment": "v0.18 (6) 보상 흐름: 홀수 분 특수(강화) 웨이브=버티면 공용 처형 보상 / 이벤트 2회(4분 보석·10분 해파리)+5분 중간보스=전용 처형 보상(총 3회) / 8분 가두리·12분 저지선=공용 / 2분 대량(burst 즉시 스폰)·14분 최종 압박=순수 위협(보상 X).",
@@ -231,8 +233,8 @@
 
   "contact": {
     "interval": 0.5,
-    "fodderDamage": 2,
-    "eliteDamage": 7,
+    "fodderDamage": 3,
+    "eliteDamage": 8,
     "knockback": 36,
     "_comment": "뱀서식 접촉 피해: 접촉(몸이 붙은) 중 interval(초)마다 fodder/eliteDamage 만큼 소량 피해(적별 독립 틱이라 둘러싸이면 누적). knockback=접촉 시 밀려나는 힘. 회피 무적 중엔 피해 없음(몸 충돌은 유지, v0.12)."
   },
@@ -271,7 +273,7 @@
     "gale": { "windup": 0.85, "interval": 4.6, "damage": 9, "tick": 0.22, "r0": 42, "r1": 100, "speed": 230, "life": 2.4, "maxLevel": 8, "perDamage": 3, "perR1": 10, "perInterval": -0.2,
       "_comment": "3 울부짖는 회오리(잔나 Q · #7dffc8): 머금기(windup · 전방 소용돌이 성장) → 밀집 방향으로 방출. r0→r1로 커지며 전진, tick마다 내부 전체 다단히트. MAX 진화 '폭풍의 부름': 즉시 최대 크기(r1)로 소환 + 저속(40)으로 근처에 오래 체류(life×2.2)." },
     "axe": { "windup": 0.25, "interval": 4.5, "damage": 30, "throwRange": 430, "speed": 640, "r": 14, "groundLife": 6, "maxLevel": 8, "perDamage": 10, "perRange": 30,
-      "_comment": "4 되찾는 도끼(올라프 Q · #ffb35a): 조준 방향 관통 투척 → 사거리 끝 지면에 꽂힘(groundLife초 유지). 주우면 쿨 초기화(즉시 재발사) — 도끼 밭이 동선이 된다(롤 훅). MAX 진화 '불멸의 도끼': 착지 즉시 회수(줍기 불필요, 쿨 자동 초기화)." },
+      "_comment": "4 되찾는 도끼(올라프 Q · #ffb35a) — v0.21 은퇴(S001 #7: 실측 딜 지분 1.7% + '진짜 별로' 판정): 카드 풀 제외 · 코드/수치 보존. 1군 자리는 ball(튕기는 축구공)이 대체. 원 사양: 관통 투척 → 지면 꽂힘 → 주우면 쿨 초기화. MAX 진화 '불멸의 도끼': 착지 즉시 회수." },
     "phoenix": { "windup": 0.45, "interval": 2.8, "damage": 24, "arc": 1.25, "reach": 330, "speed": 420, "maxLevel": 8, "perDamage": 8, "perArc": 0.06, "perInterval": -0.12,
       "_comment": "5 불사조 화염(우디르 R · #ff7a1a): 전방 부채꼴(arc 라디안)로 전진하는 불꽃 파동 — 파면이 지나가며 1회씩 타격. reach=전진 거리. MAX 진화 '불사조의 심판': 부채꼴이 아닌 360도 전방위(arc=2π)." },
     "venom": { "dropInterval": 0.14, "zoneR": 34, "zoneLife": 2.6, "tick": 0.5, "damage": 5, "dotDps": 4, "dotTime": 1.6, "maxLevel": 8, "perDamage": 2, "perZoneR": 4, "perZoneLife": 0.3,
@@ -290,7 +292,9 @@
       "_comment": "12 핏빛 낫 바퀴(다리우스 Q · #d32050): 상시 — 궤도(orbitR) 회전 낫. 날 끝 밴드(±bladeW)에 스치면 강타(damage), 몸에 붙으면(궤도 안쪽) 기본 innerMult배 — 거리 조절이 딜이 된다. 낫수(count)는 틱 가속으로 반영(실효 틱=tick/낫수 → 낫수↑=실질 DPS↑). MAX 진화 '피의 소용돌이': 안쪽 페널티 소멸(항상 전체 데미지)." },
     "tide": { "windup": 0.55, "interval": 7.2, "damage": 20, "halfLen": 180, "thick": 44, "range": 720, "speed": 520, "returnMult": 1.5, "maxLevel": 8, "perDamage": 8, "perHalfLen": 18, "perInterval": -0.3,
       "_comment": "13 핏빛 썰물(시비르 Q · #ff7d9c): 이동 방향으로 화면 횡단 파도(halfLen×2 폭) → range 끝에서 되돌아와 재타격(returnMult배 강화). 왕복 시간차 = 그로기 예고. MAX 진화 '깊은 곳의 분노': 총 3회 왕복 후 소멸(기본은 1회 왕복)." },
-    "hexaura": { "tick": 0.5, "damage": 7, "radius": 96, "knockback": 46, "maxLevel": 8, "perDamage": 3, "perRadius": 12,
-      "_comment": "14 육각 오라(클래식 마늘형 · #e8ff6b · 덱 018에서 '사슬 묶인 망령' 교체): 상시 — 주위 회전 육각 장판. tick마다 내부 적 피해 + 잡몹 살짝 넉백. 조준 X · 순수 상시(근접 청소·생존). ※ 망령(처형→소환)은 강령술사 클래스 '처형 형태'로 이동(무기 아님). MAX 진화 '완전한 결계': 반경 1.4배." }
+    "hexaura": { "tick": 0.5, "damage": 9, "radius": 120, "knockback": 60, "maxLevel": 8, "perDamage": 4, "perRadius": 14,
+      "_comment": "14 육각 오라(클래식 마늘형 · #e8ff6b · 덱 018에서 '사슬 묶인 망령' 교체): 상시 — 주위 회전 육각 장판. tick마다 내부 적 피해 + 잡몹 살짝 넉백. 조준 X · 순수 상시(근접 청소·생존). MAX 진화 '완전한 결계': 반경 1.4배. v0.21(S001 #7): 존재감 버프 — 피해 7→9 · 반경 96→120 · 넉백 46→60 · 성장 3/12→4/14 (실측 딜 지분 1.3% 교정)." },
+    "ball": { "windup": 0.30, "interval": 5.5, "damage": 22, "count": 1, "speed": 360, "r": 13, "life": 6, "rehit": 0.5, "maxLevel": 8, "perDamage": 7, "perCount": 0.4, "perSpeed": 18, "perLife": 0.4,
+      "_comment": "15 튕기는 축구공(v0.21 신규 · S001 #7 — 뱀서식 리바운드 · #f2f2f2): 화면 가장자리에 life초 동안 튕기며 부딪히는 적 타격(rehit=같은 적 재타격 쿨). 도끼(axe · 은퇴)의 1군 자리를 대체 — 로스터 14종 유지. MAX 진화 '천근 축구공': 크기 1.5배·속도 1.25배·수명 1.5배·잡몹 넉백." }
   }
 }
